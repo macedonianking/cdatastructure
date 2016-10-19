@@ -280,3 +280,164 @@ void chapter3_8_problem() {
 	dump_plist(&totalHead);
 	free_plist(&totalHead);
 }
+
+#if 0
+static int plist_isordered(struct list_head *head) {
+	struct plist_node *last, *curr;
+	int r = 1;
+
+	if (list_empty(head)) {
+		return 1;
+	}
+
+	last = list_entry(head->next, typeof(*last), node);
+	LIST_FOR_EACH_ENTRY_FROM(curr, last->node.next, head, node) {
+		if (last->e <= curr->e) {
+			r = 0;
+			goto out;
+		}
+		last = curr;
+	}
+out:
+	return r;
+}
+#endif
+
+static void plist_add_item_decimal(struct list_head *head, int c, int e) {
+	struct plist_node *ptr, *obj;
+	struct list_head *node;
+
+	LIST_FOR_EACH_ENTRY(ptr, head, node) {
+		if (ptr->e > e) {
+			continue;
+		}
+
+		if (ptr->e == e) {
+			ptr->c += c;
+			if (!ptr->c) {
+				list_del(&ptr->node);
+				free(ptr);
+				return;
+			}
+			goto adjust;
+		}
+		node = &ptr->node;
+		goto insert_item;
+	}
+
+	ptr = NULL;
+	node = head;
+insert_item:
+	obj = (struct plist_node*) malloc(sizeof(struct plist_node));
+	obj->c = c;
+	obj->e = e;
+	list_add_tail(&obj->node, node);
+
+	ptr = obj;
+adjust:
+	while (abs(ptr->c) >= 10) {
+		c = ptr->c / 10;
+		e = ptr->e + 1;
+		ptr->c = ptr->c % 10;
+		node = ptr->node.prev;
+		if (!ptr->c) {
+			list_del(&ptr->node);
+			free(ptr);
+		}
+		ptr = node != head ? list_entry(node, typeof(*ptr), node) : NULL;
+		if (ptr == NULL) {
+			ptr = (struct plist_node*) malloc(sizeof(struct plist_node));
+			ptr->c = c;
+			ptr->e = e;
+			list_add(&ptr->node, node);
+		} else if (ptr->e == e) {
+			ptr->c += c;
+			if (!ptr->c) {
+				list_del(&ptr->node);
+				free(ptr);
+				return;
+			}
+		} else {
+			// Must be (ptr->e >= e)
+			obj = (struct plist_node*) malloc(sizeof(struct plist_node));
+			obj->c = c;
+			obj->e = e;
+			list_add(&obj->node, &ptr->node);
+			ptr = obj;
+		}
+	}
+}
+
+static void plist_multi_decimal(struct list_head *dst, struct list_head *lhs, struct list_head *rhs) {
+	struct plist_node *lhsIter, *rhsIter;
+
+	DCHECK(dst && list_empty(dst));
+	LIST_FOR_EACH_ENTRY(lhsIter, lhs, node) {
+		LIST_FOR_EACH_ENTRY(rhsIter, rhs, node) {
+			plist_add_item_decimal(dst, lhsIter->c * rhsIter->c, lhsIter->e + rhsIter->e);
+		}
+	}
+}
+
+static void pow_plist_decimal(struct list_head *dst, struct list_head *list, int n) {
+	DCHECK(n > 0);
+	struct list_head lhs, rhs;
+
+	if (n == 1) {
+		duplicate_plist(dst, list);
+	} else if ((n % 2) == 0) {
+		INIT_LIST_HEAD(&lhs);
+		pow_plist_decimal(&lhs, list, n / 2);
+		plist_multi_decimal(dst, &lhs, &lhs);
+		free_plist(&lhs);
+	} else {
+		INIT_LIST_HEAD(&lhs);
+		INIT_LIST_HEAD(&rhs);
+
+		pow_plist_decimal(&lhs, list, (n - 1) / 2);
+		plist_multi_decimal(&rhs, &lhs, &lhs);
+		free_plist(&lhs);
+		plist_multi_decimal(dst, &rhs, list);
+		free_plist(&rhs);
+	}
+}
+
+static void print_plist_in_decimal(struct list_head *head) {
+	struct plist_node *ptr;
+	int e;
+
+	if (list_empty(head)) {
+		fputc('0', stdout);
+		return;
+	}
+
+	ptr = list_entry(head->next, typeof(*ptr), node);
+	e = ptr->e;
+	fputc('0' + ptr->c, stdout);
+	LIST_FOR_EACH_ENTRY_FROM(ptr, ptr->node.next, head, node) {
+		while (--e > ptr->e) {
+			fputc('0', stdout);
+		}
+		fputc('0' + ptr->c, stdout);
+		e = ptr->e;
+	}
+	while (--e >= 0) {
+		fputc('0', stdout);
+	}
+	fputc('\n', stdout);
+}
+
+void chapter3_9_problem() {
+	struct list_head lhsHead, totalHead;
+
+	INIT_LIST_HEAD(&lhsHead);
+	INIT_LIST_HEAD(&totalHead);
+
+	plist_add_item(&lhsHead, 2, 0);
+	pow_plist_decimal(&totalHead, &lhsHead, 4000);
+	dump_plist(&totalHead);
+	print_plist_in_decimal(&totalHead);
+
+	free_plist(&lhsHead);
+	free_plist(&totalHead);
+}

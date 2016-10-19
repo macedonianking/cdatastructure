@@ -19,6 +19,11 @@ struct list_head {
 		 ptr = list_entry(__p, typeof(*ptr), m), __p != (home); \
 		 __p = __p->next)
 
+#define LIST_FOR_EACH_ENTRY_FROM(ptr, fm, head, m) \
+	for (struct list_head *__p = (fm); \
+		 ptr = list_entry(__p, typeof(*ptr), m), __p != (head); \
+		 __p = __p->next)
+
 #define LIST_FOR_EACH_ENTRY_SAFE(ptr, head, m) \
 	for (struct list_head *__p = (head)->next; \
 		 (__p != (head)) && ({ptr = list_entry(__p, typeof(*ptr), m); __p = __p->next;});)
