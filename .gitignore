@@ -1,1 +1,5 @@
-build
+/main.exe
+/*.ninja_deps
+/*.ninja_log
+/*.sublime-workspace
+/build

@@ -1,0 +1,32 @@
+cc = gcc
+cflags = -c -g -std=gnu99 -Wall
+cinclude = -I.
+ldlibs = 
+
+rule cc
+  depfile = $out.d
+  command = $cc $cflags $cinclude -MMD -MF $out.d  -o $out $in
+
+rule link_c
+  command = $cc -o $out $in $ldlibs
+
+build main.exe: link_c $
+  build\chapter1.o $
+  build\chapter3.o $
+  build\chapter4.o $
+  build\chapter10.o $
+  build\chapter12.o $
+  build\chapter13.o $
+  build\string_ext.o $
+  build\main.o
+
+build build\main.o: cc src\main.c 
+build build\string_ext.o: cc src\string_ext.c 
+build build\chapter1.o: cc src\chapter1.c 
+build build\chapter3.o: cc src\chapter3.c 
+build build\chapter4.o: cc src\chapter4.c 
+build build\chapter10.o: cc src\chapter10.c 
+build build\chapter12.o: cc src\chapter12.c 
+build build\chapter13.o: cc src\chapter13.c 
+
+default main.exe
