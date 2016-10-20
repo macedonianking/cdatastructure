@@ -24,6 +24,10 @@ struct plist_node {
 	int e;
 };
 
+struct nlist_node {
+	struct list_head node;
+	int data;
+};
 
 void chapter3_3_a(struct slist_node **head) {
 	struct slist_node *curr, *next;
@@ -498,4 +502,96 @@ struct slist_node **chapter3_11_problem_b(struct slist_node **head, int data) {
 	} else {
 		return chapter3_11_problem_b(&(*head)->next, data);
 	}
+}
+
+void chapter3_12_a_problem(struct slist_node **head) {
+	struct slist_node *last, *next, *ptr;
+
+	last = NULL;
+	ptr = *head;
+	while (ptr) {
+		next = ptr->next;
+		ptr->next = last;
+		last = ptr;
+		ptr = next;
+	}
+	*head = last;
+}
+
+#define BUCKET_SIZE	1000
+#define PASS_MAX	3
+
+static inline int digit_in(int n, int i) {
+	if (n == 0) {
+		return 0;
+	} else if (i == 0) {
+		return n % 10;
+	} else {
+		return digit_in(n / 10, i - 1);
+	}
+}
+
+static void chapter3_13_problem_impl(struct list_head *head) {
+	struct nlist_node *ptr;
+	struct list_head bucket[BUCKET_SIZE];
+	int n;
+
+	for (int i = 0; i < BUCKET_SIZE; ++i) {
+		INIT_LIST_HEAD(bucket+i);
+	}
+
+	for (int i = 0; i < PASS_MAX; ++i) {
+		LIST_FOR_EACH_ENTRY_SAFE(ptr, head, node) {
+			n = digit_in(ptr->data, i);
+			list_del(&ptr->node);
+			list_add_tail(&ptr->node, bucket + n);
+		}
+		DCHECK(list_empty(head));
+
+		for (int j = 0; j < BUCKET_SIZE; ++j) {
+			if (!list_empty(bucket+j)) {
+				list_move_tail(bucket+j, head);
+			}
+		}
+	}
+}
+
+static void free_nlist(struct list_head *head) {
+	struct nlist_node *ptr;
+
+	LIST_FOR_EACH_ENTRY_SAFE(ptr, head, node) {
+		list_del(&ptr->node);
+		free(ptr);
+	}
+}
+
+static void dump_nlist(struct list_head *head) {
+	struct nlist_node *ptr;
+	int isFirst;
+
+	isFirst = 1;
+	LIST_FOR_EACH_ENTRY(ptr, head, node) {
+		if (isFirst) {
+			isFirst = 0;
+			fprintf(stdout, "%d", ptr->data);
+		} else {
+			fprintf(stdout, " %d", ptr->data);
+		}
+	}
+	fputc('\n', stdout);
+}
+
+void chapter3_13_problem() {
+	int source[] = { 64, 8, 216, 512, 27, 729, 0, 1, 343, 125 };
+	DEFINE_LIST_HEAD(head);
+	struct nlist_node *ptr;
+
+	for (int i = 0; i < ARRAY_SIZE(source); ++i) {
+		ptr = (struct nlist_node*) malloc(sizeof(struct nlist_node));
+		ptr->data = source[i];
+		list_add_tail(&ptr->node, &head);
+	}
+	chapter3_13_problem_impl(&head);
+	dump_nlist(&head);
+	free_nlist(&head);
 }

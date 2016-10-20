@@ -41,6 +41,9 @@ static inline int list_empty(struct list_head *ptr) {
 	return ptr->next == ptr;
 }
 
+void list_move(struct list_head *ptr, struct list_head *head);
+void list_move_tail(struct list_head *ptr, struct list_head *head);
+
 #define list_entry(p, t, m) CONTAINER_OF(p, t, m)
 
 #define LIST_FOR_EACH(ptr, head) \

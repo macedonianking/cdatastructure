@@ -6,6 +6,6 @@
 #include "chapter3.h"
 
 int main(int argc, char **argv) {
-	chapter3_9_problem();
+	chapter3_13_problem();
 	return 0;
 }
