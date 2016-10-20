@@ -441,3 +441,61 @@ void chapter3_9_problem() {
 	free_plist(&lhsHead);
 	free_plist(&totalHead);
 }
+
+void chapter3_10_problem(int n, int m) {
+	struct slist_node *head, **last, *ptr, *next;
+	int k, isFirst;
+
+	head = NULL;
+	last = &head;
+
+	DCHECK(n > 0 && m >= 0);
+	for (int i = 1; i != 10; ++i) {
+		ptr = (struct slist_node*) malloc(sizeof(struct slist_node));
+		ptr->data = i;
+		ptr->next = NULL;
+		*last = ptr;
+		last = &ptr->next;	
+	}
+	*last = head;
+
+	ptr = head;
+	k = m;
+	isFirst = 1;
+	while (ptr->next != ptr) {
+		while (k-- > 0) {
+			ptr = ptr->next;
+		}
+		next = ptr->next;
+		if (isFirst) {
+			printf("%d", ptr->data);
+		} else {
+			printf(" %d", ptr->data);
+		}
+		free(ptr);
+		ptr = next;
+		k = m;
+	}
+	if (isFirst) {
+		printf("%d\n", ptr->data);
+	} else {
+		printf(" %d\n", ptr->data);
+	}
+}
+
+struct slist_node **chapter3_11_problem_a(struct slist_node **head, int data) {
+	while ((*head) && (*head)->data != data) {
+		head = &(*head)->next;
+	}
+	return *head ? head : NULL;
+}
+
+struct slist_node **chapter3_11_problem_b(struct slist_node **head, int data) {
+	if (*head == NULL) {
+		return NULL;
+	} else if((*head)->data == data) {
+		return head;
+	} else {
+		return chapter3_11_problem_b(&(*head)->next, data);
+	}
+}
