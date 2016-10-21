@@ -6,6 +6,8 @@
 #include "chapter3.h"
 
 int main(int argc, char **argv) {
-	chapter3_13_problem();
+	if (argc >= 2) {
+		chapter3_14_a_problem(argv[1]);
+	}
 	return 0;
 }

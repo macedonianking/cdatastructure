@@ -16,5 +16,6 @@ void strtrim(char *str);
 char *strtrim_impl(char *str);
 void string_deblank(char *str);
 char *my_strrstr(const char *str, const char *src);
+char *strdup(const char *str);
 
 #endif // STRING_EXT_H

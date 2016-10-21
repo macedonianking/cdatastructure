@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "macros.h"
@@ -594,4 +595,116 @@ void chapter3_13_problem() {
 	chapter3_13_problem_impl(&head);
 	dump_nlist(&head);
 	free_nlist(&head);
+}
+
+#define SPLIT_TOKEN " \n\t"
+struct employee_node {
+	struct list_head node;
+	char *name;
+	int age;
+};
+
+static void split_token(char **ptr, int *n, int max, char *str) {
+	int m;
+
+	m = strspn(str, SPLIT_TOKEN);
+	str = str + m;
+
+	*n = 0;
+	while (max > 0 && *str != '\0') {
+		*ptr++ = str;
+		++*n;
+		--max;
+		do {
+			m = strcspn(str, SPLIT_TOKEN);
+			str = str + m;
+			if (max == 0) {
+				*str = '\0';
+				break;
+			}
+			m = strspn(str, SPLIT_TOKEN);
+			if (m >= 2) {
+				*str = '\0';
+				str = str + m;
+				break;
+			}
+			str = str + m;
+		} while (*str != '\0');
+	}
+}
+
+static struct employee_node *parse_employee_node(char *line) {
+	char *tokens[2];
+	int n, age;
+	struct employee_node *ptr;
+
+	split_token(tokens, &n, 2, line);
+	if (n < 2 || sscanf(tokens[1], "%d", &age) != 1) {
+		return NULL;
+	}
+
+	ptr = (struct employee_node*) malloc(sizeof(struct employee_node));
+	ptr->name = strdup(tokens[0]);
+	ptr->age = age;
+	return ptr;
+}
+
+static void dump_employee_list(struct list_head *head) {
+	struct employee_node *ptr;
+
+	fprintf(stdout, "name\t\tage\n");
+	LIST_FOR_EACH_ENTRY(ptr, head, node) {
+		fprintf(stdout, "%s\t%d\n", ptr->name, ptr->age);
+	}
+}
+
+static void free_employee_list(struct list_head *head) {
+	struct employee_node *ptr;
+
+	LIST_FOR_EACH_ENTRY_SAFE(ptr, head, node) {
+		list_del(&ptr->node);
+		free(ptr->name);
+		ptr->name = NULL;
+		free(ptr);
+	}
+}
+
+void chapter3_14_a_problem(const char *filename) {
+	FILE *fp;
+	char buffer[MAX_BUFFER_SIZE];
+	int n;
+	struct list_head head;
+	struct employee_node *ptr;
+
+	INIT_LIST_HEAD(&head);
+	if (!(fp = fopen(filename, "r"))) {
+		snprintf(buffer, MAX_BUFFER_SIZE, "Error open file '%s'", filename);
+		perror(buffer);
+		exit(-1);
+	}
+
+	while (fgets(buffer, MAX_BUFFER_SIZE, fp) != NULL) {
+		n = strlen(buffer);
+		if (buffer[n - 1] != '\n' && !feof(fp)) {
+			fprintf(stderr, "line is to long\n");
+			goto finish;
+		}
+		ptr = parse_employee_node(buffer);
+		if (ptr == NULL) {
+			fprintf(stderr, "Error parsing %s\n", buffer);
+			goto finish;
+		}
+		list_add_tail(&ptr->node, &head);
+	}
+	fclose(fp);
+	fp = NULL;
+
+	if (!list_empty(&head)) {
+		dump_employee_list(&head);
+		free_employee_list(&head);
+	}
+finish:
+	if(fp) {
+		fclose(fp);
+	}
 }

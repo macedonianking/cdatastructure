@@ -109,3 +109,12 @@ char *my_strrstr(const char *str, const char *src) {
 	}
 	return last;
 }
+
+char *strdup(const char *str) {
+	int n = strlen(str);
+	char *ptr;
+
+	ptr = (char*) malloc(sizeof(char) * (n + 1));
+	strcpy(ptr, str);
+	return ptr;
+}
