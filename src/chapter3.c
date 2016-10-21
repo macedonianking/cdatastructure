@@ -708,3 +708,161 @@ finish:
 		fclose(fp);
 	}
 }
+
+struct array_adjusting_list {
+	int *data;
+	int c;
+	int n;
+};
+
+static void init_adjusting_list(struct array_adjusting_list* list) {
+	list->c = 128;
+	list->n = 0;
+	list->data = (int*) malloc(list->c * sizeof(int));
+	if (!list->data) {
+		perror("Error allocating memory for init_adjusting_list");
+		exit(-1);
+	}
+}
+
+static void increment_adjusting_list_memory(struct array_adjusting_list *list, int c) {
+	if (c <= list->c) {
+		return;
+	}
+
+	int capacity;
+	capacity = 1;
+	while (capacity > 0 && capacity < c) {
+		capacity <<= 1;
+	}
+	if (capacity < 0) {
+		fputs("Allocating more memory for increment_adjusting_list_memory failure", stderr);
+		exit(-1);
+	}
+	list->data = realloc(list->data, capacity * sizeof(int));
+	if (!list->data) {
+		perror("Allocating more memory for increment_adjusting_list_memory failure");
+		exit(-1);
+	}
+	list->c = capacity;
+}
+
+static void add_array_adjusting_list(struct array_adjusting_list *list, int v) {
+	int t;
+	if (list->n == list->c) {
+		increment_adjusting_list_memory(list, list->c + 1);
+	}
+	for (int i = 0; i <= list->n; ++i) {
+		t = list->data[i];
+		list->data[i] = v;
+		v = t;
+	}
+	list->data[list->n++] = v;
+}
+
+static void find_array_adjusting_list(struct array_adjusting_list *list, int index) {
+	int t;
+	DCHECK(0 <= index && index < list->n);
+
+	t = list->data[index];
+	while (index-- > 0) {
+		list->data[index+1] = list->data[index];
+	}
+	list->data[0] = t;
+}
+
+static void free_adjusting_list(struct array_adjusting_list *list) {
+	free(list->data);
+	list->data = NULL;
+	list->n = 0;
+	list->c = 0;
+}
+
+void chapter3_15_a_problem() {
+	struct array_adjusting_list list;
+
+	init_adjusting_list(&list);
+	for (int i = 0; i < 100; ++i) {
+		add_array_adjusting_list(&list, i);
+	}
+	find_array_adjusting_list(&list, 2);
+	free_adjusting_list(&list);
+}
+
+void chapter3_16_b_problem(struct list_head *list) {
+	struct nlist_node *ptr, *iter;
+	struct list_head *iterNode, *nextNode;
+
+	LIST_FOR_EACH_ENTRY(ptr, list, node) {
+		iterNode = ptr->node.next;
+		while (iterNode != list) {
+			iter = list_entry(iterNode, struct nlist_node, node);
+			nextNode = iter->node.next;
+			if (ptr->data == iter->data) {
+				list_del(&iter->node);
+			}
+			iterNode = nextNode;
+		}
+	}	
+}
+
+void chapter3_16_e_problem_iter(int *data, int start, int end, int *pend) {
+	int m, endLeft, endRight, t;
+	if (start == end) {
+		*pend = start;
+		return;
+	}
+
+	m = start + (end - start) / 2;
+	chapter3_16_e_problem_iter(data, start, m, &endLeft);
+	chapter3_16_e_problem_iter(data, m+1, end, &endRight);
+
+	m = m + 1;
+	for (int i = start; i <= endLeft; ++i) {
+		for (int j = m; j <= endRight; j++) {
+			if (data[i] == data[j]) {
+				// elimiate
+				t = data[endRight];
+				data[endRight] = data[j];
+				data[j] = t;
+				--endRight;
+				break;
+			}
+		}
+	}
+	endLeft += 1;
+	if (endLeft == m) {
+		endLeft = endRight;
+		*pend = endLeft;
+		return;
+	}
+	for(int i = m; i <= endRight; ++i) {
+		data[endLeft++] = data[i];
+	}
+	*pend = endRight;
+}
+
+// 这里算法复杂度不是NlogN,不知道实现
+void chapter3_16_e_problem(int *data, int n) {
+	int end, isFirst;
+
+	chapter3_16_e_problem_iter(data, 0, n - 1, &end);
+	isFirst = 1;
+	for (int i = 0; i <= end; ++i) {
+		if (isFirst) {
+			fprintf(stdout, "%d", data[i]);
+		} else {
+			fprintf(stdout, " %d", data[i]);
+		}
+	}
+}
+
+struct expression_node {
+	struct list_head node;
+	int type;
+	int data;
+};
+
+void chapter3_19_problem() {
+
+}
