@@ -14,6 +14,7 @@ build main.exe: link_c $
   build\chapter1.o $
   build\chapter3.o $
   build\chapter4.o $
+  build\chapter4_8.o $
   build\chapter10.o $
   build\chapter12.o $
   build\chapter13.o $
@@ -27,6 +28,7 @@ build build\list.o: cc src\list.c
 build build\chapter1.o: cc src\chapter1.c 
 build build\chapter3.o: cc src\chapter3.c 
 build build\chapter4.o: cc src\chapter4.c 
+build build\chapter4_8.o: cc src\chapter4_8.c 
 build build\chapter10.o: cc src\chapter10.c 
 build build\chapter12.o: cc src\chapter12.c 
 build build\chapter13.o: cc src\chapter13.c 
