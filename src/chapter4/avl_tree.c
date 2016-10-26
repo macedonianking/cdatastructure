@@ -61,7 +61,7 @@ static struct avl_tree_node *avl_double_rotation_right(struct avl_tree_node *ptr
 	return ptr;
 }
 
-struct avl_tree_node *avl_tree_node_add(struct avl_tree_node *ptr, int data) {
+static struct avl_tree_node *avl_tree_node_add(struct avl_tree_node *ptr, int data) {
 	if (!ptr) {
 		ptr = (struct avl_tree_node*) malloc(sizeof(struct avl_tree_node));
 		ptr->data = data;
@@ -82,9 +82,9 @@ struct avl_tree_node *avl_tree_node_add(struct avl_tree_node *ptr, int data) {
 			ptr->right = avl_tree_node_add(ptr->right, data);
 			if (avl_tree_height(ptr->right) - avl_tree_height(ptr->left) == 2) {
 				if (data > ptr->right->data) {
-					avl_single_rotation_right(ptr);
+					ptr = avl_single_rotation_right(ptr);
 				} else {
-					avl_double_rotation_right(ptr);
+					ptr = avl_double_rotation_right(ptr);
 				}
 			}
 		}
@@ -194,4 +194,34 @@ void chapter4_16_avl_problem() {
 	fputc('\n', stdout);
 	free_avl_trees(root);
 	root = NULL;
+}
+
+struct avl_tree_node *chapter4_22_avl_double_rotation_left(struct avl_tree_node *k1) {
+	struct avl_tree_node *k2, *k3;
+	DCHECK(k1 && k1->left && k1->left->right);
+	k2 = k1->left;
+	k3 = k2->right;
+	k1->left = k3->right;
+	k2->right = k3->left;
+	k1->height = calc_avl_tree_height(k1);
+	k2->height = calc_avl_tree_height(k2);
+	k3->left = k2;
+	k3->right = k1;
+	k3->height = calc_avl_tree_height(k3);
+	return k3;
+}
+
+struct avl_tree_node *chapter4_22_avl_double_rotation_right(struct avl_tree_node *k1) {
+	struct avl_tree_node *k2, *k3;
+	DCHECK(k1 && k1->right && k1->right->left);
+	k2 = k1->right;
+	k3 = k2->left;
+	k1->right = k3->left;
+	k2->left = k3->right;
+	k1->height = calc_avl_tree_height(k1);
+	k2->height = calc_avl_tree_height(k2);
+	k3->left = k1;
+	k3->right = k2;
+	k3->height = calc_avl_tree_height(k3);
+	return k3;
 }
