@@ -7,5 +7,6 @@ struct tree_node_t {
 };
 
 void chapter4_14_7_problem();
+void chapter4_9_problem();
 
 #endif // MAIN_CHAPTER4_H

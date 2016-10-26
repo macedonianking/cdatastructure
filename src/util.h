@@ -12,6 +12,8 @@
 #endif // MAX_BUFFER_SIZE
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 #define CONTAINER_OF(ptr, type, m) ({ \
 	(type*)((void*)(ptr) - offsetof(type, m)); \
