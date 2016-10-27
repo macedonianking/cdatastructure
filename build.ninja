@@ -15,21 +15,27 @@ build main.exe: link_c $
   build/chapter3.o $
   build/chapter4/chapter4.o $
   build/chapter4/avl_tree.o $
+  build/chapter4/tree_node.o $
+  build/chapter4/splay_tree.o $
   build/chapter4/chapter4_8.o $
   build/chapter10.o $
   build/chapter12.o $
   build/chapter13.o $
   build/string_ext.o $
   build/list.o $
+  build/log.o $
   build/main.o
 
 build build/main.o: cc src/main.c 
 build build/string_ext.o: cc src/string_ext.c 
 build build/list.o: cc src/list.c 
+build build/log.o: cc src/log.c 
 build build/chapter1.o: cc src/chapter1.c 
 build build/chapter3.o: cc src/chapter3.c 
 build build/chapter4/chapter4.o: cc src/chapter4/chapter4.c 
 build build/chapter4/avl_tree.o: cc src/chapter4/avl_tree.c 
+build build/chapter4/tree_node.o: cc src/chapter4/tree_node.c 
+build build/chapter4/splay_tree.o: cc src/chapter4/splay_tree.c 
 build build/chapter4/chapter4_8.o: cc src/chapter4/chapter4_8.c 
 build build/chapter10.o: cc src/chapter10.c 
 build build/chapter12.o: cc src/chapter12.c 

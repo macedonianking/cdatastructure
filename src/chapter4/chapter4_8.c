@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "util.h"
+#include "log.h"
 #include "macros.h"
 
 struct ctree_node_t {

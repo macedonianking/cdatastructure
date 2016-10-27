@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdarg.h>
 #include <string.h>
 
 #ifndef MAX_BUFFER_SIZE
@@ -18,16 +17,5 @@
 #define CONTAINER_OF(ptr, type, m) ({ \
 	(type*)((void*)(ptr) - offsetof(type, m)); \
 })
-
-static inline void fatal_error(const char *format, ...) {
-	char buffer[MAX_BUFFER_SIZE];
-	va_list args;
-
-	va_start(args, format);
-	vsnprintf(buffer, MAX_BUFFER_SIZE, format, args);
-	perror(buffer);
-	va_end(args);
-	exit(-1);
-}
 
 #endif // MAIN_UTIL_H
