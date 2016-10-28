@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "chapter4/avl_tree.h"
+#include "chapter4/splay_tree.h"
 
 int main(int argc, char **argv) {
-	chapter4_16_avl_problem();
+	chapter4_46_problem();
 	return 0;
 }

@@ -32,25 +32,29 @@ static struct tree_node_t *splay_tree_access_impl(int data, struct tree_node_t *
 
 	if (data < ptr->data) {
 		ptr->left = splay_tree_access_impl(data, ptr->left, n);
-		++*n;
-		if (*n == 2) {
-			if (data < ptr->left->data) {
-				ptr = splay_tree_zig_zig_left(ptr);
-			} else {
-				ptr = tree_double_rotation_left(ptr);
+		if(*n != -1) {
+			++*n;
+			if (*n == 2) {
+				if (data < ptr->left->data) {
+					ptr = splay_tree_zig_zig_left(ptr);
+				} else {
+					ptr = tree_double_rotation_left(ptr);
+				}
+				*n = 0;
 			}
-			*n = 0;
 		}
  	} else {
 		ptr->right = splay_tree_access_impl(data, ptr->right, n);
-		++*n;
-		if (*n == 2) {
-			if (data > ptr->right->data) {
-				ptr = splay_tree_zig_zig_right(ptr);
-			} else {
-				ptr = tree_double_rotation_right(ptr);
+		if(*n != -1) {
+			++*n;
+			if (*n == 2) {
+				if (data > ptr->right->data) {
+					ptr = splay_tree_zig_zig_right(ptr);
+				} else {
+					ptr = tree_double_rotation_right(ptr);
+				}
+				*n = 0;
 			}
-			*n = 0;
 		}
 	} 
 	return ptr;

@@ -32,7 +32,7 @@ struct tree_node_t *tree_single_rotation_right(struct tree_node_t *k1) {
 struct tree_node_t *tree_double_rotation_right(struct tree_node_t *k1) {
 	DCHECK(k1 && k1->right && k1->right->left);
 	k1->right = tree_single_rotation_left(k1->right);
-	return tree_single_rotation_right(k1->right);
+	return tree_single_rotation_right(k1);
 }
 
 struct tree_node_t *find_tree_node(int data, struct tree_node_t *ptr) {
