@@ -1,5 +1,5 @@
 cc = gcc
-cflags = -c -g -std=gnu99 -Wall
+cflags = -c -g -std=gnu99 -Wall -Werror=implicit-function-declaration
 cinclude = -I. -Isrc
 ldlibs = 
 

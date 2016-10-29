@@ -6,6 +6,6 @@
 #include "chapter4/splay_tree.h"
 
 int main(int argc, char **argv) {
-	chapter4_46_problem();
+	chapter4_23_problem();
 	return 0;
 }
