@@ -18,4 +18,7 @@
 	(type*)((void*)(ptr) - offsetof(type, m)); \
 })
 
+void shuffle(int *data, int n);
+int *linear_sequence(int start, int step, int n);
+
 #endif // MAIN_UTIL_H

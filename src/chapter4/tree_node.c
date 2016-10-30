@@ -130,3 +130,39 @@ void dump_tree_node_inorder(struct tree_node_t *ptr) {
 		dump_tree_node_inorder(ptr->right);
 	}
 }
+
+int tree_node_count(struct tree_node_t *ptr) {
+	int c = 0;
+	if (ptr) {
+		c = tree_node_count(ptr->left) + tree_node_count(ptr->right) + 1;
+	}
+	return c;
+}
+
+struct tree_node_t *find_tree_node_kth_min_impl(int k, int *kptr, struct tree_node_t *ptr) {
+	struct tree_node_t *result = NULL, *temp;
+	if (ptr) {
+		temp = find_tree_node_kth_min_impl(k, kptr, ptr->left);
+		if (temp != NULL) {
+			result = temp;
+		}
+		if (*kptr < k) {
+			++*kptr;
+			result = ptr;
+		}
+		if (*kptr < k) {
+			temp = find_tree_node_kth_min_impl(k, kptr, ptr);
+			if (temp != NULL) {
+				result = temp;
+			}
+		}
+	}
+	return result;
+}
+
+struct tree_node_t *find_tree_node_kth_min(int k, struct tree_node_t *ptr) {
+	struct tree_node_t *result;
+	int n = -1;
+	result = find_tree_node_kth_min_impl(k, &n, ptr);
+	return k == n ? result : NULL;
+}

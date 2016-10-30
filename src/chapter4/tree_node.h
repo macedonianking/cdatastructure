@@ -16,6 +16,8 @@ struct tree_node_t *find_tree_node_min(struct tree_node_t *ptr);
 struct tree_node_t *find_tree_node_max(struct tree_node_t *ptr);
 struct tree_node_t *add_tree_node(int data, struct tree_node_t *ptr);
 struct tree_node_t *del_tree_node(int data, struct tree_node_t *ptr);
+struct tree_node_t *find_tree_node_kth_min(int k, struct tree_node_t *ptr);
+int tree_node_count(struct tree_node_t *ptr);
 void free_tree_nodes(struct tree_node_t *ptr);
 void dump_tree_node_inorder(struct tree_node_t *ptr);
 

@@ -124,3 +124,23 @@ void chapter4_23_problem() {
 	free_tree_nodes(root);
 	root = NULL;
 }
+
+void chapter4_27_problem() {
+	int *data;
+	struct tree_node_t *root, *ptr;
+	
+	data = linear_sequence(0, 1, 100);
+	shuffle(data, 100);
+	root = NULL;
+	for (int i = 0; i < 100; ++i) {
+		root = add_tree_node(data[i], root);
+	}
+	for (int i = 0; i < 50; ++i) {
+		ptr = find_tree_node_kth_min(rand() % 100, root);
+		DCHECK(ptr);
+		root = splay_tree_access(ptr->data, root);
+	}
+	dump_tree_node_inorder(root);
+	fputc('\n', stdout);
+	free_tree_nodes(root);
+}

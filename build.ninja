@@ -23,6 +23,7 @@ build main.exe: link_c $
   build/chapter13.o $
   build/string_ext.o $
   build/list.o $
+  build/util.o $
   build/log.o $
   build/main.o
 
@@ -30,6 +31,7 @@ build build/main.o: cc src/main.c
 build build/string_ext.o: cc src/string_ext.c 
 build build/list.o: cc src/list.c 
 build build/log.o: cc src/log.c 
+build build/util.o: cc src/util.c 
 build build/chapter1.o: cc src/chapter1.c 
 build build/chapter3.o: cc src/chapter3.c 
 build build/chapter4/chapter4.o: cc src/chapter4/chapter4.c 
