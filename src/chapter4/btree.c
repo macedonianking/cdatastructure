@@ -90,6 +90,22 @@ static int add_btree_node_data(int data, struct btree_node *node) {
     return 1;
 }
 
+static int del_btree_node_data(int data, struct btree_node *node) {
+    int r = 0;
+    struct btree_data_t *ptr;
+    LIST_FOR_EACH_ENTRY(ptr, &node->list, node) {
+        if (ptr->data == data) {
+            list_del(&ptr->node);
+            free(ptr);
+            r = 1;
+            break;
+        } else if (ptr->data > data) {
+            break;
+        }
+    }
+    return r;
+}
+
 /**
  * 从ptr节点开始，跳过n个节点
  */
@@ -133,7 +149,8 @@ static void divide_btree_node(struct btree_node *parent, struct btree_node *node
 /**
  * 在node的children查找插入的中间节点
  */
-static struct btree_node *find_btree_node_add(int data, struct btree_node *node, struct btree *tree) {
+static struct btree_node *find_btree_node_add(int data, struct btree_node *node, 
+        struct btree *tree) {
     struct btree_node *ptr, *cur;
     DCHECK(!node->is_leaf);
     DCHECK(!list_empty(&node->list));
@@ -149,27 +166,33 @@ static struct btree_node *find_btree_node_add(int data, struct btree_node *node,
     return cur;
 }
 
-static void btree_add_impl(int data, struct btree_node *node, struct btree *tree) {
+static int btree_add_impl(int data, struct btree_node *node, struct btree *tree) {
     struct btree_node *child;
+    int r = 0;
     if (node->is_leaf) {
         if (add_btree_node_data(data, node)) {
+            r = 1;
+            node->start = get_node_start_data(node);
             ++node->n;
         }
     } else {
         child = find_btree_node_add(data, node, tree);
         if (child->start != data) {
-            btree_add_impl(data, child, tree);
+            r = btree_add_impl(data, child, tree);
+            node->start = get_node_start_data(node);
             if (child->n > tree->order) {
                 divide_btree_node(node, child, tree);
             }
         }
     }
+    return r;
 }
 
-static void btree_add(int data, struct btree *tree) {
+static int btree_add(int data, struct btree *tree) {
     struct btree_node *ptr = tree->root;
     struct btree_node *temp;
     struct btree_data_t *data_ptr;
+    int r = 0;
     if (ptr == NULL) {
         ptr = alloc_btree_node();
         ptr->is_leaf = 1;
@@ -178,7 +201,8 @@ static void btree_add(int data, struct btree *tree) {
         list_add(&data_ptr->node, &ptr->list);
         ++ptr->n;
         tree->root = ptr;
-        return;
+        r = 1;
+        goto out;
     }
 
     if (ptr->is_leaf) {
@@ -186,6 +210,8 @@ static void btree_add(int data, struct btree *tree) {
          * 根节点是叶子节点
          */
         if (add_btree_node_data(data, ptr)) {
+            r = 1;
+            ptr->start = get_node_start_data(ptr);
             ++ptr->n;
             goto check_adjust_root;
         }
@@ -196,7 +222,8 @@ static void btree_add(int data, struct btree *tree) {
          */
          temp = find_btree_node_add(data, ptr, tree);
          if (temp->start != data) {
-             btree_add_impl(data, temp, tree);
+             r = btree_add_impl(data, temp, tree);
+             ptr->start = get_node_start_data(ptr);
              if (temp->n > tree->order) {
                  divide_btree_node(ptr, temp, tree);
              }
@@ -204,25 +231,139 @@ static void btree_add(int data, struct btree *tree) {
     }
 
 check_adjust_root:
-    ptr->start = get_node_start_data(ptr);
     if (ptr->n > tree->order) {
-        temp = alloc_btree_node();
-        temp->is_leaf = 0;
-        list_add(&ptr->node, &temp->list);
-        temp->n = 1;
-        temp->start = get_node_start_data(temp);
-        divide_btree_node(temp, ptr, tree);
-        tree->root = temp;
+        temp = ptr;
+        ptr = alloc_btree_node();
+        ptr->is_leaf = 0;
+        list_add(&temp->node, &ptr->list);
+        ptr->n = 1;
+        ptr->start = get_node_start_data(ptr);
+        divide_btree_node(ptr, temp, tree);
+        tree->root = ptr;
+    }
+out:
+    return r;
+}
+
+static void btree_take_or_combine_sibling(struct btree_node *node, 
+    struct btree_node *parent, struct btree *tree) {
+    struct btree_node *ptr;
+    struct list_head *child;
+
+    if (node->node.prev != &parent->list) {
+        ptr = list_entry(node->node.prev, struct btree_node, node);
+        if (ptr->n > tree->low) {
+            // 可以从前面的节点移动一个子节点过来
+            child = ptr->list.prev;
+            list_del(child);
+            --ptr->n;
+            list_add(child, &node->list);
+            ++node->n;
+            node->start = get_node_start_data(node);
+            return;
+        } else if ((ptr->n + node->n) <= tree->order) {
+            // 两个节点可以合并
+            list_move(&ptr->list, &node->list);
+            node->n += ptr->n;
+            node->start = get_node_start_data(node);
+            list_del(&ptr->node);
+            --parent->n;
+            free(ptr);
+            return;
+        }
+    }
+
+    if (node->node.next != &parent->list) {
+        ptr = list_entry(node->node.next, struct btree_node, node);
+        if (ptr->n > tree->low) {
+            // 从后面的节点移动一个子节点过来
+            child = ptr->list.next;
+            list_del(child);
+            --ptr->n;
+            ptr->start = get_node_start_data(ptr);
+            list_add_tail(child, &node->list);
+            ++node->n;
+            node->start = get_node_start_data(node);
+            return;
+        } else if ((ptr->n + node->n) <= tree->order) {
+            // 合并本节点和后面的节点
+            list_move_tail(&ptr->list, &node->list);
+            node->n += ptr->n;
+            ptr->n = 0;
+            list_del(&ptr->node);
+            parent->n--;
+            free(ptr);
+            return;
+        }
+    }
+}
+
+// FIXME:
+static void btree_del_impl(int data, struct btree_node *node, struct btree *tree) {
+    struct btree_node *child;
+    if (node->is_leaf) {
+        if (del_btree_node_data(data, node)) {
+            --node->n;
+            node->start = get_node_start_data(node);
+        }
+    } else {
+        child = find_btree_node_add(data, node, tree);
+        if (child->start <= data) {
+            btree_del_impl(data, child, tree);
+            node->start = get_node_start_data(node);
+            if (child->n < tree->low) {
+                btree_take_or_combine_sibling(child, node, tree);
+            }
+        }
+    }
+}
+
+void btree_del(int data, struct btree *tree) {
+    DCHECK(tree);
+    struct btree_node *ptr, *temp;
+    if (!tree->root || data < tree->root->start) {
+        return;
+    }
+
+    ptr = tree->root;
+    if (ptr->is_leaf) {
+        /**
+         * 根节点是叶节点
+         */
+        if (del_btree_node_data(data, ptr)) {
+            if (!--ptr->n) {
+                free(ptr);
+                tree->root = NULL;
+            } else {
+                ptr->start = get_node_start_data(ptr);
+            }
+        }
+        goto out;
+    }
+
+    temp = find_btree_node_add(data, ptr, tree);
+    if (temp->start <= data) {
+        btree_del_impl(data, temp, tree);
+        ptr->start = get_node_start_data(ptr);
+        if (temp->n < tree->low) {
+            btree_take_or_combine_sibling(temp, ptr, tree);
+        }
+        if (ptr->n == 1) {
+            temp = list_entry(&ptr->list.next, struct btree_node, node);
+            temp->is_leaf = 1;
+            free(ptr);
+            tree->root = temp;
+        }
     }
 out:
     return;
 }
 
 void chapter4_7_tutorial() {
+    int datas[] = {1, 8, 11, 12, 16, 17, 18, 19, 22, 23, 28, 31, 41, 52, 58, 59, 61};
     struct btree tree;
     init_btree(&tree, 3);
-    btree_add(3, &tree);
-    btree_add(2, &tree);
-    btree_add(1, &tree);
-    btree_add(5, &tree);
+    for (int i = 0; i < ARRAY_SIZE(datas); ++i) {
+        btree_add(datas[i], &tree);
+    }
 }

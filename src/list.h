@@ -41,7 +41,13 @@ static inline int list_empty(struct list_head *ptr) {
 	return ptr->next == ptr;
 }
 
+/**
+ * 把ptr的成员全部移动到head的后面
+ */
 void list_move(struct list_head *ptr, struct list_head *head);
+/**
+ * 把ptr的成员全部移动到head的前面
+ */
 void list_move_tail(struct list_head *ptr, struct list_head *head);
 
 #define list_entry(p, t, m) CONTAINER_OF(p, t, m)
