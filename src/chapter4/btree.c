@@ -338,7 +338,7 @@ void btree_del(int data, struct btree *tree) {
                 ptr->start = get_node_start_data(ptr);
             }
         }
-        goto out;
+        return;
     }
 
     temp = find_btree_node_add(data, ptr, tree);
@@ -349,13 +349,11 @@ void btree_del(int data, struct btree *tree) {
             btree_take_or_combine_sibling(temp, ptr, tree);
         }
         if (ptr->n == 1) {
-            temp = list_entry(&ptr->list.next, struct btree_node, node);
-            temp->is_leaf = 1;
+            temp = list_entry(ptr->list.next, struct btree_node, node);
             free(ptr);
             tree->root = temp;
         }
     }
-out:
     return;
 }
 
@@ -365,5 +363,8 @@ void chapter4_7_tutorial() {
     init_btree(&tree, 3);
     for (int i = 0; i < ARRAY_SIZE(datas); ++i) {
         btree_add(datas[i], &tree);
+    }
+    for (int i = ARRAY_SIZE(datas) - 1; i >= 0; i--) {
+        btree_del(datas[i], &tree);
     }
 }
