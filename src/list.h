@@ -41,6 +41,22 @@ static inline int list_empty(struct list_head *ptr) {
 	return ptr->next == ptr;
 }
 
+// Move [start, end) to head's next
+static inline void list_move_range(struct list_head *start, struct list_head *end, struct list_head *head) {
+	struct list_head *tail = end->prev;
+	__list_head_link(start->prev, end);
+	__list_head_link(tail, head->next);
+	__list_head_link(head, start);
+}
+
+// get the nth item from node.
+static inline struct list_head *list_item_at(struct list_head *node, int n) {
+	while (n-- > 0) {
+		node = node->next;
+	}
+	return node;
+}
+
 /**
  * 把ptr的成员全部移动到head的后面
  */

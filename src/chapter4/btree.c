@@ -5,6 +5,7 @@
 #include "log.h"
 #include "list.h"
 #include "macros.h"
+#include "config.h"
 
 struct btree_node {
     struct list_head node;
@@ -136,7 +137,35 @@ static void move_list_items(struct list_head *start, struct list_head *end,
 static void divide_btree_node(struct btree_node *parent, struct btree_node *node, 
         struct btree *tree) {
     DCHECK(node && node->n > tree->order);
-    struct btree_node *next = alloc_btree_node();
+    struct btree_node *next;
+#ifdef OPTIMIZE_BTREE_INSERTION
+    struct list_head *child;
+    if (node->node.prev != &parent->list 
+        && (next = list_entry(node->node.prev, struct btree_node, node))->n < tree->low) {
+        // Can take the first child to the previous sibling.
+        child = node->list.next;
+        list_del(child);
+        --node->n;
+        node->start = get_node_start_data(node);
+        list_add_tail(child, &next->list);
+        ++next->n;
+        return;
+    }
+
+    if (node->node.next != &parent->list 
+        && (next = list_entry(node->node.next, struct btree_node, node))->n > tree->low) {
+        // Can take last child to next sibling.
+        child = node->list.prev;
+        list_del(child);
+        --node->n;
+        list_add(child, &node->list);
+        ++next->n;
+        next->start = get_node_start_data(next);
+        return;
+    }
+#endif
+
+    next = alloc_btree_node();
     next->is_leaf = node->is_leaf;
     next->n = node->n / 2;
     node->n -= next->n;
@@ -146,6 +175,57 @@ static void divide_btree_node(struct btree_node *parent, struct btree_node *node
     ++parent->n;
 }
 
+/**
+ * Release all children of btree_node, but keep itself.
+ */
+static void release_btree_leaf_children(struct btree_node *node) {
+    DCHECK(node->is_leaf);
+    struct btree_data_t *ptr;
+
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &node->list, node) {
+        list_del(&ptr->node);
+        free(ptr);
+    }
+    node->start = 0;
+    node->n = 0;
+}
+
+/**
+ * Release all children of btree_node, but keep it self.
+ */
+static void release_btree_non_leaf_children(struct btree_node *node) {
+    DCHECK(!node->is_leaf);
+    struct btree_node *ptr;
+
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &node->list, node) {
+        if (ptr->is_leaf) {
+            release_btree_leaf_children(ptr);
+        } else {
+            release_btree_non_leaf_children(ptr);
+        }
+        list_del(&ptr->node);
+        free(ptr);
+    }
+    node->start = 0;
+    node->n = 0;
+}
+
+static void release_btree_node_children(struct btree_node *node) {
+    if (node->is_leaf) {
+        release_btree_leaf_children(node);
+    } else {
+        release_btree_non_leaf_children(node);
+    }
+}
+
+static void btree_release(struct btree *tree) {
+    if (tree->root) {
+        release_btree_node_children(tree->root);
+        free(tree->root);
+        tree->root = NULL;
+    }
+}
+ 
 /**
  * 在node的children查找插入的中间节点
  */
@@ -367,4 +447,18 @@ void chapter4_7_tutorial() {
     for (int i = ARRAY_SIZE(datas) - 1; i >= 0; i--) {
         btree_del(datas[i], &tree);
     }
+    btree_release(&tree);
+}
+
+void chapter4_36_problem() {
+    int data_buf[] = {3, 1, 4, 5, 9, 2, 6, 8, 7, 0};
+    struct btree tree;
+    init_btree(&tree, 3);
+
+    for(int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+        btree_add(data_buf[i], &tree);
+    }
+    btree_del(0, &tree);
+    btree_del(9, &tree);
+    btree_release(&tree);
 }

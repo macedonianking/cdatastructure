@@ -1,0 +1,6 @@
+#ifndef MAIN_CHAPTER4_CHAPTER4_38_H
+#define MAIN_CHAPTER4_CHAPTER4_38_H
+
+void chapter4_38_problem();
+
+#endif // MAIN_CHAPTER4_CHAPTER4_38_H
