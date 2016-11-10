@@ -1,5 +1,5 @@
-#ifndef MAIN_CHAPTER4_EXERCISE_H
-#define MAIN_CHAPTER4_EXERCISE_H
+#ifndef MAIN_CHAPTER4_PROBLEM_H
+#define MAIN_CHAPTER4_PROBLEM_H
 
 struct tree_node_t;
 
