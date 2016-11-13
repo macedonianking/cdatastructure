@@ -101,16 +101,15 @@ struct tree_node_t *del_tree_node(int data, struct tree_node_t *ptr) {
 		ptr->right = del_tree_node(data, ptr->right);
 	} else if (ptr->left && ptr->right) {
 		tmp = find_tree_node_min(ptr->right);
+		ptr->data = tmp->data;
 		ptr->right = del_tree_node(tmp->data, ptr->right);
-		tmp->left = ptr->left;
-		tmp->right = ptr->right;
-		ptr = tmp;
 	} else {
 		tmp = ptr->left;
 		if (!ptr->left) {
 			tmp = ptr->right;
 		}
-		ptr = tmp;
+		ptr->data = tmp->data;
+		free(tmp);
 	}
 	return ptr;
 }

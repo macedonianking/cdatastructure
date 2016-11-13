@@ -19,30 +19,30 @@ static inline int calc_avl_tree_height(struct avl_tree_node *ptr) {
 	return MAX(avl_tree_height(ptr->left), avl_tree_height(ptr->right)) + 1;
 }
 
-static struct avl_tree_node *avl_single_rotation_left(struct avl_tree_node *ptr) {
-	struct avl_tree_node *k;
+static struct avl_tree_node *avl_single_rotation_left(struct avl_tree_node *k1) {
+	struct avl_tree_node *k2;
 
-	DCHECK(ptr && ptr->left);
-	k = ptr->left;
-	ptr->left = k->right;
-	k->right = ptr;
-	ptr->height = calc_avl_tree_height(ptr);
-	k->height = calc_avl_tree_height(k);
+	DCHECK(k1 && k1->left);
+	k2 = k1->left;
+	k1->left = k2->right;
+	k2->right = k1;
+	k1->height = calc_avl_tree_height(k1);
+	k2->height = calc_avl_tree_height(k2);
 
-	return k;
+	return k2;
 }
 
-static struct avl_tree_node *avl_single_rotation_right(struct avl_tree_node *ptr) {
-	struct avl_tree_node *k;
+static struct avl_tree_node *avl_single_rotation_right(struct avl_tree_node *k1) {
+	struct avl_tree_node *k2;
 
-	DCHECK(ptr && ptr->right);
-	k = ptr->right;
-	ptr->right = k->left;
-	k->left = ptr;
-	ptr->height = calc_avl_tree_height(ptr);
-	k->height = calc_avl_tree_height(k);
+	DCHECK(k1 && k1->right);
+	k2 = k1->right;
+	k1->right = k2->left;
+	k2->left = k1;
+	k1->height = calc_avl_tree_height(k1);
+	k2->height = calc_avl_tree_height(k2);
 
-	return k;
+	return k2;
 }
 
 static struct avl_tree_node *avl_double_rotation_left(struct avl_tree_node *ptr) {
@@ -145,10 +145,8 @@ struct avl_tree_node *avl_tree_del(struct avl_tree_node *ptr, int data) {
 		struct avl_tree_node *tmp;
 		if (ptr->left && ptr->right) {
 			tmp = avl_tree_find_min(ptr->right);
+			ptr->data = tmp->data;
 			ptr->right = avl_tree_del(ptr->right, tmp->data);
-			tmp->left = ptr->left;
-			tmp->right = ptr->right;
-			ptr = tmp;
 			ptr->height = calc_avl_tree_height(ptr);
 			if (avl_tree_height(ptr->left) - avl_tree_height(ptr->right) == 2) {
 				if (avl_tree_height(ptr->left->left) >= avl_tree_height(ptr->left->right)) {
@@ -162,7 +160,8 @@ struct avl_tree_node *avl_tree_del(struct avl_tree_node *ptr, int data) {
 			if (!tmp) {
 				tmp = ptr->right;
 			}
-			ptr = tmp;
+			ptr->data = tmp->data;
+			free(tmp);
 		}
 	}
 	return ptr;
