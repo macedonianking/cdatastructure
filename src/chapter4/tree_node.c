@@ -104,11 +104,8 @@ struct tree_node_t *del_tree_node(int data, struct tree_node_t *ptr) {
 		ptr->data = tmp->data;
 		ptr->right = del_tree_node(tmp->data, ptr->right);
 	} else {
-		tmp = ptr->left;
-		if (!ptr->left) {
-			tmp = ptr->right;
-		}
-		ptr->data = tmp->data;
+		tmp = ptr;
+		ptr = ptr->left ? ptr->left : ptr->right;
 		free(tmp);
 	}
 	return ptr;

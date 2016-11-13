@@ -156,11 +156,8 @@ struct avl_tree_node *avl_tree_del(struct avl_tree_node *ptr, int data) {
 				}
 			}
 		} else {
-			tmp = ptr->left;
-			if (!tmp) {
-				tmp = ptr->right;
-			}
-			ptr->data = tmp->data;
+			tmp = ptr;
+			ptr = ptr->left ? ptr->left : ptr->right;
 			free(tmp);
 		}
 	}
