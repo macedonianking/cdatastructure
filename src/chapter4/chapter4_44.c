@@ -68,14 +68,16 @@ struct tree_node44 *delete_tree_node44(struct tree_node44 *node, int data) {
 
 struct tree_node44 *tree_node44_find_kmin(struct tree_node44 *node, int k) {
     struct tree_node44 *ret = NULL;
+    int left_count;
 
     if (node && 0 <= k && k < node->count) {
-        ret = tree_node44_find_kmin(node->l, k);
-        if (ret == NULL) {
-            ret = tree_node44_find_kmin(node->r, k - TREE_NODE44_COUNT(node->l));
-        }
-        if (ret == NULL) {
+        left_count = TREE_NODE44_COUNT(node->l);
+        if (k < left_count) {
+            ret = tree_node44_find_kmin(node->l, k);
+        } else if (k == left_count) {
             ret = node;
+        } else {
+            ret = tree_node44_find_kmin(node, k - left_count - 1);
         }
     }
     return ret;

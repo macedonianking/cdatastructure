@@ -6,9 +6,11 @@ ldlibs =
 rule cc
   depfile = $out.d
   command = $cc $cflags $cinclude -MMD -MF $out.d  -o $out $in
+  description = CC $out
 
 rule link_c
   command = $cc -o $out $in $ldlibs
+  description = LINK $out
 
 build main.exe: link_c $
   build/chapter1.o $
