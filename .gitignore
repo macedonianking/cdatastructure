@@ -1,6 +1,6 @@
-build
-/.ninja_log
-/c_fall.sublime-workspace
 /main.exe
-/.ninja_deps
-/.vscode
+/*.ninja_deps
+/*.ninja_log
+/*.sublime-workspace
+/build
+.vscode

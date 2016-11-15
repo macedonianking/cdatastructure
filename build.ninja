@@ -1,0 +1,29 @@
+cc = gcc
+cflags = -c -g -std=gnu99 -Wall -Werror=implicit-function-declaration -Werror=return-type
+cinclude = -I. -Isrc
+ldlibs = 
+
+rule cc
+  depfile = $out.d
+  command = $cc $cflags $cinclude -MMD -MF $out.d  -o $out $in
+  description = CC $out
+
+rule link_c
+  command = $cc -o $out $in $ldlibs
+  description = LINK $out
+
+build main.exe: link_c $
+  build/main.o $
+  build/string_ext.o $
+  build/list.o $
+  build/util.o $
+  build/log.o
+
+
+build build/main.o: cc src/main.c 
+build build/string_ext.o: cc src/string_ext.c 
+build build/list.o: cc src/list.c 
+build build/log.o: cc src/log.c 
+build build/util.o: cc src/util.c
+
+default main.exe
