@@ -25,7 +25,9 @@ build main.exe: link_c $
   build/chapter4/chapter4_39.o $
   build/chapter4/chapter4_43.o $
   build/chapter4/chapter4_44.o $
+  build/chapter4/chapter4_45.o $
   build/chapter4/tree_problem.o $
+  build/chapter5/chapter5.o $
   build/chapter10.o $
   build/chapter12.o $
   build/chapter13.o $
@@ -52,7 +54,9 @@ build build/chapter4/chapter4_38.o: cc src/chapter4/chapter4_38.c
 build build/chapter4/chapter4_39.o: cc src/chapter4/chapter4_39.c 
 build build/chapter4/chapter4_43.o: cc src/chapter4/chapter4_43.c 
 build build/chapter4/chapter4_44.o: cc src/chapter4/chapter4_44.c 
+build build/chapter4/chapter4_45.o: cc src/chapter4/chapter4_45.c 
 build build/chapter4/tree_problem.o: cc src/chapter4/tree_problem.c 
+build build/chapter5/chapter5.o: cc src/chapter5/chapter5.c 
 build build/chapter10.o: cc src/chapter10.c 
 build build/chapter12.o: cc src/chapter12.c 
 build build/chapter13.o: cc src/chapter13.c 
