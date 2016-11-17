@@ -14,6 +14,11 @@ struct hash_node {
     int value;
 };
 
+struct hash_table {
+    struct list_head *queue;
+    int count;
+};
+
 static unsigned int hash_string(const char *str) {
     unsigned int hash = 0;
     while (*str != '\0') {
@@ -75,7 +80,7 @@ static void insert_hash_table(struct hash_table *table, int key, int value) {
     list_add(&node->node, &table->queue[hash_int(key) % table->count]);
 }
 
-void init_hash_table(struct hash_table *table, int count) {
+static void init_hash_table(struct hash_table *table, int count) {
     table->queue = (struct list_head*) malloc(sizeof(struct list_head) * count);
     if (!table->queue) {
         fatal_error("init_hash_table");
@@ -86,7 +91,7 @@ void init_hash_table(struct hash_table *table, int count) {
     table->count = count;
 }
 
-void free_hash_table(struct hash_table *table) {
+static void free_hash_table(struct hash_table *table) {
     if (table) {
         free(table->queue);
     }
