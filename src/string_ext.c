@@ -5,7 +5,7 @@
 #include <string.h>
 #include <memory.h>
 
-#include "macros.h"
+#include "util.h"
 
 #define IS_CHAR_EMPTY(ch) \
 	({char _ch = (ch); _ch == '\n' ||_ch == ' ' || _ch == '\t';})

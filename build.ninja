@@ -13,6 +13,7 @@ rule link_c
   description = LINK $out
 
 build main.exe: link_c $
+  build/chapter1/chapter1.o $
   build/main.o $
   build/string_ext.o $
   build/list.o $
@@ -25,5 +26,6 @@ build build/string_ext.o: cc src/string_ext.c
 build build/list.o: cc src/list.c 
 build build/log.o: cc src/log.c 
 build build/util.o: cc src/util.c
+build build/chapter1/chapter1.o: cc src/chapter1/chapter1.c
 
 default main.exe
