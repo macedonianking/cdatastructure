@@ -98,3 +98,54 @@ void chapter5_1_problem_b() {
     }
     free_hash_table(&table);
 }
+
+// 查找对应的节点是否找到
+// 注意结束条件,quad 的hash方法必然找到节点或者找到空节点
+static struct hash_node *find_hash_node_quad(struct hash_table *table, int v) {
+    int hash = hash_int(table, v);
+    int i, key_index;
+    struct hash_node *node, *key_node;
+
+    i = 0;
+    key_node = NULL;
+    for (;;) {
+        key_index = i * i;
+        ++i;
+        node = table->queue + (key_index + hash) % table->count;
+        if (!node->in_use) {
+            break;
+        } else if (node->key == v) {
+            key_node = node;
+            break;
+        }
+    }
+    return key_node;
+}
+
+static void add_hash_table_quad(struct hash_table *table, int v) {
+    struct hash_node *node;
+
+    node = find_hash_node_quad(table, v);
+    if (node != NULL) {
+        if (node->in_use) {
+            DCHECK(node->key == v);
+        } else {
+            node->key = v;
+            node->in_use = 1;
+        }
+    } else {
+        fprintf(stdout, "MEET AN ERROR ON add_hash_table_quad\n");
+    }
+}
+
+void chapter5_1_problem_c() {
+    struct hash_table table;
+    int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
+
+    init_hash_table(&table, 31);
+    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+        add_hash_table_quad(&table, data_buf[i]);
+    }
+    free_hash_table(&table);
+}
+
