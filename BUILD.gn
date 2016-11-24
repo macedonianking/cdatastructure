@@ -1,0 +1,30 @@
+
+executable("main") {
+  sources = [
+    "src/main.c",
+    target_gen_dir + "/src/hello.c",
+  ]
+
+  deps = [
+    ":gen_hello_source",
+    "//hello:hello_static",
+    "//hello:hello_shared",
+  ]
+
+  output_extension = "exe"
+  output_dir = "$root_out_dir/content_shell"
+}
+
+action_foreach("gen_hello_source") {
+  script = "//build/script/gcc_precompile.py"
+  sources = [ "src/hello.template" ]
+  outputs = [
+    "{{source_gen_dir}}/{{source_name_part}}.c"
+  ]
+
+  args = [ 
+    "-o", 
+    outputs[0],    
+    "{{source}}", 
+  ]
+}

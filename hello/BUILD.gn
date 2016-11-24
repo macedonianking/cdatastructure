@@ -1,0 +1,15 @@
+
+static_library("hello_static") {
+  sources = [
+    "hello.c",
+    "hello.h"
+  ]
+}
+
+shared_library("hello_shared") {
+  sources = [
+    "hello.c",
+    "hello.h",
+  ]
+  ldflags = [ "-fPIC" ]
+}

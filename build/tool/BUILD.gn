@@ -1,0 +1,58 @@
+
+toolchain("gcc") {
+
+  tool("cc") {
+    # output指向当前的输出文件
+    depfile = "{{output}}.d"
+    command = "gcc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} -c {{source}} -o {{output}}"
+    depsformat = "gcc"
+    outputs = [
+      "{{source_out_dir}}/{{target_output_name}}{{source_name_part}}.o"
+    ]
+  }
+
+  tool("alink") {
+    outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    command = "python " + rebase_path("//build/script/gen_static_library.py", root_out_dir) + " -o $outfile --args rcs {{inputs}}"
+    default_output_dir = "{{root_out_dir}}"
+    default_output_extension = ".a"
+    output_prefix = "lib"
+    outputs = [
+      outfile,
+    ]
+  }
+
+  tool("solink") {
+    # 生成动态库的工具
+    sofile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "$sofile.rsp"
+    rspfile_content = "{{inputs}}"
+    command = "gcc -shared {{ldflags}} -o $sofile @$rspfile"
+    description = "SOLINK {{label}}"
+    default_output_dir = "{{root_out_dir}}"
+    output_prefix = "lib"
+    default_output_extension = ".o"
+    outputs = [
+      sofile,
+    ]
+    link_output = sofile
+    depend_output = sofile
+    runtime_link_output = sofile
+  }
+
+  tool("link") {
+    outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    rspfile = "$outfile.rsp"
+    rspfile_content = "{{inputs}}"
+    command = "gcc {{ldflags}} -o $outfile -Wl,--start-group @$rspfile -Wl,--end-group {{libs}}"
+    default_output_dir = "{{root_out_dir}}"
+    outputs = [
+      outfile,
+    ]
+  }
+
+  tool("stamp") {
+    command = "touch {{output}}"
+    description = "STAMP {{output}}"
+  }
+}
