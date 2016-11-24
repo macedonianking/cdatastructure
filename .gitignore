@@ -2,3 +2,5 @@
 /.ninja_deps
 /.ninja_log
 /c_fall.sublime-workspace
+/out
+/*.sublime-workspace

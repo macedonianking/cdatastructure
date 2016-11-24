@@ -1,0 +1,17 @@
+
+config("default_config") {
+  defines = []
+  if (os_win) {
+    defines += [ "OS_WINDOWS" ]
+  } else if (os_android) {
+    defines += [ "OS_ANDROID" ]
+  } else if (os_mac) {
+    defines += [ "OS_MAC" ]
+  } else if (os_linux) {
+    defines += [ "OS_LINUX" ]
+  } else {
+    defines += [ "OS_LINUX" ]
+  }
+  cflags = [ "-Wall", "-Werror=implicit-function-declaration" ]
+  include_dirs = [ "//" ]
+}
