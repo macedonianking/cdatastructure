@@ -3,7 +3,7 @@ toolchain("gcc") {
   tool("cc") {
     # output指向当前的输出文件
     depfile = "{{output}}.d"
-    command = "gcc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} -c {{source}} -o {{output}}"
+    command = "gcc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
     description = "CC {{output}}"
     depsformat = "gcc"
     outputs = [
@@ -12,10 +12,9 @@ toolchain("gcc") {
   }
 
   tool("alink") {
-    outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
-    command = "python " + rebase_path("//build/script/gen_static_library.py", root_out_dir) + " -o $outfile --args rcs {{inputs}}"
+    outfile = "{{target_out_dir}}/{{target_output_name}}{{output_extension}}"
+    command = "python " + rebase_path("//build/script/gen_static_library.py", root_out_dir) + " --ar ar -o $outfile --args rcs {{inputs}}"
     description = "ALINK {{label}}"
-    default_output_dir = "{{root_out_dir}}"
     default_output_extension = ".a"
     output_prefix = "lib"
     outputs = [
@@ -25,12 +24,11 @@ toolchain("gcc") {
 
   tool("solink") {
     # 生成动态库的工具
-    sofile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    sofile = "{{target_out_dir}}/{{target_output_name}}{{output_extension}}"
     rspfile = "$sofile.rsp"
     rspfile_content = "{{inputs}}"
     command = "gcc -shared {{ldflags}} -o $sofile @$rspfile"
     description = "SOLINK {{label}}"
-    default_output_dir = "{{root_out_dir}}"
     output_prefix = "lib"
     default_output_extension = ".dll"
     outputs = [
