@@ -1,6 +1,5 @@
 
 toolchain("gcc") {
-
   tool("cc") {
     # output指向当前的输出文件
     depfile = "{{output}}.d"
@@ -31,7 +30,7 @@ toolchain("gcc") {
     description = "SOLINK {{label}}"
     default_output_dir = "{{root_out_dir}}"
     output_prefix = "lib"
-    default_output_extension = ".o"
+    default_output_extension = ".dll"
     outputs = [
       sofile,
     ]

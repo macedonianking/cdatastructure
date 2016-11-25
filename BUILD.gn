@@ -7,12 +7,12 @@ executable("main") {
 
   deps = [
     ":gen_hello_source",
-    "//hello:hello_static",
     "//hello:hello_shared",
   ]
-
   output_extension = "exe"
   output_dir = "$root_out_dir/content_shell"
+  libs = [ "-lhello_shared" ]
+  ldflags = [ "-Wl,-rpath=.", "-L." ]
 }
 
 action_foreach("gen_hello_source") {
