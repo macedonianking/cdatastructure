@@ -1,4 +1,6 @@
 
+import("//build/tool/android.gni")
+
 copy("main_executable") {
   sources = [ "$root_out_dir/main.exe" ]
   outputs = [ "$root_out_dir/bin/{{source_file_part}}" ]
@@ -40,5 +42,15 @@ action_foreach("gen_hello_source") {
     "-o", 
     outputs[0],    
     "{{source}}", 
+  ]
+}
+
+mingw_toolchain("mingw_toolchain_i386") {
+  mingw_root = "D:/share/MinGW"
+}
+
+group("test_group") {
+  deps = [
+    "//hello:hello_static(:mingw_toolchain_i386)",
   ]
 }

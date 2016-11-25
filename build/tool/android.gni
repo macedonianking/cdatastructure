@@ -1,0 +1,53 @@
+
+template("gcc_toolchain") {
+  assert(defined(invoker.cc), "gcc_toolchain must specify cc variable")
+  assert(defined(invoker.ar), "gcc_toolchain must specify ar variable")
+  assert(defined(invoker.ld), "gcc_toolchain must specify ld variable")
+  toolchain(target_name) {
+    forward_variables_from(invoker, [ "cc", "ar", "ld" ])
+
+    tool("cc") {
+      depfile = "{{output}}.d"
+      depsformat = "gcc"
+      command = "$cc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}} "
+      description = "CC {{label}}"
+      outputs = [
+        "{{source_out_dir}}/{{target_output_name}}{{source_name_part}}.o"
+      ]
+    }
+
+    tool("alink") {
+      outfile = "{{target_out_dir}}/{{target_output_name}}{{output_extension}}"
+      command = "python " + rebase_path("//build/script/gen_static_library.py", root_out_dir) + " --ar $ar --args rcs -o $outfile {{inputs}}"
+      description = "ALINK $outfile"
+      outputs = [
+        outfile,
+      ]
+      output_prefix = "lib"
+      default_output_extension = ".a"
+    }
+
+    tool("solink") {
+      outfile = "{{target_out_dir}}/{{target_output_name}}{{output_extension}}"
+      rspfile = "$outfile.rsp"
+      rspfile_content = "{{inputs}}"
+      command = "$ld {{ldflags}} -o $outfile @$rspfile"
+      description = "SOLINK {{label}}"
+      output_prefix = "lib"
+      default_output_extension = ".so"
+      outputs = [
+        outfile,
+      ]
+    }
+  }
+}
+
+template("mingw_toolchain") {
+  assert(defined(invoker.mingw_root), "mingw_tooclahin must specify mingw_root variable")
+  gcc_toolchain(target_name) {
+    _mingw_bin_dir = invoker.mingw_root + "/bin/"
+    cc = _mingw_bin_dir + "gcc"
+    ar = _mingw_bin_dir + "ar"
+    ld = _mingw_bin_dir + "gcc"
+  }
+}
