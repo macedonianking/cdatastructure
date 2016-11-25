@@ -1,4 +1,12 @@
 
+copy("main_executable") {
+  sources = [ "$root_out_dir/main.exe" ]
+  outputs = [ "$root_out_dir/bin/{{source_file_part}}" ]
+  deps = [
+    ":main"
+  ]
+}
+
 executable("main") {
   sources = [
     "src/main.c",
@@ -10,9 +18,8 @@ executable("main") {
     "//hello:hello_shared",
   ]
   output_extension = "exe"
-  output_dir = "$root_out_dir/content_shell"
-  libs = [ "-lhello_shared" ]
-  ldflags = [ "-Wl,-rpath=.", "-L." ]
+  libs = [ "-lhello_shared", "-L." ]
+  print(target_out_dir)
 }
 
 action_foreach("gen_hello_source") {

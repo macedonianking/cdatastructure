@@ -9,7 +9,6 @@ def parse_arguments():
 
 def main():
     args = parse_arguments();
-    print("Hello world");
     command = "cp -f %s %s" % (args.source, args.o);
     subprocess.check_output(command, shell=True);
     pass;

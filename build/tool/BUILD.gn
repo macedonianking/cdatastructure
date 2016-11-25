@@ -4,6 +4,7 @@ toolchain("gcc") {
     # output指向当前的输出文件
     depfile = "{{output}}.d"
     command = "gcc -MMD -MF $depfile {{defines}} {{include_dirs}} {{cflags}} -c {{source}} -o {{output}}"
+    description = "CC {{output}}"
     depsformat = "gcc"
     outputs = [
       "{{source_out_dir}}/{{target_output_name}}{{source_name_part}}.o"
@@ -13,6 +14,7 @@ toolchain("gcc") {
   tool("alink") {
     outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
     command = "python " + rebase_path("//build/script/gen_static_library.py", root_out_dir) + " -o $outfile --args rcs {{inputs}}"
+    description = "ALINK {{label}}"
     default_output_dir = "{{root_out_dir}}"
     default_output_extension = ".a"
     output_prefix = "lib"
@@ -44,10 +46,16 @@ toolchain("gcc") {
     rspfile = "$outfile.rsp"
     rspfile_content = "{{inputs}}"
     command = "gcc {{ldflags}} -o $outfile -Wl,--start-group @$rspfile -Wl,--end-group {{libs}}"
+    description = "LINK {{label}}"
     default_output_dir = "{{root_out_dir}}"
     outputs = [
       outfile,
     ]
+  }
+
+  tool("copy") {
+    command = "cp -f {{source}} {{output}}"
+    description = "COPY {{label}}"
   }
 
   tool("stamp") {
