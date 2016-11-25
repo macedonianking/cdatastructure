@@ -7,19 +7,27 @@ copy("main_executable") {
   ]
 }
 
+config("main_config") {
+  cflags = [ "-g",  "-std=gnu99" ]
+}
+
 executable("main") {
   sources = [
     "src/main.c",
     target_gen_dir + "/src/hello.c",
   ]
 
+  all_dependent_configs = [ 
+    ":main_config",
+  ]
+
+  assert(os_win, "target must Windows.")
   deps = [
     ":gen_hello_source",
     "//hello:hello_shared",
   ]
+
   output_extension = "exe"
-  libs = [ "-lhello_shared", "-L." ]
-  print(target_out_dir)
 }
 
 action_foreach("gen_hello_source") {
