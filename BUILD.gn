@@ -21,7 +21,6 @@ executable("main") {
     ":main_config",
   ]
 
-  assert(os_win, "target must Windows.")
   deps = [
     ":gen_hello_source",
     "//hello:hello_shared",

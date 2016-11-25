@@ -1,10 +1,3 @@
-declare_args() {
-  os_win = false
-  os_android = false
-  os_linux = false
-  os_mac = false
-}
-
 if (target_os == "") {
   target_os = host_os
 }
