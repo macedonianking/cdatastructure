@@ -15,7 +15,6 @@ action("shell_resource") {
     "res",
   ]
   outputs = [
-    "$target_gen_dir/$target_name/R.java",
     "$target_gen_dir/$target_name/resource.zip",
   ]
   depfile = "$target_gen_dir/$target_name/$target_name.d"
@@ -23,7 +22,7 @@ action("shell_resource") {
     "--aapt", aapt_path,
     "-M", rebase_path("AndroidManifest.xml"),
     "-f",
-    "-F", rebase_path(outputs[1], root_build_dir),
+    "-F", rebase_path(outputs[0], root_build_dir),
     "-J", rebase_path("$target_gen_dir/$target_name", root_build_dir),
     "--base-packages", "$android_jar",
     "--depfile", rebase_path("$depfile", root_build_dir),

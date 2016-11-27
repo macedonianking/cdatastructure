@@ -53,7 +53,7 @@ def get_aapt_command(args):
 def walk_dir(dir_path, file_obj):
 	for root, dirs, files in os.walk(dir_path, topdown=True):
 		for filename in files:
-			abs_file = os.path.abspath(os.path.join(root, filename)).replace("\\", "/")
+			abs_file = os.path.abspath(os.path.join(root, filename))
 			print(abs_file, file=file_obj, end=' ')
 
 def gen_depfile(args):
