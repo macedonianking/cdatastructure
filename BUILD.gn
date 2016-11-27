@@ -13,11 +13,24 @@ config("main_config") {
   cflags = [ "-g",  "-std=gnu99" ]
 }
 
+action_foreach("gen_hello_source") {
+  script = "//build/script/gcc_precompile.py"
+  sources = [ "src/hello.template" ]
+  outputs = [
+    "$target_gen_dir/{{source_name_part}}.c"
+  ]
+
+  args = [ 
+    "-o", 
+    rebase_path(outputs[0], root_build_dir),    
+    "{{source}}", 
+  ]
+}
+
 executable("main") {
   sources = [
     "src/main.c",
-    target_gen_dir + "/src/hello.c",
-  ]
+  ] + get_target_outputs(":gen_hello_source")
 
   all_dependent_configs = [ 
     ":main_config",
@@ -29,20 +42,6 @@ executable("main") {
   ]
 
   output_extension = "exe"
-}
-
-action_foreach("gen_hello_source") {
-  script = "//build/script/gcc_precompile.py"
-  sources = [ "src/hello.template" ]
-  outputs = [
-    "{{source_gen_dir}}/{{source_name_part}}.c"
-  ]
-
-  args = [ 
-    "-o", 
-    outputs[0],    
-    "{{source}}", 
-  ]
 }
 
 mingw_toolchain("mingw_toolchain_i386") {
