@@ -39,6 +39,7 @@ executable("main") {
   deps = [
     ":gen_hello_source",
     "//hello:hello_shared",
+    "//android/public/shell:shell_apk",
   ]
 
   output_extension = "exe"

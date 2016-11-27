@@ -1,0 +1,38 @@
+
+# 编译资源
+action("shell_resource") {
+  script = "//build/script/aapt_package.py"
+  sources = [
+    "AndroidManifest.xml",
+  ]
+  console=true
+  android_sdk_dir = "D:/Android/android-sdk"
+  build_tool_version = "17.0.0"
+  aapt_path = android_sdk_dir + "/build-tools/$build_tool_version/aapt.exe"
+  target_sdk_version = "17"
+  android_jar = android_sdk_dir + "/platforms/android-$target_sdk_version/android.jar" 
+  resource_dirs = [
+    "res",
+  ]
+  outputs = [
+    "$target_gen_dir/$target_name/R.java",
+    "$target_gen_dir/$target_name/resource.zip",
+  ]
+  depfile = "$target_gen_dir/$target_name/$target_name.d"
+  args = [
+    "--aapt", aapt_path,
+    "-M", rebase_path("AndroidManifest.xml"),
+    "-f",
+    "-F", rebase_path(outputs[1], root_build_dir),
+    "-J", rebase_path("$target_gen_dir/$target_name", root_build_dir),
+    "--base-packages", "$android_jar",
+    "--depfile", rebase_path("$depfile", root_build_dir),
+    "-S",
+  ] + rebase_path(resource_dirs, root_build_dir)
+}
+
+group("shell_apk") {
+  deps = [
+    ":shell_resource",
+  ]
+}
