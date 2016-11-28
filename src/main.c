@@ -5,6 +5,6 @@
 #include "chapter5/hash_table_open_addr.h"
 
 int main(int argc, char **argv) {
-	chapter5_1_problem_b();
+	printf("Hello world!!!\n");
 	return 0;
 }

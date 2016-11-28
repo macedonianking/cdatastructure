@@ -6,10 +6,14 @@
 #include "macros.h"
 #include "util.h"
 
+#define STATE_EMPTY     0
+#define STATE_INUSE     1
+#define STATE_DELETE    2
+
 struct hash_node {
     int key;
     int value;
-    int in_use;
+    int state;
 };
 
 struct hash_table {
@@ -28,7 +32,7 @@ static void init_hash_table(struct hash_table *table, int count) {
     for (int i = 0; i < count; ++i) {
         table->queue[i].key = 0;
         table->queue[i].value = 0;
-        table->queue[i].in_use = 0;
+        table->queue[i].state = STATE_EMPTY;
     }
 }
 
@@ -48,7 +52,7 @@ static struct hash_node *find_hash_node_linear(struct hash_table *table, int v) 
     key_ptr = NULL;
     for (int i = 0; i < table->count; ++i) {
         node = table->queue + (hash + i) % table->count;
-        if (node->in_use && node->key == v) {
+        if (node->state != STATE_INUSE) {
             key_ptr = node;
             break;
         }
@@ -57,37 +61,24 @@ static struct hash_node *find_hash_node_linear(struct hash_table *table, int v) 
 }
 
 /**
- * 插入hash节点
- */
-static struct hash_node *insert_hash_node_linear(struct hash_table *table, int k) {
-    int hash = hash_int(table, k);
-    struct hash_node *key_ptr, *node;
+* 插入节点
+*/
+static struct hash_node *add_hash_table_linear(struct hash_table *table, int key) {
+     struct hash_node *node;
 
-    key_ptr = NULL;
-    for (int i = 0; i < table->count; ++i) {
-        node = table->queue + (hash + i) % table->count;
-        if (!node->in_use) {
-            key_ptr = node;
-            break;
-        }
+    node = find_hash_node_linear(table, key);
+    if (node) {
+        node->key = key;
+        node->state = STATE_INUSE;
+    } else {
+        fprintf(stderr, "insert_hash_node_linear failed for (%d)\n", key);
     }
-    if (key_ptr) {
-        key_ptr->key = k;
-        key_ptr->in_use = 1;
-    }
-    return key_ptr;
+    return node;
 }
 
-static void add_hash_table_linear(struct hash_table *table, int v) {
-    struct hash_node *node = find_hash_node_linear(table, v);
-    if (node == NULL) {
-        node = insert_hash_node_linear(table, v);
-        if (node == NULL) {
-            fprintf(stderr, "MEET AN ERROR ON add_hash_table_linear for %d\n", v);
-        }
-    }
-}
-
+/**
+* 使用线性函数解决冲突
+*/
 void chapter5_1_problem_b() {
     int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
     struct hash_table table;
@@ -112,9 +103,7 @@ static struct hash_node *find_hash_node_quad(struct hash_table *table, int v) {
         key_index = i * i;
         ++i;
         node = table->queue + (key_index + hash) % table->count;
-        if (!node->in_use) {
-            break;
-        } else if (node->key == v) {
+        if (node->state == STATE_EMPTY) {
             key_node = node;
             break;
         }
@@ -126,15 +115,11 @@ static void add_hash_table_quad(struct hash_table *table, int v) {
     struct hash_node *node;
 
     node = find_hash_node_quad(table, v);
-    if (node != NULL) {
-        if (node->in_use) {
-            DCHECK(node->key == v);
-        } else {
-            node->key = v;
-            node->in_use = 1;
-        }
+    if (node->state == STATE_INUSE) {
+        DCHECK(node->key == v);
     } else {
-        fprintf(stdout, "MEET AN ERROR ON add_hash_table_quad\n");
+        node->key = v;
+        node->state = STATE_INUSE;
     }
 }
 
@@ -149,3 +134,46 @@ void chapter5_1_problem_c() {
     free_hash_table(&table);
 }
 
+static struct hash_node *find_hash_node_double_hash(struct hash_table *table, int key) {
+    int hash;
+    int d;
+    struct hash_node *node, *key_node;
+
+    d = 7 - key % 7;
+    hash = hash_int(table, key);
+    key_node = NULL;
+    while (!key_node) {
+        node = table->queue + hash;
+        if (node->state != STATE_INUSE) {
+            key_node = node;
+        } else {
+            hash = (hash + d) % table->count;
+        }
+    }
+
+    return key_node;
+}
+
+/**
+ * 双hash的插入过程
+ */
+static void add_hash_table_double_hash(struct hash_table *table, int key) {
+    struct hash_node *node;
+
+    node = find_hash_node_double_hash(table, key);
+    if (node->state != STATE_INUSE) {
+        node->key = key;
+        node->state = STATE_INUSE;
+    }
+}
+
+void chapter5_1_problem_d() {
+     struct hash_table table;
+    int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
+
+    init_hash_table(&table, 31);
+    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+        add_hash_table_double_hash(&table, data_buf[i]);
+    }
+    free_hash_table(&table); 
+}
