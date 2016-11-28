@@ -65,7 +65,6 @@ def gen_depfile(args):
 
 def main():
 	args = parse_args();
-	print(args)
 	command = get_aapt_command(args);
 	subprocess.check_output(command, shell=True);
 	if args.depfile:

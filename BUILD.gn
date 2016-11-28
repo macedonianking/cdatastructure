@@ -29,8 +29,15 @@ action_foreach("gen_hello_source") {
 
 executable("main") {
   sources = [
+    "src/main.h",
     "src/main.c",
   ] + get_target_outputs(":gen_hello_source")
+
+  data = []
+  foreach(item, [ "src/main.h", "src/main.c" ]) {
+    data += [ rebase_path(item) ]
+  }
+  print(data)
 
   all_dependent_configs = [ 
     ":main_config",
