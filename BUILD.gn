@@ -1,5 +1,6 @@
 
 import("//build/tool/android.gni")
+import("//build/android/internal_rules.gni")
 
 copy("main_executable") {
   sources = [ "$root_out_dir/main.exe" ]
@@ -33,12 +34,6 @@ executable("main") {
     "src/main.c",
   ] + get_target_outputs(":gen_hello_source")
 
-  data = []
-  foreach(item, [ "src/main.h", "src/main.c" ]) {
-    data += [ rebase_path(item) ]
-  }
-  print(data)
-
   all_dependent_configs = [ 
     ":main_config",
   ]
@@ -59,5 +54,11 @@ mingw_toolchain("mingw_toolchain_i386") {
 group("test_group") {
   deps = [
     "//hello:hello_static(:mingw_toolchain_i386)",
+    ":test_write_build_config",
   ]
+}
+
+write_build_config("test_write_build_config") {
+  type = "android_apk_test"
+  build_config = "$target_out_dir/$target_name.build_config"
 }

@@ -6,11 +6,11 @@ action("shell_resource") {
     "AndroidManifest.xml",
   ]
   console=true
-  android_sdk_dir = "D:/Android/android-sdk"
+  _android_sdk_dir = android_sdk_dir
   build_tool_version = "17.0.0"
-  aapt_path = android_sdk_dir + "/build-tools/$build_tool_version/aapt.exe"
+  aapt_path = _android_sdk_dir + "/build-tools/$build_tool_version/aapt.exe"
   target_sdk_version = "17"
-  android_jar = android_sdk_dir + "/platforms/android-$target_sdk_version/android.jar" 
+  android_jar = _android_sdk_dir + "/platforms/android-$target_sdk_version/android.jar" 
   resource_dirs = [
     "res",
   ]

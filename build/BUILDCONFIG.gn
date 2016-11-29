@@ -6,6 +6,10 @@ if (current_os == "") {
   current_os = target_os
 }
 
+declare_args() {
+    android_sdk_dir = "D:/android-sdk-windows"
+}
+
 _shared_binary_default_config = [ "//build:default_config" ]
 
 set_defaults("executable") {
