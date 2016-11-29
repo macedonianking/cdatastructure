@@ -2,6 +2,5 @@
 /*.ninja_deps
 /*.ninja_log
 /*.sublime-workspace
-/build
 .vscode
 /out
