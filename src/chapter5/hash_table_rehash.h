@@ -1,0 +1,6 @@
+#ifndef CHAPTER5_HASH_TABLE_REHASH_H
+#define CHAPTER5_HASH_TABLE_REHASH_H
+
+void chapter5_5_tutorial();
+
+#endif /* CHAPTER5_HASH_TABLE_REHASH_H */
