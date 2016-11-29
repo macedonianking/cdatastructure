@@ -1,43 +1,44 @@
 
+_java_target_whitelist = [
+  "//test_write_build_config",
+]
 
 template("write_build_config") {
-  _java_library_whitelist = [
-  ]
-
-  type = invoker.type
-
-  if (type != "android_apk" && 
-      type != "java_library") {
-    _target_label = get_label_info(invoker.target_name, "label_no_toolchain")
-    set_sources_assignment_filter(_java_library_whitelist)
-    sources = [
-      _target_label,
-    ]
-    if (sources != []) {
-      print(sources)
-    }
-  }
-
   action(target_name) {
-    set_sources_assignment_filter([])
     build_config = invoker.build_config
     print(build_config)
 
-    assert(type == "android_apk_test" || 
-           type == "android_apk" || 
-           type == "java_library")
-    forward_variables_from(invoker, [ "deps", "test_only"])
+    script = "//build/script/touch.py"
+    inputs = []
+    forward_variables_from(invoker, [ "deps", "test_only" ])
 
-    if (!defined(deps)) {
+    if (defined(deps)) {
       deps = []
     }
 
-    depfile = "$target_gen_dir/$target_name.d"
-    script = "//build/script/touch.py"
-    sources = [
-    ]
+    _deps_configs = []
+    if (defined(invoker.possible_deps_configs)) {
+      foreach(_possible_deps, invoker.possible_deps_configs) {
+        _target_label = get_label_info(_possible_deps, "label_no_toolchain")
+        set_sources_assignment_filter(_java_target_whitelist)
+        sources = []
+        sources = [ _target_label ]
+        if (sources == []) {
+          _deps_name = get_label_info(_target_label, "name")
+          _deps_gen_dir = get_label_info(_target_label, "target_gen_dir")
+          _deps_configs += [
+            "$_dep_gen_dir/$_deps_name.build_config",
+          ]
+        }
+      }
+      set_sources_assignment_filter([])
+      sources = []
+    }
+
+
+    print(_deps_configs)
     outputs = [
-      "$target_out_dir/$target_name.d"
+      "$target_out_dir/$target_name.build_config",
     ]
     args = [
       "--output", rebase_path(outputs[0]),

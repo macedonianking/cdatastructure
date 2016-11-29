@@ -54,11 +54,18 @@ mingw_toolchain("mingw_toolchain_i386") {
 group("test_group") {
   deps = [
     "//hello:hello_static(:mingw_toolchain_i386)",
-    ":test_write_build_config",
+    "//:test_write_build_config",
   ]
 }
 
-write_build_config("test_write_build_config") {
-  type = "android_apk_test"
+write_build_config("test_write_build_config_base") {
   build_config = "$target_out_dir/$target_name.build_config"
+}
+
+write_build_config("test_write_build_config") {
+  build_config = "$target_out_dir/$target_name.build_config"
+
+  possible_deps_configs = [
+    ":test_write_build_config_base",
+  ]
 }
