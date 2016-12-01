@@ -53,6 +53,8 @@ executable("main") {
     "chapter5/hash_table_open_addr.h",
     "chapter5/hash_table_rehash.c",
     "chapter5/hash_table_rehash.h",
+    "chapter6/binary_heap.c",
+    "chapter6/binary_heap.h",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g" ]

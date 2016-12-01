@@ -20,5 +20,6 @@
 
 void shuffle(int *data, int n);
 int *linear_sequence(int start, int step, int n);
+int next_capacity(int c);
 
 #endif // MAIN_UTIL_H

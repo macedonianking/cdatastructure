@@ -2,6 +2,9 @@
 
 #include <stdlib.h>
 
+#include "log.h"
+#include "macros.h"
+
 void shuffle(int *data, int n) {
     int index, temp;
 
@@ -21,4 +24,26 @@ int *linear_sequence(int start, int step, int n) {
         start += step;
     }
     return data;
+}
+
+int next_capacity(int c) {
+    int n = c << 1;
+    int bits;
+    
+    DCHECK(c > 0);
+    if (n < 0) {
+        fatal_error("next_capacity c two large");
+    }
+    bits = 0;
+    while (c > 0) {
+        bits++;
+    }
+    if (n & (1 << (bits - 1))) {
+        bits++;
+    }
+    n = 1 << bits;
+    if (n <= 0) {
+        fatal_error("next_capacity two large");
+    }
+    return n;
 }
