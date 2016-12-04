@@ -16,14 +16,10 @@ struct binary_heap {
     int capacity;
 };
 
-<<<<<<< HEAD
-void init_binary_head(struct binary_heap *heap, int c) {
-=======
 static void percolate_down(struct binary_heap *heap, int index);
 static void percolate_up(struct binary_heap *heap, int index);
 
 static void init_binary_head(struct binary_heap *heap, int c) {
->>>>>>> main
     DCHECK(c > 0);
     heap->queue = (int*) malloc(sizeof(int) * c);
     DCHECK(heap->queue);
@@ -31,9 +27,6 @@ static void init_binary_head(struct binary_heap *heap, int c) {
     heap->capacity = c;
 }
 
-<<<<<<< HEAD
-void extend_binary_heap(struct binary_heap *heap, int c) {
-=======
 static void free_binary_heap(struct binary_heap *heap) {
     free(heap->queue);
     heap->queue = NULL;
@@ -41,7 +34,6 @@ static void free_binary_heap(struct binary_heap *heap) {
 }
 
 static void extend_binary_heap(struct binary_heap *heap, int c) {
->>>>>>> main
     int *queue;
 
     queue = (int*) realloc(heap->queue, sizeof(int) * c);
@@ -52,29 +44,13 @@ static void extend_binary_heap(struct binary_heap *heap, int c) {
     heap->capacity = c;
 }
 
-<<<<<<< HEAD
-void binary_heap_enqueue(struct binary_heap *heap, int value) {
-    int index;
-    
-=======
 static void binary_heap_enqueue(struct binary_heap *heap, int value) {
->>>>>>> main
     if (heap->capacity == heap->size) {
         extend_binary_heap(heap, next_capacity(heap->capacity));
     }
 
-<<<<<<< HEAD
-    index = heap->size;
-    while (index != 0 && heap->queue[heap_parent(index)] > value) {
-        heap->queue[index] = heap->queue[heap_parent(index)];
-        index = heap_parent(index);
-    }
-    heap->queue[index] = value;
-    ++heap->size;
-=======
     heap->queue[heap->size++] = value;
     percolate_up(heap, heap->size-1);
->>>>>>> main
 }
 
 /*
@@ -82,49 +58,10 @@ static void binary_heap_enqueue(struct binary_heap *heap, int value) {
 */
 int binary_heap_dequeue(struct binary_heap *heap) {
     int r;
-<<<<<<< HEAD
-    int index;
-    int temp_index, next_index;
-    int value, next_value;
-
-=======
->>>>>>> main
     DCHECK(heap->size);
     r = heap->queue[0];
     --heap->size;
     if (heap->size > 0) {
-<<<<<<< HEAD
-        index = 0;
-        value = heap->queue[heap->size];
-        while (index < heap->size) {
-            next_index = index;
-            next_value = value;
-            temp_index = heap_left(index);
-            if (temp_index < heap->size && heap->queue[temp_index] < next_value) {
-                next_index = temp_index;
-                next_value = heap->queue[temp_index];
-            }
-            temp_index = heap_right(index);
-            if (temp_index < heap->size && heap->queue[temp_index] < next_value) {
-                next_index = temp_index;
-                next_value = heap->queue[temp_index];
-            }
-
-            if (index == next_index) {
-                break;
-            }
-            heap->queue[index] = heap->queue[next_index];
-            index = next_index;
-        }
-        heap->queue[index] = value;
-    }
-
-    return r;   
-}
-
-void chapter6_3_tutorial() {
-
-=======
         heap->queue[0] = heap->queue[heap->size];
         percolate_down(heap, 0);
     }
@@ -282,5 +219,4 @@ static void chapter6_8_a_problem_internal(struct binary_heap *heap, int index, i
 void chapter6_8_a_problem(struct binary_heap *heap, int key, void (*func)(int value)) {
     DCHECK(func);
     chapter6_8_a_problem_internal(heap, 0, key, func);
->>>>>>> main
 }
