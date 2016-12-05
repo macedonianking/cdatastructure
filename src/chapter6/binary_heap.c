@@ -1,6 +1,8 @@
 #include "chapter6/binary_heap.h"
 
 #include <stdlib.h>
+#include <memory.h>
+#include <math.h>
 
 #include "macros.h"
 #include "log.h"
@@ -18,6 +20,7 @@ struct binary_heap {
 
 static void percolate_down(struct binary_heap *heap, int index);
 static void percolate_up(struct binary_heap *heap, int index);
+static void build_heap(struct binary_heap *heap);
 
 static void init_binary_head(struct binary_heap *heap, int c) {
     DCHECK(c > 0);
@@ -116,7 +119,7 @@ static void percolate_down(struct binary_heap *heap, int index) {
     heap->queue[index] = value;
 }
 
-static void build_heap(struct binary_heap *heap) {
+void build_heap(struct binary_heap *heap) {
     DCHECK(heap->size > 0);
     for (int index = heap_parent(heap->size-1); index >= 0; --index) {
         percolate_down(heap, index);
@@ -147,7 +150,7 @@ static int binary_heap_delete(struct binary_heap *heap, int index) {
     int r;
     DCHECK(index >= 0 && index < heap->size);
     r = heap->queue[index];
-    if (--heap->size) {
+    if (--heap->size && index < heap->size) {
         heap->queue[index] = heap->queue[heap->size];
         percolate_down(heap, index);
     }
@@ -157,7 +160,10 @@ static int binary_heap_delete(struct binary_heap *heap, int index) {
 void chapter6_3_tutorial() {
 }
 
-void chapter6_2_problem() {
+/**
+ * Build binary heap from insert method.
+ */
+void chapter6_2_a_problem() {
     int data_buf[] = { 10, 12, 1, 14, 6, 5, 8, 15, 3, 9, 7, 4, 11, 13, 2 };
     struct binary_heap heap;
 
@@ -168,19 +174,37 @@ void chapter6_2_problem() {
     free_binary_heap(&heap);
 }
 
+/**
+ * Build binary heap from linear-timed algorithm.
+ */
+void chapter6_2_b_problem() {
+    int data_buf[] = { 10, 12, 1, 14, 6, 5, 8, 15, 3, 9, 7, 4, 11, 13, 2 };
+    struct binary_heap heap;
+
+    init_binary_head(&heap, 128);
+    memcpy(heap.queue, data_buf, sizeof(data_buf));
+    heap.size = ARRAY_SIZE(data_buf);
+    build_heap(&heap);
+    dump_binary_heap_inorder(&heap);
+    free_binary_heap(&heap);
+}
+
+/**
+ * Build binary heap and delete 3 elements.
+ */
 void chapter6_3_problem() {
     int data_buf[] = { 10, 12, 1, 14, 6, 5, 8, 15, 3, 9, 7, 4, 11, 13, 2 };
     struct binary_heap heap;
 
     init_binary_head(&heap, 128);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
-        binary_heap_enqueue(&heap, data_buf[i]);
-    }
+    heap.size = ARRAY_SIZE(data_buf);
+    memcpy(heap.queue, data_buf, sizeof(data_buf));
     for (int i = 0; i < 3; ++i) {
         if (heap.size > 0) {
             printf("heap min:%d\n", binary_heap_dequeue(&heap));
         }
     }
+    dump_binary_heap_inorder(&heap);
     free_binary_heap(&heap);
 }
 
@@ -201,6 +225,18 @@ void chapter6_5_problem() {
     printf("\n");
 
     free_binary_heap(&heap);
+}
+
+void chapter6_6_problem() {
+    int sum = 0;
+    int value = 1;
+    int depth = 0;
+    do {
+        sum += value;
+        value <<= 1;
+    } while(++depth < 7);
+    sum -= 2 * 15;
+    printf("node count: %d", sum);
 }
 
 static void chapter6_8_a_problem_internal(struct binary_heap *heap, int index, int key,

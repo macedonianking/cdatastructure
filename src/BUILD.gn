@@ -55,6 +55,8 @@ executable("main") {
     "chapter5/hash_table_rehash.h",
     "chapter6/binary_heap.c",
     "chapter6/binary_heap.h",
+    "chapter6/dheap.c",
+    "chapter6/dheap.h",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g" ]
