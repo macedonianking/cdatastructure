@@ -4,6 +4,6 @@
 #include "chapter6/leftist_heap.h"
 
 int main(int argc, char **argv) {
-	chapter6_6_tutorial();
+	chapter6_16_problem();
 	return 0;
 }

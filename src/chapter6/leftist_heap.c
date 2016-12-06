@@ -89,6 +89,14 @@ static void dump_leftist_heap_inorder(struct leftist_heap_node *heap) {
     printf("\n");
 }
 
+static void free_leftist_heap_node(struct leftist_heap_node *node) {
+    if (node != NULL) {
+        free_leftist_heap_node(node->left);
+        free_leftist_heap_node(node->right);
+        free(node);
+    }
+}
+
 void chapter6_6_tutorial() {
     struct leftist_heap_node *heap;
     int data_buf[] = { 10, 12, 1, 14, 6, 5, 8, 15, 3, 9, 7, 4, 11, 13, 2 };
@@ -99,4 +107,23 @@ void chapter6_6_tutorial() {
     }
     dump_leftist_heap_inorder(heap);
     heap = NULL;
+}
+
+void chapter6_16_problem() {
+    int k1_data[] = {11, 12, 17, 18, 2, 5, 8, 15};
+    int k2_data[] = {31, 18, 9, 10, 4, 6, 11, 21};
+    struct leftist_heap_node *k1, *k2;
+
+    k1 = NULL;
+    k2 = NULL;
+    for (int i = 0; i < ARRAY_SIZE(k1_data); ++i) {
+        k1 = leftist_heap_enqueue(k1, k1_data[i]);
+    }
+    for (int i = 0; i < ARRAY_SIZE(k2_data); ++i) {
+        k2 = leftist_heap_enqueue(k2, k2_data[i]);   
+    }
+    free_leftist_heap_node(k1);
+    free_leftist_heap_node(k2);
+    k1 = NULL;
+    k2 = NULL;
 }
