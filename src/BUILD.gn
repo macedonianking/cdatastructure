@@ -57,6 +57,8 @@ executable("main") {
     "chapter6/binary_heap.h",
     "chapter6/dheap.c",
     "chapter6/dheap.h",
+    "chapter6/leftist_heap.c",
+    "chapter6/leftist_heap.h",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g" ]
