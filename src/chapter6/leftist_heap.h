@@ -3,5 +3,6 @@
 
 void chapter6_6_tutorial();
 void chapter6_16_problem();
+void chapter6_17_problem();
 
 #endif 

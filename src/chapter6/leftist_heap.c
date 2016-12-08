@@ -122,8 +122,20 @@ void chapter6_16_problem() {
     for (int i = 0; i < ARRAY_SIZE(k2_data); ++i) {
         k2 = leftist_heap_enqueue(k2, k2_data[i]);   
     }
-    free_leftist_heap_node(k1);
-    free_leftist_heap_node(k2);
+    k1 = merge(k1, k2);
+    dump_leftist_heap_inorder(k1);
     k1 = NULL;
     k2 = NULL;
+    free_leftist_heap_node(k1);
+    free_leftist_heap_node(k2);
+}
+
+void chapter6_17_problem() {
+    struct leftist_heap_node *node;
+    node = NULL;
+    for (int i = 1; i <= 15; ++i) {
+        node = leftist_heap_enqueue(node, i);
+    }
+    dump_leftist_heap_inorder(node);
+    node = NULL;
 }
