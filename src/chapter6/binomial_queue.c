@@ -19,8 +19,8 @@ struct binomial_queue {
 /**
  * Allocate memory for a bin_queue_node_t object.
  */
-struct bin_queue_node_t *alloc_bin_queue_node(int key) {
-    struct bin_queue_node_t *ptr = (struct bin_queue_node_t*) malloc(sizeof(*ptr));
+static struct bin_queue_node_t *alloc_bin_queue_node(int key) {
+    struct bin_queue_node_t *ptr = (struct bin_queue_node_t*) malloc(sizeof(struct bin_queue_node_t));
     DCHECK(ptr);
     INIT_LIST_HEAD(&ptr->node);
     INIT_LIST_HEAD(&ptr->list);
@@ -66,11 +66,11 @@ struct bin_queue_node_t *merge(struct bin_queue_node_t *k1, struct bin_queue_nod
 /**
  * Initialize the binomial_queue data structure with capacity value.
  */
-void init_binomial_queue(struct binomial_queue *queue, int capacity) {
+static void init_binomial_queue(struct binomial_queue *queue, int capacity) {
     if (capacity <= 0) {
         capacity = 10;
     }
-    queue->queue = (struct bin_queue_node_t**) malloc(sizeof(struct bin_queue_node_t*));
+    queue->queue = (struct bin_queue_node_t**) malloc(sizeof(struct bin_queue_node_t*) * capacity);
     DCHECK(queue->queue);
     memset(queue->queue, 0, sizeof(struct bin_queue_node_t*) * capacity);
     queue->capacity = capacity;
@@ -79,7 +79,7 @@ void init_binomial_queue(struct binomial_queue *queue, int capacity) {
 /**
  * Free the entire binomial_queue elements.
  */
-void free_binomial_queue(struct binomial_queue *queue) {
+static void free_binomial_queue(struct binomial_queue *queue) {
     struct bin_queue_node_t *ptr;
     for (int i = 0; i < queue->capacity; ++i) {
         if (queue->queue[i] != NULL) {
@@ -139,14 +139,14 @@ static int binomial_queue_find_min(struct binomial_queue *queue) {
     min = NULL;
     for (int i = 0; i < queue->capacity; ++i) {
         ptr = queue->queue[i];
-        if (ptr != NULL && min != NULL && ptr->key < (*min)->key) {
+        if (ptr != NULL && (min == NULL || (ptr->key) < (*min)->key)) {
             min = queue->queue + i;
         }
     }
     return min == NULL ? -1 : min - queue->queue;
 }
 
-int binomial_queue_is_empty(struct binomial_queue *queue) {
+static int binomial_queue_is_empty(struct binomial_queue *queue) {
     int is_empty = 1;
     for (int i = 0; i < queue->capacity && is_empty; ++i) {
         is_empty = queue->queue[i] == NULL;
@@ -154,22 +154,23 @@ int binomial_queue_is_empty(struct binomial_queue *queue) {
     return is_empty;
 }
 
-void binomial_queue_enqueue(struct binomial_queue *queue, int key) {
+static void binomial_queue_enqueue(struct binomial_queue *queue, int key) {
     struct bin_queue_node_t *node = alloc_bin_queue_node(key);
     add_binomial_queue(queue, node, 0);
 }
 
 // 取出最小值，将他的子成员放到内部
-int binomial_queue_dequeue(struct binomial_queue *queue) {
-    int min, order;
+static int binomial_queue_dequeue(struct binomial_queue *queue) {
+    int min_index, order;
+    int min;
     struct bin_queue_node_t *node, *ptr;
     DCHECK(!binomial_queue_is_empty(queue));
-    min = binomial_queue_find_min(queue);
-    DCHECK(min != -1);
+    min_index = binomial_queue_find_min(queue);
+    DCHECK(min_index != -1);
     
-    node = queue->queue[min];
+    node = queue->queue[min_index];
+    queue->queue[min_index] = NULL;
     min = node->key;
-    queue->queue[min] = NULL;
     order = 0;
     LIST_FOR_EACH_ENTRY_SAFE(ptr, &node->list, node) {
         list_del(&ptr->node);
@@ -181,7 +182,7 @@ int binomial_queue_dequeue(struct binomial_queue *queue) {
     return min;   
 }
 
-int binomial_queue_node_percolate_up(struct bin_queue_node_t *node, int key) {
+static int binomial_queue_node_percolate_up(struct bin_queue_node_t *node, int key) {
     if (node == NULL || node->key > key) {
         return 0;
     } else if (node->key == key) {
@@ -250,7 +251,7 @@ void binomial_queue_merge(struct binomial_queue *dst, struct binomial_queue *src
     }
 }
 
-void dump_binomial_queue_inorder(struct binomial_queue *queue) {
+static void dump_binomial_queue_inorder(struct binomial_queue *queue) {
     while (!binomial_queue_is_empty(queue)) {
         fprintf(stdout, "%d ", binomial_queue_dequeue(queue));
     }
@@ -258,5 +259,12 @@ void dump_binomial_queue_inorder(struct binomial_queue *queue) {
 }
 
 void chapter6_8_tutorial() {
-
+    struct binomial_queue queue;
+    
+    init_binomial_queue(&queue, 10);
+    for (int i = 0; i < 8; ++i) {
+        binomial_queue_enqueue(&queue, i);
+    }
+    dump_binomial_queue_inorder(&queue);
+    free_binomial_queue(&queue);
 }

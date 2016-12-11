@@ -94,7 +94,7 @@ static void percolate_down(struct binary_heap *heap, int index) {
     int next_index, next_value;
     int temp_index;
 
-    DCHECK(value >= 0 && value < heap->size);
+    DCHECK(index >= 0 && index < heap->size);
     value = heap->queue[index];
     for (;;) {
         next_index = index;
