@@ -141,7 +141,7 @@ void chapter5_5_tutorial() {
     int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
 
     init_hash_table(&table, 7);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         insert_hash_table(&table, data_buf[i], 0);
     }
     hash_table_remove(&table, 4371);

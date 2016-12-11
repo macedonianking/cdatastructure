@@ -18,7 +18,7 @@ void chapter4_9_problem() {
 	struct tree_node_t *root, *ptr;
 
 	root = NULL;
-	for (int i = 0; i < ARRAY_SIZE(data); ++i) {
+	for (int i = 0; i < NARRAY(data); ++i) {
 		root = add_tree_node(data[i], root);
 	}
 

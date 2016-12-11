@@ -441,10 +441,10 @@ void chapter4_7_tutorial() {
     int datas[] = {1, 8, 11, 12, 16, 17, 18, 19, 22, 23, 28, 31, 41, 52, 58, 59, 61};
     struct btree tree;
     init_btree(&tree, 3);
-    for (int i = 0; i < ARRAY_SIZE(datas); ++i) {
+    for (int i = 0; i < NARRAY(datas); ++i) {
         btree_add(datas[i], &tree);
     }
-    for (int i = ARRAY_SIZE(datas) - 1; i >= 0; i--) {
+    for (int i = NARRAY(datas) - 1; i >= 0; i--) {
         btree_del(datas[i], &tree);
     }
     btree_release(&tree);
@@ -455,7 +455,7 @@ void chapter4_36_problem() {
     struct btree tree;
     init_btree(&tree, 3);
 
-    for(int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for(int i = 0; i < NARRAY(data_buf); ++i) {
         btree_add(data_buf[i], &tree);
     }
     btree_del(0, &tree);

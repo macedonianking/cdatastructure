@@ -84,7 +84,7 @@ void chapter5_1_problem_b() {
     struct hash_table table;
     
     init_hash_table(&table, 31);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         add_hash_table_linear(&table, data_buf[i]);
     }
     free_hash_table(&table);
@@ -128,7 +128,7 @@ void chapter5_1_problem_c() {
     int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
 
     init_hash_table(&table, 31);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         add_hash_table_quad(&table, data_buf[i]);
     }
     free_hash_table(&table);
@@ -172,7 +172,7 @@ void chapter5_1_problem_d() {
     int data_buf[] = {4371, 1323, 6173, 4199, 4344, 9679, 1989};
 
     init_hash_table(&table, 31);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         add_hash_table_double_hash(&table, data_buf[i]);
     }
     free_hash_table(&table); 

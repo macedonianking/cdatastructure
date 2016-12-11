@@ -170,7 +170,7 @@ void chapter4_4_avl_problem() {
 	struct avl_tree_node *root;
 
 	root = NULL;
-	for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+	for (int i = 0; i < NARRAY(data_buf); ++i) {
 		root = avl_tree_node_add(root, data_buf[i]);
 	}
 	dump_avl_tree_preorder(root);
@@ -183,7 +183,7 @@ void chapter4_16_avl_problem() {
 	struct avl_tree_node *root;
 
 	root = NULL;
-	for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+	for (int i = 0; i < NARRAY(data_buf); ++i) {
 		root = avl_tree_node_add(root, data_buf[i]);
 	}
 	dump_avl_tree_preorder(root);

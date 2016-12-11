@@ -47,3 +47,10 @@ int next_capacity(int c) {
     }
     return n;
 }
+
+void dump_narray(int *buf, int n) {
+    while (n-- > 0) {
+        printf("%d ", *buf++);
+    }
+    printf("\n");
+}

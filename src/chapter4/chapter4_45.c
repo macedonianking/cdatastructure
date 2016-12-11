@@ -128,10 +128,10 @@ void chapter4_45_problem_b() {
     struct tree_node45 *root;
 
     root = NULL;
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         root = insert_tree_node45(root, data_buf[i]);
     }
-    for (int i = ARRAY_SIZE(data_buf) - 1; i >= 0; --i) {
+    for (int i = NARRAY(data_buf) - 1; i >= 0; --i) {
         root = delete_tree_node45(root, data_buf[i]);
     }
     release_trees45(root);

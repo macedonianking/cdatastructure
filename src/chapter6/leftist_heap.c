@@ -102,7 +102,7 @@ void chapter6_6_tutorial() {
     int data_buf[] = { 10, 12, 1, 14, 6, 5, 8, 15, 3, 9, 7, 4, 11, 13, 2 };
 
     heap = NULL;
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         heap = leftist_heap_enqueue(heap, data_buf[i]);
     }
     dump_leftist_heap_inorder(heap);
@@ -116,10 +116,10 @@ void chapter6_16_problem() {
 
     k1 = NULL;
     k2 = NULL;
-    for (int i = 0; i < ARRAY_SIZE(k1_data); ++i) {
+    for (int i = 0; i < NARRAY(k1_data); ++i) {
         k1 = leftist_heap_enqueue(k1, k1_data[i]);
     }
-    for (int i = 0; i < ARRAY_SIZE(k2_data); ++i) {
+    for (int i = 0; i < NARRAY(k2_data); ++i) {
         k2 = leftist_heap_enqueue(k2, k2_data[i]);   
     }
     k1 = merge(k1, k2);

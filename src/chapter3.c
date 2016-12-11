@@ -587,7 +587,7 @@ void chapter3_13_problem() {
 	DEFINE_LIST_HEAD(head);
 	struct nlist_node *ptr;
 
-	for (int i = 0; i < ARRAY_SIZE(source); ++i) {
+	for (int i = 0; i < NARRAY(source); ++i) {
 		ptr = (struct nlist_node*) malloc(sizeof(struct nlist_node));
 		ptr->data = source[i];
 		list_add_tail(&ptr->node, &head);

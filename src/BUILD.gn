@@ -61,6 +61,10 @@ executable("main") {
     "chapter6/leftist_heap.h",
     "chapter6/binomial_queue.c",
     "chapter6/binomial_queue.h",
+    "chapter7/insertion_sort.c",
+    "chapter7/insertion_sort.h",
+    "chapter7/shell_sort.c",
+    "chapter7/shell_sort.h",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g" ]

@@ -258,7 +258,7 @@ void chapter4_38_problem() {
     struct btree tree;
 
     btree_init(&tree, 3);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         btree_add(data_buf[i], &tree);
     }
     btree_release(&tree);

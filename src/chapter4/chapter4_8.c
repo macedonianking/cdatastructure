@@ -84,7 +84,7 @@ void chapter4_8_problem() {
 	struct ctree_node_t *root;
 
 	root = NULL;
-	for (int i = 0; i < ARRAY_SIZE(data); ++i) {
+	for (int i = 0; i < NARRAY(data); ++i) {
 		root = add_ctree_node_t(data[i][0], data[i][1], root);
 	}
 

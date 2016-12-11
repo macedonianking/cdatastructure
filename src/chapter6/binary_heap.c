@@ -168,7 +168,7 @@ void chapter6_2_a_problem() {
     struct binary_heap heap;
 
     init_binary_head(&heap, 128);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         binary_heap_enqueue(&heap, data_buf[i]);
     }
     free_binary_heap(&heap);
@@ -183,7 +183,7 @@ void chapter6_2_b_problem() {
 
     init_binary_head(&heap, 128);
     memcpy(heap.queue, data_buf, sizeof(data_buf));
-    heap.size = ARRAY_SIZE(data_buf);
+    heap.size = NARRAY(data_buf);
     build_heap(&heap);
     dump_binary_heap_inorder(&heap);
     free_binary_heap(&heap);
@@ -197,7 +197,7 @@ void chapter6_3_problem() {
     struct binary_heap heap;
 
     init_binary_head(&heap, 128);
-    heap.size = ARRAY_SIZE(data_buf);
+    heap.size = NARRAY(data_buf);
     memcpy(heap.queue, data_buf, sizeof(data_buf));
     for (int i = 0; i < 3; ++i) {
         if (heap.size > 0) {
@@ -213,10 +213,10 @@ void chapter6_5_problem() {
     struct binary_heap heap;
 
     init_binary_head(&heap, 128);
-    for (int i = 0; i < ARRAY_SIZE(data_buf); ++i) {
+    for (int i = 0; i < NARRAY(data_buf); ++i) {
         heap.queue[i] = data_buf[i];
     }
-    heap.size = ARRAY_SIZE(data_buf);
+    heap.size = NARRAY(data_buf);
     build_heap(&heap);
     binary_heap_increase_key(&heap, 3, 10);
     binary_heap_decrease_key(&heap, 5, 2);

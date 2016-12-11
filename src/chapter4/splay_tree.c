@@ -113,7 +113,7 @@ void chapter4_23_problem() {
 	int buf[] = { 10, 4, 2, 1, 3, 6, 5, 8, 7, 9, 11, 12, 13 };
 	struct tree_node_t *root = NULL;
 
-	for (int i = 0; i < ARRAY_SIZE(buf); ++i) {
+	for (int i = 0; i < NARRAY(buf); ++i) {
 		root = add_tree_node(buf[i], root);
 	}
 	root = splay_tree_access(3, root);
