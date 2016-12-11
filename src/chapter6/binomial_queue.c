@@ -3,7 +3,7 @@
 #include "list.h"
 #include "util.h"
 #include "macros.h"
-
+#include "log.h"
 
 struct bin_queue_node_t {
     struct list_head node;
@@ -91,6 +91,170 @@ void free_binomial_queue(struct binomial_queue *queue) {
     free(queue->queue);
     queue->queue = NULL;
     queue->capacity = 0;
+}
+
+/**
+ * 检查当前的capacity的值是否合适
+ */
+static void check_binomial_queue_capacity(struct binomial_queue *queue,
+                                          int capacity) {
+    int next;
+    struct bin_queue_node_t **ptr;
+    if (capacity <= queue->capacity) {
+        return;
+    }
+    next = next_capacity(queue->capacity);
+    if (next < capacity) {
+        next = capacity;
+    }
+    ptr = (struct bin_queue_node_t**) realloc(queue->queue, next * sizeof(struct bin_queue_node_t*));
+    if (!ptr) {
+        fatal_error("check_binomial_queue_capacity failed");
+    }
+    for (int i = queue->capacity; i < next; ++i) {
+        ptr[i] = NULL;
+    }
+    queue->queue = ptr;
+    queue->capacity = next;
+}
+
+static void add_binomial_queue(struct binomial_queue *queue, 
+                               struct bin_queue_node_t *node, 
+                               int order) {
+    DCHECK(node && order >= 0);
+    struct bin_queue_node_t *ptr;
+    check_binomial_queue_capacity(queue, order + 1);
+    if (queue->queue[order] == NULL) {
+        queue->queue[order] = node;
+    } else{
+        ptr = queue->queue[order];
+        queue->queue[order] = NULL;
+        node = merge(node, ptr);
+        add_binomial_queue(queue, node, order + 1);
+    }
+}
+
+static int binomial_queue_find_min(struct binomial_queue *queue) {
+    struct bin_queue_node_t *ptr, **min;
+    min = NULL;
+    for (int i = 0; i < queue->capacity; ++i) {
+        ptr = queue->queue[i];
+        if (ptr != NULL && min != NULL && ptr->key < (*min)->key) {
+            min = queue->queue + i;
+        }
+    }
+    return min == NULL ? -1 : min - queue->queue;
+}
+
+int binomial_queue_is_empty(struct binomial_queue *queue) {
+    int is_empty = 1;
+    for (int i = 0; i < queue->capacity && is_empty; ++i) {
+        is_empty = queue->queue[i] == NULL;
+    }
+    return is_empty;
+}
+
+void binomial_queue_enqueue(struct binomial_queue *queue, int key) {
+    struct bin_queue_node_t *node = alloc_bin_queue_node(key);
+    add_binomial_queue(queue, node, 0);
+}
+
+// 取出最小值，将他的子成员放到内部
+int binomial_queue_dequeue(struct binomial_queue *queue) {
+    int min, order;
+    struct bin_queue_node_t *node, *ptr;
+    DCHECK(!binomial_queue_is_empty(queue));
+    min = binomial_queue_find_min(queue);
+    DCHECK(min != -1);
+    
+    node = queue->queue[min];
+    min = node->key;
+    queue->queue[min] = NULL;
+    order = 0;
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &node->list, node) {
+        list_del(&ptr->node);
+        add_binomial_queue(queue, ptr, order);
+        ++order;
+    }
+    free(node);
+
+    return min;   
+}
+
+int binomial_queue_node_percolate_up(struct bin_queue_node_t *node, int key) {
+    if (node == NULL || node->key > key) {
+        return 0;
+    } else if (node->key == key) {
+        return 1;
+    } else {
+        struct bin_queue_node_t *ptr, *dst;
+        int temp;
+        dst = NULL;
+        LIST_FOR_EACH_ENTRY(ptr, &node->list, node) {
+            if (binomial_queue_node_percolate_up(ptr, key)) {
+                dst = ptr;
+                break;
+            }
+        }
+        if (dst != NULL) {
+            temp = node->key;
+            node->key = dst->key;
+            dst->key = temp;
+            return 1;
+        }
+        return 0;
+    }
+}
+
+int binomial_queue_remove(struct binomial_queue *queue, int key) {
+    struct bin_queue_node_t *dst, *ptr;
+    int order, result;
+    dst = NULL;
+    for (int i = 0; i < queue->capacity; ++i) {
+        ptr = queue->queue[i];
+        if (ptr != NULL && binomial_queue_node_percolate_up(ptr, key)) {
+            DCHECK(ptr->key == key);
+            dst = ptr;
+            queue->queue[i] = NULL;
+            break;
+        }
+    }
+    result = 0;
+    if (dst == NULL) {
+        goto out;
+    }
+    result = 1;
+    order = 0;
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &dst->list, node) {
+        list_del(&ptr->node);
+        add_binomial_queue(queue, ptr, order);
+        ++order;
+    }
+    free(dst);
+
+out:
+    return result;
+}
+
+/*
+* Merge two binomial queue
+*/
+void binomial_queue_merge(struct binomial_queue *dst, struct binomial_queue *src) {
+    struct bin_queue_node_t *ptr;
+    for (int i = 0; i < src->capacity; ++i) {
+        ptr = src->queue[i];
+        src->queue[i] = NULL;
+        if (ptr != NULL) {
+            add_binomial_queue(dst, ptr, i);
+        }
+    }
+}
+
+void dump_binomial_queue_inorder(struct binomial_queue *queue) {
+    while (!binomial_queue_is_empty(queue)) {
+        fprintf(stdout, "%d ", binomial_queue_dequeue(queue));
+    }
+    fputc('\n', stdout);
 }
 
 void chapter6_8_tutorial() {
