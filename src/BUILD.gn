@@ -1,16 +1,6 @@
 
 executable("main") {
   sources = [
-    "chapter1.c",
-    "chapter1.h",
-    "chapter10.c",
-    "chapter10.h",
-    "chapter12.c",
-    "chapter12.h",
-    "chapter13.c",
-    "chapter13.h",
-    "chapter3.c",
-    "chapter3.h",
     "config.h",
     "kdebug.h",
     "list.c",
@@ -23,6 +13,10 @@ executable("main") {
     "string_ext.h",
     "util.c",
     "util.h",
+    "chapter1/chapter1.c",
+    "chapter1/chapter1.h",
+    "chapter3/chapter3.c",
+    "chapter3/chapter3.h",
     "chapter4/avl_tree.c",
     "chapter4/avl_tree.h",
     "chapter4/btree.c",
@@ -65,6 +59,14 @@ executable("main") {
     "chapter7/insertion_sort.h",
     "chapter7/shell_sort.c",
     "chapter7/shell_sort.h",
+    "chapter7/heap_sort.c",
+    "chapter7/heap_sort.h",
+    "chapter10/chapter10.c",
+    "chapter10/chapter10.h",
+    "chapter12/chapter12.c",
+    "chapter12/chapter12.h",
+    "chapter13/chapter13.c",
+    "chapter13/chapter13.h",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g" ]
