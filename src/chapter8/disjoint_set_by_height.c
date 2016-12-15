@@ -11,10 +11,12 @@ static void disjoint_set_union(struct disjoint_set *set, int k1, int k2) {
         k1 = k2;
         k2 = t;
     }
-    if (set->queue[k1] == set->queue[k2]) {
-        set->queue[k1] -= 1;
+    if (k1 != k2) {
+        if (set->queue[k1] == set->queue[k2]) {
+            set->queue[k1] -= 1;
+        }
+        set->queue[k2] = k1;
     }
-    set->queue[k2] = k1;
 }
 
 void chapter8_1_problem_c() {
