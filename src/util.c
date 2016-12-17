@@ -29,22 +29,18 @@ int *linear_sequence(int start, int step, int n) {
 int next_capacity(int c) {
     int n = c << 1;
     int bits;
-    
+
     DCHECK(c > 0);
-    if (n < 0) {
-        fatal_error("next_capacity c two large");
-    }
-    bits = 0;
+    bits = 1;
     while (c > 0) {
         bits++;
+        c >>= 1;
     }
-    if (n & (1 << (bits - 1))) {
-        bits++;
+    if (bits > 1 && (n & (1 << (bits - 1)))) {
+        ++bits;
     }
     n = 1 << bits;
-    if (n <= 0) {
-        fatal_error("next_capacity two large");
-    }
+    DCHECK(n > 0);
     return n;
 }
 

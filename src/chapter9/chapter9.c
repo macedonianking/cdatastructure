@@ -3,20 +3,23 @@
 #include <stdlib.h>
 
 #include "macros.h"
+#include "util.h"
 
-void init_graph(struct graph_t *ptr, int capacity) {
-    struct vertex_t *ver;
+static inline void init_vertex(struct vertex_t *ptr) {
+    ptr->indegree = 0;
+    ptr->state = 0;
+    ptr->name = '&';
+    INIT_LIST_HEAD(&ptr->start_list);
+    INIT_LIST_HEAD(&ptr->end_list);
+}
 
-    ptr->capacity = capacity;
-    ptr->size = 0;
-    ptr->queue = (struct vertex_t*) malloc(sizeof(struct vertex_t) * capacity);
-    DCHECK(ptr->queue);
-
-    ver = ptr->queue;
-    for (int i = capacity; i > 0; --i, ++ver) {
-        INIT_LIST_HEAD(&ver->start_list);
-        INIT_LIST_HEAD(&ver->end_list);
-        ver->indegree = 0;
+void init_graph(struct graph_t *graph, int capacity) {
+    graph->capacity = capacity;
+    graph->size = 0;
+    graph->queue = (struct vertex_t*) malloc(sizeof(struct vertex_t) * capacity);
+    DCHECK(graph->queue);
+    for (int i = 0; i < graph->capacity; ++i) {
+        init_vertex(graph->queue + i);
     }
 }
 
@@ -63,4 +66,32 @@ struct g_edge_t* graph_add_edge(struct graph_t *graph, int start, int end) {
     ptr->indegree++;
 
     return edge;
+}
+
+void graph_extend_memory(struct graph_t *graph, int capacity) {
+    struct vertex_t *ptr;
+    if (capacity <= graph->capacity) {
+        capacity = next_capacity(graph->capacity);
+        DCHECK(capacity > 0);    
+    }
+    ptr = (struct vertex_t*) realloc(graph->queue, sizeof(struct vertex_t) * capacity);
+    DCHECK(ptr);
+    for (int i = graph->capacity; i < capacity; ++i) {
+        init_vertex(graph->queue + i);
+    }
+    graph->capacity = capacity;
+    graph->queue = ptr;
+}
+
+int graph_sure_get_vertex_index(struct graph_t *graph, char name) {
+    int k1;
+    k1 = graph_get_vertex_index(graph, name);
+    if (k1 == -1) {
+        if (graph->size == graph->capacity) {
+            graph_extend_memory(graph, -1);
+        }
+        k1 = graph->size;
+        graph->queue[graph->size++].name = name;
+    }
+    return k1;
 }

@@ -1,6 +1,7 @@
 #include "chapter9/topological_sort.h"
 
 #include "chapter9/chapter9.h"
+#include "macros.h"
 
 // 图形的数据
 static struct edge_pair graph_data[] = {
@@ -15,6 +16,12 @@ static struct edge_pair graph_data[] = {
     {4, 7},
     {5, 7},
     {7, 6},
+};
+
+struct edge_pair_weight {
+    char start;
+    char end;
+    int weight;
 };
 
 struct vertex_node_t {
@@ -50,7 +57,7 @@ static void dump_topological_order(struct graph_t *graph) {
     int n;
 
     // 构建列表
-    for (int i = 1; i < graph->size; ++i) {
+    for (int i = 0; i < graph->size; ++i) {
         curr = graph->queue + i;
         curr->state = 1;
         if (!curr->indegree) {
@@ -62,7 +69,7 @@ static void dump_topological_order(struct graph_t *graph) {
     }
 
     // 得到拓扑顺序
-    n = graph->size - 1;
+    n = graph->size;
     while (!list_empty(&zero_queue)) {
         node = list_entry(zero_queue.next, struct vertex_node_t, node);
         list_del(&node->node);
@@ -84,7 +91,7 @@ static void dump_topological_order(struct graph_t *graph) {
     while (!list_empty(&result_queue)) {
         node = list_entry(result_queue.next, struct vertex_node_t, node);
         list_del(&node->node);
-        fprintf(stdout, "%d ", node->k1);
+        fprintf(stdout, "%c ", graph->queue[node->k1].name);
         free(node);
     }
     fputc('\n', stdout);
@@ -103,14 +110,89 @@ out:
 
 void chapter9_2_tutorial() {
     struct graph_t graph;
+    struct edge_pair *pair;
+    int k1, k2;
 
     init_graph(&graph, 10);
-    graph.size = 8;
     for (int i = 0; i < NARRAY(graph_data); ++i) {
-        graph_add_edge(&graph, graph_data[i].k1, graph_data[i].k2);
+        pair = graph_data + i;
+        k1 = graph_sure_get_vertex_index(&graph, '0' + pair->k1);
+        k2 = graph_sure_get_vertex_index(&graph, '0' + pair->k2);
+        DCHECK(k1 != -1 && k2 != -1);
+        graph_add_edge(&graph, k1, k2);
     }
 
     // 输出拓扑顺序
+    dump_topological_order(&graph);
+    free_graph(&graph);
+}
+
+// 输入数据
+// 9.1，
+static struct edge_pair_weight graph_edge_weight[] = {
+    {'A', 'B', 2},
+    {'A', 'E', 2},
+    {'B', 'C', 2},
+    {'C', 't', 4},
+    {'D', 'A', 3},
+    {'D', 'E', 3},
+    {'E', 'C', 2},
+    {'E', 'F', 3},
+    {'E', 'I', 3},
+    {'F', 'C', 1},
+    {'F', 't', 3},
+    {'G', 'D', 2},
+    {'G', 'E', 1},
+    {'G', 'H', 6},
+    {'H', 'E', 2},
+    {'H', 'I', 6},
+    {'I', 'F', 1},
+    {'I', 't', 4},
+    {'s', 'A', 1},
+    {'s', 'D', 4},
+    {'s', 'G', 6},
+};
+
+static void init_graph_vertex_data(struct graph_t *graph) {
+    char name[] = "ABCDEFGHIst";
+    int length = NARRAY(name) - 1;
+    int k1;
+
+    for (int i = 0; i < length; ++i) {
+        k1 = graph_get_vertex_index(graph, name[i]);
+        if (k1 == -1) {
+            if (graph->size == graph->capacity) {
+                graph_extend_memory(graph, -1);
+            }
+            graph->queue[graph->size].name = name[i];
+            ++graph->size;
+        }
+    }
+}
+
+// 初始化图形数据
+static void init_graph_edge_weight_data(struct graph_t *graph) {
+    struct edge_pair_weight *ptr;
+    struct g_edge_t *edge;
+    int k1, k2;
+
+   
+    init_graph_vertex_data(graph);
+    for (int i = 0; i < NARRAY(graph_edge_weight); ++i) {
+        ptr = graph_edge_weight + i;
+        k1 = graph_get_vertex_index(graph, ptr->start);
+        k2 = graph_get_vertex_index(graph, ptr->end);
+        DCHECK(k1 != -1 && k2 != -1);
+        edge = graph_add_edge(graph, k1, k2);
+        edge->weight = ptr->weight;
+    }
+}
+
+void chapter9_1_problem() {
+    struct graph_t graph;
+
+    init_graph(&graph, 12);
+    init_graph_edge_weight_data(&graph);
     dump_topological_order(&graph);
     free_graph(&graph);
 }
