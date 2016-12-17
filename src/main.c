@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chapter8/chapter8.h"
+#include "chapter9/topological_sort.h"
 
 int main(int argc, char **argv) {
-	chapter8_6_problem();
+	chapter9_2_tutorial();
 	return 0;
 }
