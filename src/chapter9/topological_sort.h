@@ -3,5 +3,6 @@
 
 void chapter9_2_tutorial();
 void chapter9_1_problem();
+void chapter9_2_problem();
 
 #endif // CHAPTER9_TOPOLOGICAL_SORT_H

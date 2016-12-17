@@ -81,5 +81,5 @@ executable("main") {
     "chapter13/chapter13.h",
   ]
   include_dirs = ["."]
-  cflags = [ "-std=gnu99", "-g" ]
+  cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
 }
