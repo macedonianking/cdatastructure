@@ -10,6 +10,7 @@ static inline void init_vertex(struct vertex_t *ptr) {
     ptr->indegree = 0;
     ptr->state = 0;
     ptr->name = '&';
+    ptr->distance = -1;
     INIT_LIST_HEAD(&ptr->start_list);
     INIT_LIST_HEAD(&ptr->end_list);
 }

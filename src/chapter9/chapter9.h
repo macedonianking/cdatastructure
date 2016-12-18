@@ -20,6 +20,7 @@ struct vertex_t {
     struct list_head end_list;      // edge end with this vertex
     int indegree;                   // the indegree property of this vertex
     int state;
+    int distance;
     char name;
 };
 

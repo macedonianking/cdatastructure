@@ -75,6 +75,8 @@ executable("main") {
     "chapter9/topological_sort.h",
     "chapter9/chapter9_3_1.c",
     "chapter9/chapter9_3_1.h",
+    "chapter9/chapter9_3_2.c",
+    "chapter9/chapter9_3_2.h",
     "chapter10/chapter10.c",
     "chapter10/chapter10.h",
     "chapter12/chapter12.c",
