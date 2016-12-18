@@ -24,11 +24,6 @@ struct edge_pair_weight {
     int weight;
 };
 
-struct vertex_node_t {
-    struct list_head node;
-    int k1;
-};
-
 // 在删除k1节点后，减少对应的变得边的结束节点的indgree的值, 如果indegree的值位0，那么放入zero_list中
 static void on_remove_vertex(struct graph_t *graph, int k1, struct list_head *zero_list) {
     struct vertex_t *vertex, *end_vertex;
@@ -39,9 +34,7 @@ static void on_remove_vertex(struct graph_t *graph, int k1, struct list_head *ze
     LIST_FOR_EACH_ENTRY(ptr, &vertex->start_list, start_node) {
         end_vertex = graph->queue + ptr->end;
         if (!--end_vertex->indegree) {
-            vertex_node = (struct vertex_node_t*) malloc(sizeof(struct vertex_node_t));
-            vertex_node->k1 = ptr->end;
-            INIT_LIST_HEAD(&vertex_node->node);
+            vertex_node = alloc_vertex_node(ptr->end);
             list_add_tail(&vertex_node->node, zero_list);
         }
     }
@@ -55,9 +48,7 @@ static void collect_all_zero_nodes(struct graph_t *graph, struct list_head *list
         curr = graph->queue + i;
         curr->state = 1;
         if (!curr->indegree) {
-            node = (struct vertex_node_t*) malloc(sizeof(struct vertex_node_t));
-            node->k1 = i;
-            INIT_LIST_HEAD(&node->node);
+            node = alloc_vertex_node(i);
             list_add_tail(&node->node, list);
         }
     }
@@ -73,9 +64,9 @@ static int handle_topological_order(struct graph_t *graph,
         node = list_entry(zero_list->next, struct vertex_node_t, node);
         list_del(&node->node);
         list_add_tail(&node->node, result_list);
-        on_remove_vertex(graph, node->k1, zero_list);
+        on_remove_vertex(graph, node->k, zero_list);
         --n;
-        graph->queue[node->k1].state= 0;
+        graph->queue[node->k].state= 0;
     }
     return n;
 }
@@ -88,7 +79,7 @@ static void output_topological_order(struct graph_t *graph,
     while (!list_empty(list)) {
         node = list_entry(list->next, struct vertex_node_t, node);
         list_del(&node->node);
-        fprintf(stdout, "%c ", graph->queue[node->k1].name);
+        fprintf(stdout, "%c ", graph->queue[node->k].name);
         free(node);
     }
     fputc('\n', stdout);
@@ -223,9 +214,7 @@ static void on_remove_vertex_stack(struct graph_t *graph, int k, struct list_hea
     LIST_FOR_EACH_ENTRY(edge, &node->start_list, start_node) {
         ptr = graph->queue + edge->end;
         if (!--ptr->indegree) {
-            item = (struct vertex_node_t*) malloc(sizeof(struct vertex_node_t));
-            item->k1 = edge->end;
-            INIT_LIST_HEAD(&item->node);
+            item = alloc_vertex_node(edge->end);
             list_add(&item->node, list);
         }
     }
@@ -241,10 +230,10 @@ static int handle_topological_order_stack(struct graph_t *graph,
     n = graph->size;
     while (!list_empty(zero_list)) {
         node = list_entry(zero_list->next, struct vertex_node_t, node);
-        on_remove_vertex_stack(graph, node->k1, zero_list);
+        on_remove_vertex_stack(graph, node->k, zero_list);
         list_del(&node->node);
         list_add_tail(&node->node, dump_list);
-        graph->queue[node->k1].state = 0;
+        graph->queue[node->k].state = 0;
         --n;
     }
     return n;
@@ -268,7 +257,7 @@ static void dump_topological_order_stack(struct graph_t *graph) {
     output_topological_order(graph, &dump_list);
 out:
     release_vertext_node_list(&zero_list);
-    release_vertext_node_list(&zero_list);
+    release_vertext_node_list(&dump_list);
     reset_graph_indegree(graph);
 }
 

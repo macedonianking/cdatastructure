@@ -29,6 +29,13 @@ struct graph_t {
     int capacity;
 };
 
+struct vertex_node_t {
+    struct list_head node;
+    int k;
+};
+
+
+
 // Initialize the graph capacity, allocate memory for the vertex node.
 void init_graph(struct graph_t* graph, int capacity);
 // free memory used by the graph object.
@@ -55,6 +62,10 @@ static inline int graph_get_vertex_index(struct graph_t *graph, char name) {
     return -1;
 }
 
+struct vertex_node_t *alloc_vertex_node(int k);
+void free_vertex_node_list(struct list_head *list);
+
 int graph_sure_get_vertex_index(struct graph_t *graph, char name);
+void graph_add_edge_help(struct graph_t *graph, char start, int n, ...);
 
 #endif // CHAPTER9_CHAPTER9_H

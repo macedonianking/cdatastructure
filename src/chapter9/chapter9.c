@@ -1,5 +1,6 @@
 #include "chapter9/chapter9.h"
 
+#include <stdarg.h>
 #include <stdlib.h>
 
 #include "macros.h"
@@ -23,7 +24,22 @@ void init_graph(struct graph_t *graph, int capacity) {
     }
 }
 
+static void free_graph_vertex(struct vertex_t *vertex) {
+    struct g_edge_t *ptr;
+    DCHECK(vertex);
+    while (!list_empty(&vertex->start_list)) {
+        ptr = list_entry(vertex->start_list.next, struct g_edge_t, start_node);
+        list_del(&ptr->start_node);
+        free(ptr);
+    }
+    INIT_LIST_HEAD(&vertex->start_list);
+    INIT_LIST_HEAD(&vertex->end_list);
+}
+
 void free_graph(struct graph_t *ptr) {
+    for (int i = 0 ; i < ptr->size; ++i) {
+        free_graph_vertex(ptr->queue + i);
+    }
     free(ptr->queue);
     ptr->queue = NULL;
     ptr->capacity = ptr->size = 0;
@@ -94,4 +110,39 @@ int graph_sure_get_vertex_index(struct graph_t *graph, char name) {
         graph->queue[graph->size++].name = name;
     }
     return k1;
+}
+
+void graph_add_edge_help(struct graph_t *graph, char start, int n, ...) {
+    char name;
+    int k1, k2;
+    int weight;
+    struct g_edge_t *edge;
+    
+    k1 = graph_sure_get_vertex_index(graph, start);
+    va_list(_args);
+    va_start(_args, n);
+    while (n-- > 0) {
+        name = va_arg(_args, int);
+        weight = va_arg(_args, int);
+        k2 = graph_sure_get_vertex_index(graph, name);
+        edge = graph_add_edge(graph, k1, k2);
+        edge->weight = weight;
+    }
+    va_end(_args);
+}
+
+struct vertex_node_t *alloc_vertex_node(int k) {
+    struct vertex_node_t *ptr = (struct vertex_node_t*) malloc(sizeof(struct vertex_node_t));
+    INIT_LIST_HEAD(&ptr->node);
+    ptr->k = k;
+    return ptr;
+}
+
+void free_vertex_node_list(struct list_head *list) {
+    struct vertex_node_t *ptr;
+    while (!list_empty(list)) {
+        ptr = list_entry(list->next, struct vertex_node_t, node);
+        list_del(&ptr->node);
+        free(ptr);
+    }
 }
