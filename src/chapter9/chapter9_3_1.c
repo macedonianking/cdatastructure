@@ -106,6 +106,23 @@ void chapter9_3_1_tutorial() {
     free_graph(&graph);
 }
 
-void chapter9_5_b_problem() {
+static void init_graph_data_figure_9_80(struct graph_t *graph) {
+    init_graph(graph, 12);
+    graph_add_edge_help(graph, 'A', 2, 'B', 5, 'C', 3);
+    graph_add_edge_help(graph, 'B', 3, 'G', 1, 'E', 3, 'C', 2);
+    graph_add_edge_help(graph, 'C', 2, 'E', 7, 'D', 7);
+    graph_add_edge_help(graph, 'D', 2, 'A', 2, 'F', 6);
+    graph_add_edge_help(graph, 'E', 2, 'D', 2, 'F', 1);
+    graph_add_edge_help(graph, 'G', 1, 'E', 1);
+}
 
+void chapter9_5_b_problem() {
+    struct graph_t graph;
+    int k;
+
+    init_graph_data_figure_9_80(&graph);
+    k = graph_get_vertex_index(&graph, 'B');
+    DCHECK(k != -1);
+    dump_shortest_path_for_graph(&graph, k);
+    free_graph(&graph);
 }
