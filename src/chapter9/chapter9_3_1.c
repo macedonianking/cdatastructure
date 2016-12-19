@@ -106,7 +106,7 @@ void chapter9_3_1_tutorial() {
     free_graph(&graph);
 }
 
-static void init_graph_data_figure_9_80(struct graph_t *graph) {
+void init_graph_data_figure_9_80(struct graph_t *graph) {
     init_graph(graph, 12);
     graph_add_edge_help(graph, 'A', 2, 'B', 5, 'C', 3);
     graph_add_edge_help(graph, 'B', 3, 'G', 1, 'E', 3, 'C', 2);

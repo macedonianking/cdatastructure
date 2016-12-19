@@ -134,3 +134,17 @@ void chapter9_3_2_tutorial() {
     dump_graph_shortest_path(&graph, s);
     free_graph(&graph);
 }
+
+void init_graph_data_figure_9_80(struct graph_t *graph);
+
+void chapter9_5_a_problem() {
+    struct graph_t graph;
+    int s;
+    
+    init_graph_data_figure_9_80(&graph);
+    s = graph_get_vertex_index(&graph, 'A');
+    DCHECK(s != -1);
+    dijkstra(&graph, s);
+    dump_graph_shortest_path(&graph, s);
+    free_graph(&graph);
+}
