@@ -1,4 +1,4 @@
-#include "chapter4/algorithm4.h"
+#include "chapter4/algorithm4_1.h"
 
 #include "util.h"
 #include "macros.h"
@@ -66,9 +66,52 @@ static void find_maximum_subarray(int *buf, int n, int *outs, int *oute, int *ou
     *outv = out_v;
 }
 
-void algorithm_4_1_tutorial() {
+void algorithm4_1_tutorial() {
     int outs, oute, outv;
     int buf[] = {13, -3, -25, 20, -3, -16, -23, 18, 20, -7, 12, -5, -22, 15, -4, 7};
     find_maximum_subarray(buf, NARRAY(buf), &outs, &oute, &outv);
+    fprintf(stdout, "outs=%d, oute=%d, outv=%d\n", outs, oute, outv);
+}
+
+void algorithm4_1_1_problem() {
+    int buf[10];
+    int outs, oute, outv;
+    
+    for (int i = 0; i < 10; ++i) {
+        buf[i] = -(i + 1);
+    }
+    find_maximum_subarray(buf, NARRAY(buf), &outs, &oute, &outv);
+    fprintf(stdout, "outs=%d, oute=%d, outv=%d\n", outs, oute, outv);
+}
+
+static void find_maximum_subarray_brute_force(int *buf, int n, int *outs, int *oute, int *outv) {
+    int out_s, out_e, out_v;
+    int tmp_v;
+
+    out_s = out_e = 0;
+    out_v = buf[out_s];
+    for (int i = 0; i < n; ++i) {
+        tmp_v = 0;
+        for (int j = i; j < n; ++j) {
+            tmp_v += buf[j];
+            if (tmp_v > out_v) {
+                out_s = i;
+                out_e = j;
+                out_v = tmp_v;
+            }
+        }
+    }
+    *outs = out_s;
+    *oute = out_e;
+    *outv = out_v;
+}
+
+/**
+ * 强制求解的方法,时间复杂度是n^2
+ */
+void algorithm4_1_2_problem() {
+    int outs, oute, outv;
+    int buf[] = {13, -3, -25, 20, -3, -16, -23, 18, 20, -7, 12, -5, -22, 15, -4, 7};
+    find_maximum_subarray_brute_force(buf, NARRAY(buf), &outs, &oute, &outv);
     fprintf(stdout, "outs=%d, oute=%d, outv=%d\n", outs, oute, outv);
 }
