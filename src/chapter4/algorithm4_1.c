@@ -115,3 +115,46 @@ void algorithm4_1_2_problem() {
     find_maximum_subarray_brute_force(buf, NARRAY(buf), &outs, &oute, &outv);
     fprintf(stdout, "outs=%d, oute=%d, outv=%d\n", outs, oute, outv);
 }
+
+static void find_maximum_subarray_linear(int *buf, int n, 
+                                         int *outs, int *oute, int *outv) {
+    int out_s, out_e, out_v;
+    int tmp_s, tmp_v;
+
+    out_s = out_e = 0;
+    out_v = buf[out_s];
+    tmp_s = out_s;
+    tmp_v = out_v;
+
+    for (int i = 1; i < n; ++i) {
+        if (buf[i] >= 0) {
+            if (tmp_v >= 0) {
+                tmp_v += buf[i];
+            } else {
+                tmp_s = i;
+                tmp_v = buf[i];
+            }
+            if (tmp_v > out_v) {
+                out_v = tmp_v;
+                out_s = tmp_s;
+                out_e = i;
+            }
+        } else {
+            tmp_v += buf[i];
+            if (tmp_v < 0) {
+                tmp_v = buf[i];
+                tmp_s = i;
+            }
+        }
+    }
+    *outs = out_s;
+    *oute = out_e;
+    *outv = out_v;
+}
+
+void algorithm4_1_5_problem() {
+    int outs, oute, outv;
+    int buf[] = {13, -3, -25, 20, -3, -16, -23, 18, 20, -7, 12, -5, -22, 15, -4, 7};
+    find_maximum_subarray_linear(buf, NARRAY(buf), &outs, &oute, &outv);
+    fprintf(stdout, "outs=%d, oute=%d, outv=%d\n", outs, oute, outv);
+}
