@@ -49,6 +49,8 @@ executable("main") {
     "chapter4/tree_problem.h",
     "chapter4/algorithm4_1.c",
     "chapter4/algorithm4_1.h",
+    "chapter4/algorithm4_2.c",
+    "chapter4/algorithm4_2.h",
     "chapter5/chapter5.c",
     "chapter5/chapter5.h",
     "chapter5/hash_table_open_addr.c",
