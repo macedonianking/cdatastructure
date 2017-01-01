@@ -65,6 +65,8 @@ executable("main") {
     "chapter6/leftist_heap.h",
     "chapter6/binomial_queue.c",
     "chapter6/binomial_queue.h",
+    "chapter6/algorithm6_2.c",
+    "chapter6/algorithm6_2.h",
     "chapter7/insertion_sort.c",
     "chapter7/insertion_sort.h",
     "chapter7/shell_sort.c",
