@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chapter6/algorithm6_5.h"
+#include "chapter7/algorithm7.h"
 
 int main(int argc, char **argv) {
-	algorithm6_5_1_problem();
+	algorithm_7_1_tutorial();
 	return 0;
 }
