@@ -79,6 +79,8 @@ executable("main") {
     "chapter7/merge_sort.h",
     "chapter7/quick_sort.c",
     "chapter7/quick_sort.h",
+    "chapter7/algorithm7.c",
+    "chapter7/algorithm7.h",
     "chapter8/chapter8.c",
     "chapter8/chapter8.h",
     "chapter8/disjoint_set_by_size.c",
