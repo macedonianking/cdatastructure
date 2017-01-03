@@ -4,6 +4,6 @@
 #include "chapter7/algorithm7.h"
 
 int main(int argc, char **argv) {
-	algorithm_7_1_tutorial();
+	algorithm_7_1_4_problem();
 	return 0;
 }
