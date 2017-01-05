@@ -10,7 +10,7 @@
 #define MAX_BUFFER_SIZE	1024
 #endif // MAX_BUFFER_SIZE
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+#define NARRAY(array) 		(sizeof(array) / sizeof(array[0]))
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -20,5 +20,8 @@
 
 void shuffle(int *data, int n);
 int *linear_sequence(int start, int step, int n);
+int next_capacity(int c);
+
+void dump_narray(int *buf, int n);
 
 #endif // MAIN_UTIL_H

@@ -1,0 +1,21 @@
+
+executable("main") {
+  sources = [
+    "config.h",
+    "kdebug.h",
+    "list.c",
+    "list.h",
+    "log.c",
+    "log.h",
+    "macros.h",
+    "main.c",
+    "string_ext.c",
+    "string_ext.h",
+    "util.c",
+    "util.h",
+    "chapter1/chapter1.c",
+    "chapter1/chapter1.h",
+  ]
+  include_dirs = ["."]
+  cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
+}

@@ -1,0 +1,20 @@
+
+config("default_config") {
+  defines = []
+  if (target_os == "win") {
+    defines += [ "OS_WINDOWS" ]
+  } else if (target_os == "android") {
+    defines += [ "OS_ANDROID" ]
+  } else if (target_os == "mac") {
+    defines += [ "OS_MAC" ]
+  } else if (target_os == "linux") {
+    defines += [ "OS_LINUX" ]
+  } else if (target_os == "posix") {
+    defines += [ "OS_POSIX" ]
+  } else {
+    assert(false, "Not supported platform")
+  }
+  cflags = [ "-Wall", "-Werror=implicit-function-declaration" ]
+  include_dirs = [ "//" ]
+  ldflags = []
+}

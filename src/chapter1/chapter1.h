@@ -1,8 +1,6 @@
-#ifndef EXPERT_C_CHAPTER1_CHAPTER1_H
-#define EXPERT_C_CHAPTER1_CHAPTER1_H
+#ifndef CHAPTER1_CHPATER1_H
+#define CHAPTER1_CHPATER1_H
 
-void chapter1_30_tutorial();
-void chapter1_31_tutorial();
-void chapter1_50_tutorial();
+void chapter1_2_3_problem();
 
 #endif
