@@ -14,7 +14,7 @@ executable("main") {
     "util.c",
     "util.h",
     "chapter1/chapter1.c",
-    "chapter1/chapter1.h",
+    "chapter2/chapter2.c",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]

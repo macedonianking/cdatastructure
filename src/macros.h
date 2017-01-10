@@ -10,7 +10,11 @@
 
 #include <stdio.h>
 
-#define fatal() *(int*)(0) = 0xbaadbeef
+#define fatal() \
+do { \
+    *(int*)(0) = 0xbaadbeef; \
+} while (0)
+
 #define DCHECK(condition) do { \
     if (!(condition)) { \
         fprintf(stderr, "%s:%d DCHECK(%s) failed\n", __FILE__, __LINE__, #condition); \
