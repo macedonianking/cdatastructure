@@ -3,4 +3,6 @@
 
 void chapter1_2_3_problem();
 
+void chapter1_1_problem();
+
 #endif
