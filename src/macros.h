@@ -2,14 +2,11 @@
 #define MAIN_MACROS_H
 
 #ifdef NDEBUG
-
 #define fatal()
 #define DCHECK(condition)
-
 #else
 
 #include <stdio.h>
-
 #define fatal() \
 do { \
     *(int*)(0) = 0xbaadbeef; \
@@ -22,7 +19,13 @@ do { \
         fatal(); \
     } \
 } while (0)
-
 #endif // NDEBUG
+
+#define SWAP(lhs, rhs, tmp) \
+do { \
+	tmp = lhs; \
+	lhs = rhs; \
+	rhs = tmp; \
+} while(0)
 
 #endif // MAIN_MACROS_H
