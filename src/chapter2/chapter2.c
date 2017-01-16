@@ -44,7 +44,7 @@ void chapter2_1_2_problem() {
 }
 
 void chapter2_problem() {
-    chapter2_3_1_tutorial();
+    chapter2_3_problem();
 }
 
 static void selection_sort(int *buf, int n) {
@@ -116,5 +116,30 @@ static void merge_sort(int *buf, int n) {
 void chapter2_3_1_tutorial() {
     int buf[] = {31, 41, 59, 26, 41, 58};
     merge_sort(buf, NARRAY(buf));
+    dump_narray(buf, NARRAY(buf));
+}
+
+void chapter2_3_1_problem() {
+    int buf[] = {3, 41, 52, 26, 38, 57, 9, 49};
+    merge_sort(buf, NARRAY(buf));
+    dump_narray(buf, NARRAY(buf));
+}
+
+static void bubble_sort(int *buf, int n) {
+    int t;
+    for (int i = 0; i < n-1; i++) {
+        for (int j = n-1; j > i; --j) {
+            if (buf[j] < buf[j-1]) {
+                t = buf[j];
+                buf[j] = buf[j-1];
+                buf[j-1] = t;
+            }
+        }
+    }
+}
+
+void chapter2_3_problem() {
+    int buf[] = {3, 41, 52, 26, 38, 57, 9, 49};
+    bubble_sort(buf, NARRAY(buf));
     dump_narray(buf, NARRAY(buf));
 }

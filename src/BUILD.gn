@@ -8,6 +8,7 @@ executable("main") {
     "log.c",
     "log.h",
     "macros.h",
+    "macros.c",
     "main.c",
     "string_ext.c",
     "string_ext.h",
@@ -15,6 +16,7 @@ executable("main") {
     "util.h",
     "chapter1/chapter1.c",
     "chapter2/chapter2.c",
+    "chapter12/chapter12.c",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
