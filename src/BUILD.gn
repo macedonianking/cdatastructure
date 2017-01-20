@@ -16,6 +16,7 @@ executable("main") {
     "util.h",
     "chapter1/chapter1.c",
     "chapter2/chapter2.c",
+    "chapter5/chapter5.c",
     "chapter12/chapter12.c",
   ]
   include_dirs = ["."]

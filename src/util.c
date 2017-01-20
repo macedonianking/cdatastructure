@@ -50,3 +50,18 @@ void dump_narray(int *buf, int n) {
     }
     printf("\n");
 }
+
+/**
+ * 得到整数的位数
+ */
+int getIntegerBits(unsigned int n) {
+    if (n == 0) {
+        return 0;
+    }
+
+    int bits = 1;
+    while (n >>= 1) {
+        ++bits;   
+    }
+    return bits;
+}

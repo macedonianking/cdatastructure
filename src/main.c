@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "chapter12/chapter12.h"
+#include "chapter5/chapter5.h"
 
 int main(int argc, char **argv) {
-	chapter12_main();
+	chapter5_main();
 	return 0;
 }

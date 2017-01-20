@@ -22,6 +22,11 @@ void shuffle(int *data, int n);
 int *linear_sequence(int start, int step, int n);
 int next_capacity(int c);
 
+/**
+ * 获取整数对应的位数
+ */
+int getIntegerBits(unsigned int n);
+
 void dump_narray(int *buf, int n);
 
 #endif // MAIN_UTIL_H
