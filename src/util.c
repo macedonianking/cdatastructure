@@ -6,13 +6,15 @@
 #include "macros.h"
 
 void shuffle(int *data, int n) {
-    int index, temp;
+    int i, t;
 
-    while (--n > 0) {
-        index = rand() % (n + 1);
-        temp = *data;
-        *data = *(data + index);
-        *(data + index) = temp;
+    while (n > 1) {
+        i = rand() % n;
+        --n;
+        t = data[0];
+        data[0] = data[i];
+        data[i] = t;
+        ++data;
     }
 }
 
