@@ -1,7 +1,7 @@
 #ifndef MAIN_MACROS_H
 #define MAIN_MACROS_H
 
-void reportDcheckFailure(const char *file, int lineNumber, const char *assertion);
+void reportDcheckFailure(const char *file, int lineNumber, const char *function, const char *assertion);
 void reportDcheckBacktrace();
 
 #ifdef NDEBUG
@@ -23,13 +23,13 @@ do { \
 
 #define DCHECK(condition) do { \
     if (!(condition)) { \
-        reportDcheckFailure(__FILE__, __LINE__, #condition); \
+        reportDcheckFailure(__FILE__, __LINE__, __FUNCTION__, #condition); \
         CRASH(); \
     } \
 } while (0)
 
 #define DCHECK_NOT_REACH() do { \
-	reportDcheckFailure(__FILE__, __LINE__, "DCHECK_NOT_REACH"); \
+	reportDcheckFailure(__FILE__, __LINE__, __FUNCTION__, "DCHECK_NOT_REACH"); \
 	CRASH(); \
 } while (0)
 #endif // NDEBUG

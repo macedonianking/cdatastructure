@@ -31,6 +31,18 @@ static inline struct rb_node_t *uncle(struct rb_node_t *node) {
     }
 }
 
+static inline void rb_transplant(struct rb_tree *tree, struct rb_node_t *src,
+        struct rb_node_t *dst) {
+    if (src->parent == &tree->nil) {
+        tree->root = dst;
+    } else if (src->parent->left == src) {
+        src->parent->left = dst;
+    } else {
+        src->parent->right = dst;
+    }
+    dst->parent = src->parent;
+}
+
 /**
  * 初始化一颗红黑树
  */
@@ -55,6 +67,38 @@ static inline struct rb_node_t *alloc_rb_node(int key) {
 
 static inline void free_rb_node(struct rb_node_t *node) {
     free(node);
+}
+
+static struct rb_node_t *rb_search(struct rb_tree *tree, int key) {
+    struct rb_node_t *node;
+
+    node = tree->root;
+    while (node != &tree->nil && node->key != key) {
+        if (key < node->key) {
+            node = node->left;
+        } else {
+            node = node->right;
+        }
+    }
+    return node != &tree->nil ? node : NULL;
+}
+
+static inline struct rb_node_t *rb_minimum(struct rb_tree *tree, struct rb_node_t *node) {
+    if (node != &tree->nil) {
+        while (node->left != &tree->nil) {
+            node = node->left;
+        }
+    }
+    return node != &tree->nil ? node : NULL;
+}
+
+static inline struct rb_node_t *rb_maximum(struct rb_tree *tree, struct rb_node_t *node) {
+    if (node != &tree->nil) {
+        while (node->right != &tree->nil) {
+            node = node->right;
+        }
+    }
+    return node != &tree->nil ? node : NULL;
 }
 
 static void free_rb_tree_internal(struct rb_tree *tree, struct rb_node_t *node) {
@@ -191,8 +235,96 @@ static void rb_insert(struct rb_tree *tree, int key) {
     rb_insert_fixup(tree, node);
 }
 
+/**
+ * 修正删除后红黑树的属性
+ */
+static void rb_delete_fixup(struct rb_tree *tree, struct rb_node_t *node) {
+    struct rb_node_t *w;
+    while (node != tree->root && node->color == BLACK) {
+        if (node == node->parent->left) {
+            w = node->parent->right;
+            if (w->color == RED) {
+                node->parent->color = RED;
+                w->color = BLACK;
+                rb_rotate_left(tree, node->parent);
+            } else if (w->left->color == BLACK && w->right->color == BLACK) {
+                w->color = RED;
+                node = node->parent;
+            } else if (w->left->color == RED && w->right->color == BLACK) {
+                w->left->color = BLACK;
+                w->color = RED;
+                rb_rotate_right(tree, w);
+            } else {
+                w->color = node->parent->color;
+                node->parent->color = BLACK;
+                w->right->color = BLACK;
+                rb_rotate_left(tree, node->parent);
+                node = tree->root;
+            }
+        } else {
+            w = node->parent->left;
+            if (w->color == RED) {
+                w->color = BLACK;
+                node->parent->color = RED;
+                rb_rotate_right(tree, node->parent);
+            } else if (w->left->color == BLACK && w->right->color == BLACK) {
+                w->color = RED;
+                node = node->parent;
+            } else if (w->right->color == RED && w->left->color == BLACK) {
+                w->color = RED;
+                w->right->color = BLACK;
+                rb_rotate_left(tree, w);
+            } else {
+                w->color = node->parent->color;
+                node->parent->color = BLACK;
+                w->left->color = BLACK;
+                rb_rotate_right(tree, node->parent);
+                node = tree->root;
+            }
+        }
+    }
+    node->color = BLACK;
+}
+
+/**
+ * 删除节点
+ */
+static void rb_delete_node(struct rb_tree *tree, struct rb_node_t *node) {
+    DCHECK(node);
+    struct rb_node_t *t;
+
+    if (node->left != &tree->nil && node->right != &tree->nil) {
+        t = rb_minimum(tree, node->right);
+        DCHECK(t);
+        node->key = t->key;
+        rb_delete_node(tree, t);
+    } else {
+        t = node->left;
+        if (t == &tree->nil) {
+            t = node->right;
+        }
+        rb_transplant(tree, node, t);
+        if (node->color == BLACK) {
+            /**
+             * 被删除的节点是黑色的节点,才需要重新调整
+             */
+            rb_delete_fixup(tree, t);
+        }
+        free_rb_node(node);
+    }
+}
+
+void rb_delete(struct rb_tree *tree, int key) {
+    struct rb_node_t *node;
+
+    node = rb_search(tree, key);
+    if (node != NULL) {
+        rb_delete_node(tree, node);
+    }
+}
+
 void chapter13_main() {
-    chapter13_3_2_problem();
+    chapter13_4_3_problem();
 }
 
 void chapter13_3_2_problem() {
@@ -202,6 +334,22 @@ void chapter13_3_2_problem() {
     init_rb_tree(&tree);
     for (int i = 0; i < NARRAY(buf); ++i) {
         rb_insert(&tree, buf[i]);
+    }
+
+    free_rb_tree(&tree);
+}
+
+void chapter13_4_3_problem() {
+    int insert_buf[] = {41, 38, 31, 12, 19, 8};
+    int delete_buf[] = {8, 12, 19, 31, 38, 41};
+    struct rb_tree tree;
+
+    init_rb_tree(&tree);
+    for (int i = 0; i < NARRAY(insert_buf); ++i) {
+        rb_insert(&tree, insert_buf[i]);
+    }
+    for (int i = 0; i < NARRAY(delete_buf); ++i) {
+        rb_delete(&tree, delete_buf[i]);
     }
 
     free_rb_tree(&tree);
