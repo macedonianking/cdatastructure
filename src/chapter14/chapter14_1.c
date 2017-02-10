@@ -375,6 +375,51 @@ int chapter14_1_4_problem(struct rb_tree *tree, int key) {
 	return node != &tree->nil ? r : 0;
 }
 
+static inline
+struct rb_node *chapter14_1_5_problem(struct rb_tree *tree, int key, int offset) {
+	int r, i;
+	struct rb_node *node;
+
+	r = 0;
+	node = tree->root;
+	while (node != &tree->nil) {
+		if (key == node->key) {
+			r += node->left->size + 1;
+			break; 
+		} else if (key < node->key) {
+			node = node->left;
+		} else {
+			r += node->left->size + 1;
+			node = node->right;
+		}
+	}
+	if (node == &tree->nil) {
+		return NULL;
+	}
+	i = r + offset;
+
+	while (node != &tree->nil) {
+		if (i == r) {
+			break;
+		} else if (i >= r - node->left->size) {
+			node = node->left;
+			r -= 1;
+		} else if (i <= r + node->right->size) {
+			node = node->right;
+			r += node->right->left->size + 1;
+		} else if (node == tree->root) {
+			node = &tree->nil;
+		} else if (node == node->p->left) {
+			r += node->right->size + 1;
+			node = node->p;
+		} else {
+			r -= node->left->size + 1;
+			node = node->p;
+		}
+	}
+	return node != &tree->nil && i == r ? node : NULL;
+}
+
 void chapter14_1_main() {
 
 }
