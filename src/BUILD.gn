@@ -20,6 +20,7 @@ executable("main") {
     "chapter12/chapter12.c",
     "chapter13/chapter13.c",
     "chapter14/chapter14_1.c",
+    "chapter14/chapter14_2.c",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
