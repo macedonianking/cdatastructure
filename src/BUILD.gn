@@ -22,7 +22,7 @@ executable("main") {
     "chapter14/chapter14_1.c",
     "chapter14/chapter14_2.c",
     "chapter15/chapter15_1.c",
->>>>>>> expert
+    "chapter15/chapter15_2.c",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
