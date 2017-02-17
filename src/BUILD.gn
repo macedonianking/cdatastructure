@@ -1,0 +1,8 @@
+
+executable("main") {
+  sources = [
+    "main.c",
+  ]
+  include_dirs = ["."]
+  cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
+}

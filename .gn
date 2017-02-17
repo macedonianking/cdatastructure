@@ -1,0 +1,3 @@
+# set build config path.
+
+buildconfig = "//build/BUILDCONFIG.gn"
