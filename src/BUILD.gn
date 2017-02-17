@@ -3,6 +3,6 @@ executable("main") {
   sources = [
     "main.c",
   ]
-  include_dirs = ["."]
+  include_dirs = [".", "./include/asm-i386"]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
 }
