@@ -3,6 +3,7 @@ executable("main") {
   sources = [
     "config.h",
     "kdebug.h",
+    "rb_tree.c",
     "list.c",
     "list.h",
     "log.c",
@@ -23,6 +24,7 @@ executable("main") {
     "chapter14/chapter14_2.c",
     "chapter15/chapter15_1.c",
     "chapter15/chapter15_2.c",
+    "chapter15/chapter15_station.c",
   ]
   include_dirs = ["."]
   cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
