@@ -1,0 +1,4 @@
+#ifndef _PGTABLE_2LEVEL_H
+#define _PGTABLE_2LEVEL_H
+
+#endif // _PGTABLE_2LEVEL_H

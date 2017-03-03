@@ -18,12 +18,21 @@ when excepton 14 happened.
 /*
 cr3
 page directory physical address.
+PAE开启的情况下27bits存储Page directory pointer table的地址
+cr3寄存器被修改的是,Local TLB被自动清空
 */
 
 /*
 cr4寄存器
 PSE扩展page开关
 PGE避免经常被使用的page被交换到磁盘
+PAE page address extension地址位数从32位扩展成34位
+*/
+
+/*
+开启PAE
+2-9-9-12的方式
+entry是64bit位的
 */
 
 #endif /* _ASM_I386_REGISTERS_H */

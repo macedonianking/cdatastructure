@@ -22,6 +22,8 @@
 #define PG_Write        4
 
 // User/Supervisor flags
+// 0代表Supervisor
+// 1代表User和Supervisor用户都能访问
 #define PG_User         5
 
 // 控制缓存的方式
@@ -34,6 +36,14 @@
 // 防止被频繁使用的Page被交换到disk.
 // cr4 PGE开启才有效
 #define PG_Global       8
+
+// PCD
+// Page cache disabled.
+#define PG_PCD          9
+
+// PWT
+// page write through.
+#define PG_PWT          10
 
 /*
 Extended pageing.
