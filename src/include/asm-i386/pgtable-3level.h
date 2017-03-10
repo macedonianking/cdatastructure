@@ -14,6 +14,13 @@
 #define pud_bad(x)      0
 #define pud_present(x)  1
 
+static inline void set_pte(pte_t *pteptr, pte_t pteval) {
+    pteptr->pte_high = pteval.pte_high;
+    smb_wmb();
+    pteptr->pte_low = pteval.pte_low;
+}
 
+#define set_pte_atomic(pteptr, pteval) \
+    set_64bit((unsigned long long *)(pteptr), pte_val(pteval))
 
 #endif // _PGTABLE_3LEVEL_H

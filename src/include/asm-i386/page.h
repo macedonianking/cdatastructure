@@ -36,4 +36,12 @@ typedef struct { unsigned long pgprot; } pgprot_t;
 
 #endif // __ASSEMBLY__
 
+#ifdef __ASSEMBLY__
+#define __PAGE_OFFSET   (0xC0000000)
+#else
+#define __PAGE_OFFSET   (0xC0000000UL)
+#endif
+
+#define PAGE_OFFSET     __PAGE_OFFSET
+
 #endif // _I386_PAGE_H
