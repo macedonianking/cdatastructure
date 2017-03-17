@@ -1,0 +1,21 @@
+toolchain("default_toolchain") {
+
+  tool("cc") {
+    depfile = "{{output}}.d"
+    command = "gcc -MMD -MF $depfile -c {{cflags}} {{defines}} {{include_dirs}} -o {{output}} {{source}}"
+    outputs = [
+      "{{source_out_dir}}/{{source_name_part}}.o",
+    ]
+    description = "CC {{source}}"
+  }
+
+  tool("link") {
+    command = "gcc -o {{output}} {{ldflags}} {{inputs}}"
+    description = "LINK {{label}}"
+    default_output_extension = ".exe"
+    outputs = [
+      "{{output_dir}}/{{target_output_name}}.{{output_extension}}"
+    ]
+  }
+
+}

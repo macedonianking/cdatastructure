@@ -10,6 +10,7 @@ declare_args() {
   javac_path = "D:/share/Java/jdk1.8.0_05/bin/javac.exe"
 }
 
+# 设置默认的configs
 _shared_binary_default_config = [ "//build:default_config" ]
 
 set_defaults("executable") {
@@ -22,4 +23,5 @@ set_defaults("shared_library") {
   configs = _shared_binary_default_config
 }
 
+set_sources_assignment_filter(["*_win.cc"])
 set_default_toolchain("//build/tool:gcc")
