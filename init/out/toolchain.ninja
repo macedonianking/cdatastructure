@@ -1,0 +1,12 @@
+rule cc
+  command = gcc -MMD -MF ${out}.d -c ${cflags} ${defines} ${include_dirs} -o ${out} ${in}
+  description = CC ${in}
+  depfile = ${out}.d
+  deps = gcc
+rule link
+  command = gcc -o ${out} ${ldflags} ${in}
+  description = LINK ${label}
+  pool = link_pool
+
+subninja obj/main.ninja
+

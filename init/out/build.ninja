@@ -1,0 +1,20 @@
+rule gn
+  command = D:/share/bin/gn.exe --root=D:/workspace/cdatastructure/init -q gen //out/
+  description = Regenerating ninja files
+
+build build.ninja: gn
+  generator = 1
+  depfile = build.ninja.d
+
+pool link_pool
+  depth = 0
+
+subninja toolchain.ninja
+
+build main: phony /main..exe
+build $:main: phony /main..exe
+
+build all: phony $
+    /main..exe
+
+default all

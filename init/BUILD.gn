@@ -1,0 +1,6 @@
+
+executable("main") {
+  sources = [
+    "src/main.c",
+  ]
+}

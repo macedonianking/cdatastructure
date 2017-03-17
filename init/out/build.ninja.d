@@ -1,0 +1,1 @@
+build.ninja: D:/workspace/cdatastructure/init/BUILD.gn D:/workspace/cdatastructure/init/build/BUILDCONFIG.gn D:/workspace/cdatastructure/init/build/toolchain/BUILD.gn

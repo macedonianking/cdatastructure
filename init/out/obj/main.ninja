@@ -1,0 +1,13 @@
+defines =
+include_dirs =
+cflags =
+label = //$:main
+target_output_name = main
+
+build obj/src/main.o: cc ../src/main.c
+
+build /main..exe: link obj/src/main.o
+  ldflags =
+  libs =
+  output_extension = .exe
+  output_dir = 
