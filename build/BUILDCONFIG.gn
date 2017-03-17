@@ -1,13 +1,13 @@
 if (target_os == "") {
   target_os = host_os
 }
-
 if (current_os == "") {
   current_os = target_os
 }
 
 declare_args() {
-    android_sdk_dir = "D:/android-sdk-windows"
+  android_sdk_dir = "D:/android-sdk-windows"
+  javac_path = "D:/share/Java/jdk1.8.0_05/bin/javac.exe"
 }
 
 _shared_binary_default_config = [ "//build:default_config" ]

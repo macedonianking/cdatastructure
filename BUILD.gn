@@ -12,6 +12,7 @@ copy("main_executable") {
 
 config("main_config") {
   cflags = [ "-g",  "-std=gnu99" ]
+  defines = [ "USE_SDK" ]
 }
 
 action_foreach("gen_hello_source") {
@@ -42,6 +43,8 @@ executable("main") {
     ":gen_hello_source",
     "//hello:hello_shared",
     "//android/public/shell:shell_apk",
+    "//java:main_java",
+    "//java:main_java_test",
   ]
 
   output_extension = "exe"

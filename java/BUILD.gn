@@ -1,0 +1,48 @@
+
+template("main_java_template") {
+  action(target_name) {
+    forward_variables_from(invoker, [ "java_source_dir" ])
+    script = "//build/script/java_compiler.py"
+    sources = exec_script("//build/script/find_all_java_files_under.py",
+                        [ "--dir", rebase_path("$java_source_dir", root_build_dir),
+                          "--relative-dir", rebase_path(".", root_build_dir),
+                        ], "list lines")
+    depsfile = "$target_gen_dir/$target_name/$target_name.d"                     
+    outputs = [
+      "$target_gen_dir/$target_name/$target_name.jar",
+    ]
+    args = [
+      "--out", rebase_path(outputs[0], root_build_dir),
+      "--classes-dir", 
+      rebase_path(target_gen_dir, root_build_dir) + "/$target_name/classes",
+      "--javac-path", javac_path,
+      "--depsfile", rebase_path(depsfile, root_build_dir),
+    ] + rebase_path(sources, root_build_dir)
+  }
+}
+
+action("main_java") {
+  script = "//build/script/java_compiler.py"
+  sources = exec_script("//build/script/find_all_java_files_under.py",
+                        [ "--dir", rebase_path("src", root_build_dir),
+                          "--relative-dir", rebase_path(".", root_build_dir),
+                        ], "list lines")
+  depsfile = "$target_gen_dir/$target_name/$target_name.d"                      
+  outputs = [
+    "$target_gen_dir/$target_name/$target_name.jar",
+    depsfile,
+  ]
+  javac_path_impl = javac_path
+  args = [
+    "--out", rebase_path(outputs[0], root_build_dir),
+    "--classes-dir", 
+    rebase_path(target_gen_dir, root_build_dir) + "/main_java/classes",
+    "--javac-path", javac_path_impl,
+    "--depsfile", rebase_path(depsfile, root_build_dir),
+  ] + rebase_path(sources, root_build_dir)
+  print(get_label_info(":main_java", "target_gen_dir"))
+}
+
+target("main_java_template", "main_java_test") {
+  java_source_dir = "src"  
+}
