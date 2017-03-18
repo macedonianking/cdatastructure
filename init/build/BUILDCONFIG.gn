@@ -1,2 +1,14 @@
+declare_args() {
+  is_debug = true
+}
 
+_default_toolchain_config = "//build:default_toolchain_config"
+set_defaults("executable") {
+  configs = [ _default_toolchain_config ]
+}
+set_defaults("shared_library") {
+  configs = [ _default_toolchain_config ]
+}
+
+# 设置默认的工具链
 set_default_toolchain("//build/toolchain:default_toolchain")

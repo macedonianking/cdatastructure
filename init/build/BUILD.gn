@@ -1,0 +1,8 @@
+
+# 这是默认的配置文件
+config("default_toolchain_config") {
+  cflags = [ "-std=gnu99", "-Wall" ]
+  if (is_debug) {
+    cflags += [ "-g" ]
+  }
+}

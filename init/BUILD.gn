@@ -1,6 +1,38 @@
 
+# 生成main.exe
 executable("main") {
   sources = [
     "src/main.c",
   ]
+  deps = [
+    "//hello:hello_static",
+  ]
+  configs += [
+    "//hello:hello_static_config",
+  ]
+}
+
+# 拷贝main.exe到out目录
+copy("main_copy") {
+  sources = [
+    "$target_out_dir/main.exe"
+  ]
+  outputs = [ "$root_build_dir/{{source_file_part}}", ]
+  deps = [
+    ":main",
+  ]
+}
+
+# 拷贝libhello_shared.dll到out
+copy("main_app") {
+    sources = [
+        "$target_out_dir/hello/libhello_shared.dll",
+    ]
+    outputs = [
+        "$root_build_dir/{{source_file_part}}",
+    ]
+    deps = [
+        ":main_copy",
+        "//hello:hello_shared",
+    ]
 }

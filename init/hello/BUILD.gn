@@ -1,7 +1,27 @@
 
+
+config("hello_shared_config") {
+    include_dirs = [ ".", ]
+    libs = [ "hello_shared", ]
+    lib_dirs = [ "$target_out_dir", ]
+}
+
+shared_library("hello_shared") {
+    sources = [
+        "hello.c",
+        "hello.h",
+    ]
+}
+
+config("hello_static_config") {
+    include_dirs = [
+        ".",
+    ]
+}
+
 static_library("hello_static") {
-  sources = [
-    "hello.c",
-    "hello.h",
-  ]
+    sources = [
+        "hello.c",
+        "hello.h",
+    ]
 }

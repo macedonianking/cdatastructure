@@ -1,21 +1,69 @@
 toolchain("default_toolchain") {
 
+  lib_prefix = "-l"
+  lib_dir_prefix = "-L"
+  ar_path = rebase_path("//build/script/gen_static_library.py", root_out_dir)
+
+# 编译源文件成中间文件
   tool("cc") {
     depfile = "{{output}}.d"
-    command = "gcc -MMD -MF $depfile -c {{cflags}} {{defines}} {{include_dirs}} -o {{output}} {{source}}"
+    depsformat = "gcc"
+    command = "gcc -MMD -MF $depfile -c {{cflags}} {{cflags_c}} {{defines}} {{include_dirs}} -o {{output}} {{source}}"
     outputs = [
-      "{{source_out_dir}}/{{source_name_part}}.o",
+      "{{source_out_dir}}/{{label_name}}{{source_name_part}}.o",
     ]
     description = "CC {{source}}"
   }
 
+# 生成静态库
+  tool("alink") {
+    outfile = "{{target_out_dir}}/{{target_output_name}}{{output_extension}}"
+    command = "python $ar_path --ar ar -o {{output}} --args rcs {{inputs}}"
+    description = "ALINK {{label}}"
+    default_output_extension = ".a"
+    output_prefix = "lib"
+    outputs = [
+      outfile,
+    ]
+  }
+
+# 链接生成动态库
+  tool("solink") {
+    command = "gcc -shared -fPIC {{ldflags}} -o {{output}} {{inputs}}"
+    description = "SOLINK {{label}}"
+    default_output_dir = "{{target_out_dir}}"
+    default_output_extension = ".dll"
+    output_prefix = "lib"
+    outputs = [
+      "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+    ]
+  }
+
+# 链接生成.exe文件的工具
   tool("link") {
-    command = "gcc -o {{output}} {{ldflags}} {{inputs}}"
+    lib_switch = lib_prefix
+    lib_dir_switch = lib_dir_prefix
+    rspfile = "{{output}}.rsp"
+    rspfile_content = "{{inputs}}"
+    command = "gcc {{ldflags}} @$rspfile -o {{output}} {{libs}}"
     description = "LINK {{label}}"
+    default_output_dir = "{{target_out_dir}}"
     default_output_extension = ".exe"
     outputs = [
-      "{{output_dir}}/{{target_output_name}}.{{output_extension}}"
+      "{{output_dir}}/{{target_output_name}}{{output_extension}}"
     ]
+  }
+
+# 拷贝文件
+  tool("copy") {
+    command = "cp -rf {{source}} {{output}}"
+    description = "COPY {{label}}"
+  }
+
+# 打时间标签
+  tool("stamp") {
+    command = "touch {{output}}"
+    description = "TOUCH {{label}}"
   }
 
 }
