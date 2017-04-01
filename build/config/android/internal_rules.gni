@@ -1,0 +1,6 @@
+import("//build/config/android/config.gni")
+
+# write_build_config模板
+template("write_build_config") {
+  type = invoker.type
+}

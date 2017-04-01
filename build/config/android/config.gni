@@ -1,0 +1,88 @@
+# 添加android的编译项的一些参数声明
+
+if (is_android) {
+    assert(rebase_path("//", root_build_dir) == "../",
+        "root_build_dir is wrong. eg //out/Debug.")
+
+    # 是否存在//clang文件夹
+    has_chrome_android_internal = exec_script("//build/dir_exists.py",
+                                              [ rebase_path("//clang") ],
+                                              "string") == "True"
+
+    # 设置变量default_android_ndk_root, defualt_android_ndk_version, default_android_ndk_major_version                                        
+    if (!defined(default_android_ndk_root)) {
+        default_android_ndk_root = "//third_party/android_tools/ndk"
+        default_android_ndk_version = "r12b"
+        default_android_ndk_major_version = "12"
+    } else {
+        assert(defined(default_android_ndk_version))
+        assert(defined(default_android_ndk_major_version))
+    }
+
+    # 设置变量default_android_sdk_root, default_android_sdk_version
+    # default_android_sdk_build_tools_version
+    if (!defined(default_android_sdk_root)) {
+        default_android_sdk_root = "//third_party/android_tools/sdk"
+        default_android_sdk_version = "23"
+        default_android_sdk_build_tools_version = "23.0.1"
+    } else {
+        assert(defined(default_android_sdk_version))
+        assert(defined(default_android_sdk_build_tools_version))
+    }
+
+    # 设置变量default_lint_android_sdk_root
+    # 和default_lint_android_sdk_version
+    if (!defined(default_lint_android_sdk_root)) {
+        default_lint_android_sdk_root = "//third_party/android_tools/sdk"
+        default_lint_android_sdk_version = "23"
+    } else {
+        assert(defined(default_lint_android_sdk_version))
+    }
+
+    if (!defined(default_android_keystore_path)) {
+        default_android_keystore_path = "//build/android/ant/chromium-debug.keystore"
+        default_android_keystore_name = "chromiumdebugkey"
+        default_android_keystore_password = "chromium"
+    }
+
+    declare_args() {
+        android_ndk_root = default_android_ndk_root
+        android_ndk_version = default_android_ndk_version
+        android_ndk_major_version = default_android_ndk_major_version
+
+        android_sdk_root = default_android_sdk_root
+        android_sdk_version = default_android_sdk_version
+        android_sdk_build_tools_version = default_android_sdk_build_tools_version
+
+        lint_android_sdk_root = default_lint_android_sdk_root
+        lint_android_sdk_version= default_lint_android_sdk_version
+
+        android_libcpp_lib_dir = ""
+
+        android_default_version_code = "1"
+        android_default_version_name = "Developer build"
+
+        android_keystore_path = default_android_keystore_path
+        android_keystore_name = default_android_keystore_name
+        android_keystore_password = default_android_keystore_password
+
+        run_findbugs = false
+        findbugs_verbose = false
+
+        proguard_verbose = false
+        is_java_debug = is_debug
+
+        enable_cremental_javac = false
+
+        use_order_profiling = false
+        build_apk_secondary_abi = false
+    }
+
+    android_sdk = "${android_sdk_root}/platforms/android-${android_sdk_version}"
+    android_sdk_tools = "${android_sdk_root}/tools"
+    android_sdk_build_tools = "${android_sdk_root}/build-tools/${android_sdk_build_tools_version}"
+
+    android_sdk_jar = "${android_sdk}/android.jar"
+    zipalign_path = "${android_sdk_build_tools}/zipalign"
+}
+
