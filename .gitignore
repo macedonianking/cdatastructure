@@ -1,1 +1,4 @@
 /out
+*.sublime-workspace
+.ninja_deps
+*.exe
