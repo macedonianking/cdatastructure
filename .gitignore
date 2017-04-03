@@ -2,3 +2,4 @@
 *.sublime-workspace
 .ninja_deps
 *.exe
+**/__pycache__

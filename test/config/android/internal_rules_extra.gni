@@ -2,61 +2,6 @@ import("//build/config/android/config.gni")
 
 assert(is_android)
 
-# 白名单
-_java_target_whitelist = [
-  "*:*_java",
-  "*:*_javalib",
-  "*:*_java_*",  # e.g. java_test_support
-  "*:java",
-  "*:junit",
-  "*:junit_*",
-  "*:*_junit_*",
-  "*:*javatests",
-  "*:*_assets",
-  "*android*:assets",
-  "*:*_apk_*resources",
-  "*android*:resources",
-  "*:*_resources",
-  "*:*_grd",
-  "*:*locale_paks",
-
-  # TODO(agrieve): Rename targets below to match above patterns.
-  "*android_webview/glue:glue",
-  "//build/android/pylib/device/commands:chromium_commands",
-  "//build/android/rezip:rezip",
-  "//chrome/test/android/cast_emulator:cast_emulator",
-  "//components/cronet/android:cronet_api",
-  "//components/cronet/android:cronet_javadoc_classpath",
-  "//components/policy:app_restrictions_resources",
-  "//device/battery/android:battery_monitor_android",
-  "//device/vibration/android:vibration_manager_android",
-  "//mojo/public/java:bindings",
-  "//mojo/public/java:system",
-  "//third_party/android_tools:emma_device",
-  "//third_party/cardboard-java:cardboard-java",
-  "//third_party/custom_tabs_client:custom_tabs_client_shared_lib",
-  "//third_party/custom_tabs_client:custom_tabs_support_lib",
-  "//third_party/errorprone:chromium_errorprone",
-  "//third_party/haha:haha",
-  "//third_party/junit:hamcrest",
-  "//third_party/netty4:netty_all",
-  "//third_party/netty-tcnative:netty-tcnative",
-  "//third_party/robolectric:android-all-4.3_r2-robolectric-0",
-  "//third_party/robolectric:android-all-5.0.0_r2-robolectric-1",
-  "//third_party/robolectric:json-20080701",
-  "//third_party/robolectric:tagsoup-1.2",
-  "//third_party/robolectric:shadows-core-3.0-18",
-  "//third_party/robolectric:shadows-core-3.0-21",
-  "//third_party/robolectric:shadows-multidex-3.0",
-]
-
-# 黑名单
-_java_target_blacklist = [
-  "//chrome:packed_resources",
-  "//remoting/android:remoting_android_raw_resources",
-  "*:*_unpack_aar",
-]
-
 # 写入build_config文件
 template("write_build_config_extra") {
 
@@ -65,36 +10,55 @@ template("write_build_config_extra") {
     print(invoker.possible_config_deps)
   }
 
-  _config_deps_paths = []
-  forward_variables_from(invoker, [ "possible_config_deps" ])
-  if (defined(possible_config_deps)) {
-    foreach(_dep, possible_config_deps) {
-      _target_label = get_label_info(_dep, "label_no_toolchain")
-      _target_build_config_label = "${_target_label}__build_config"
-      _target_gen_dir = get_label_info(_target_build_config_label, "target_gen_dir")
-      _target_name = get_label_info(_target_label, "name")
-      _target_build_config_path = "$_target_gen_dir/$_target_name.build_config"
-      _config_deps_paths += [ _target_build_config_path ]
-    }
-  }
-  print(_config_deps_paths)
+  assert(type == "android_apk" || type == "java_library"
+        || type == "android_resources")
 
   action(target_name) {
     forward_variables_from(invoker, [ "deps" ])
+    if (!defined(deps)) {
+      deps = []
+    }
+
+    _deps_configs = []
+    forward_variables_from(invoker, [ "possible_config_deps" ])
+    if (defined(possible_config_deps)) {
+      foreach(_dep, possible_config_deps) {
+        _target_label = get_label_info(_dep, "label_no_toolchain")
+        _target_build_config_label = "${_target_label}__build_config"
+        deps += [ _target_build_config_label ]
+        _target_gen_dir = get_label_info(_target_build_config_label, "target_gen_dir")
+        _target_name = get_label_info(_target_label, "name")
+        _target_build_config_path = "$_target_gen_dir/$_target_name.build_config"
+        _deps_configs += [ _target_build_config_path ]
+      }
+    }
+    _rebased_deps_configs = rebase_path(_deps_configs, root_build_dir)
+
+    _required_android = type == "java_library"
+
 
     set_sources_assignment_filter([])
     build_config = invoker.build_config
+    depfile = "$target_gen_dir/$target_name.d"
 
-    script = "//test/script/write_build_config_extra.py"
+    script = "//test/script/write_build_config.py"
     sources = []
     outputs = [
         build_config,
     ]
 
     args = [
-      rebase_path(outputs[0], root_build_dir),
       "--type", type,
+      "--build-config", rebase_path(build_config, root_build_dir),
+      "--depfile", rebase_path(depfile, root_build_dir),
+      "--deps-config=$_rebased_deps_configs",
     ]
+
+    if (_required_android) {
+      args += [
+        "--required-android",
+      ]
+    }
   }
 
 }
@@ -161,6 +125,48 @@ template("java_library_extra") {
     args = [
       "--jar", rebase_path(outputs[0], root_build_dir),
       "--build-config", rebase_path(build_config, root_build_dir),
+    ]
+  }
+}
+
+template("android_resources_extra") {
+  type = "android_resources"
+  build_config = "$target_gen_dir/$target_name.build_config"
+
+  # 生成android_resources.build_config
+  _build_config_target_name = "${target_name}__build_config"
+  _build_config_target_label = ":${_build_config_target_name}"
+  target("write_build_config_extra", _build_config_target_name) {
+    forward_variables_from(invoker, [ "deps", "possible_config_deps" ])
+  }
+
+  action(target_name) {
+    forward_variables_from(invoker, 
+                           [ 
+                            "deps", 
+                            "android_resources_dir",
+                            "android_manifest"
+                           ])
+    output_resources_zip = "$target_gen_dir/$target_name/resources.zip"
+    output_resources_R_jar = "$target_gen_dir/$target_name/R.jar"
+
+    depfile = "$target_gen_dir/$target_name.d"
+    script = "//test/script/android_resources.py"
+    sources = android_resources_dir
+    outputs = [
+      output_resources_zip,
+      output_resources_R_jar
+    ]
+
+    _rebased_android_resources_dir = rebase_path(android_resources_dir, 
+        root_build_dir)
+
+    args = [
+      "--resources-zip", rebase_path(output_resources_zip, root_build_dir),
+      "--R-jar", rebase_path(output_resources_R_jar, root_build_dir),
+      "--resources-dir=$_rebased_android_resources_dir",
+      "--depfile", rebase_path(depfile, root_build_dir),
+      "--manifest", rebase_path(android_manifest, root_build_dir),
     ]
   }
 }
