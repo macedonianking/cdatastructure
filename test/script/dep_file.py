@@ -12,7 +12,7 @@ class DepfileWriter:
         print("%s:" % (destfile), file = self._M_file)
         pass;
 
-    def add(self, *argv):
+    def add(self, argv):
         """Add argv paths to the depfile.
         *argv:  The paths to be writen to the depfile file.
         """
@@ -35,6 +35,6 @@ def createDepFile(path, destFile, argv):
     """创建依赖文件
     """
     writer = DepfileWriter(path, destFile)
-    writer.add(*argv)
+    writer.add(argv)
     writer.close()
     pass
