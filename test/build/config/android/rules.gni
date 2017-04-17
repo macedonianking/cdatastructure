@@ -1,0 +1,56 @@
+import("//build/config/android/config.gni")
+import("//build/config/android/internal_rules.gni")
+
+assert(is_android)
+
+template("android_resources") {
+  type = "android_resources"
+  
+  base_path = "${target_gen_dir}/${target_name}"
+  zip_path = base_path + ".resources.zip"
+  srcjar_path = base_path + ".srcjar"
+  r_text_path = base_path + "_R.txt"
+  build_config = base_path + ".build_config"
+
+  build_config_target_name = "${target_name}__build_config"
+  process_resources_target_name = "${target_name}__process_resources"
+
+  write_build_config(build_config_target_name) {
+    forward_variables_from(invoker, 
+                          [
+                            "testonly",
+                            "deps",
+                            "resource_dirs",
+                            "android_manifest",
+                          ])
+    if (!defined(deps)) {
+      deps = []
+    }
+    possible_config_deps = deps
+    assert(defined(resource_dirs))
+    resources_zip = zip_path
+  }
+
+  process_resources(process_resources_target_name) {
+    forward_variables_from(invoker, 
+                          [
+                            "deps",
+                            "android_manifest",
+                            "custom_package",
+                            "resource_dirs",
+                            "v14_skip",
+                          ])
+    if (!defined(deps)) {
+      deps = []
+    }  
+    deps += [
+      ":${build_config_target_name}",
+    ]
+  }
+
+  group(target_name) {
+    deps = [
+      ":${process_resources_target_name}",
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+
+assert(is_android)
+
+declare_args() {
+  android_sdk_root = "//third_party/android_tools/sdk"
+  android_sdk_version = "23"
+  android_sdk_build_tools_version = "23.0.1"
+}
+
+android_sdk = "${android_sdk_root}/platforms/android-${android_sdk_version}"
+android_sdk_tools = "${android_sdk_root}/tools"
+android_sdk_build_tools = "${android_sdk_root}/build-tools/${android_sdk_build_tools_version}"
+
+android_sdk_jar = "${android_sdk}/android.jar"
+zipalign_path = "${android_sdk_build_tools}/zipalign"

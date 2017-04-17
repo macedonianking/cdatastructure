@@ -1,0 +1,10 @@
+import("//build/config/android/config.gni")
+import("//build/config/android/internal_rules.gni")
+
+compile_java("print_java") {
+  java_files = [
+    "src/com/oppo/main/Main.java",
+  ]
+  jar_path = "$target_out_dir/print_java.jar"
+  classpath = []
+}

@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//build/config/android/config.gni")
-
 executable("hello") {
   sources = [
     "hello.cc",
@@ -30,12 +28,3 @@ static_library("hello_static") {
     "hello_static.h",
   ]
 }
-
-group("main") {
-  deps = [
-    "//build/config/android:main",
-    "//test/config:all",
-  ]
-}
-
-

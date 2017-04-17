@@ -1,0 +1,35 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+if (target_os == "") {
+  target_os = "android"
+}
+if (target_cpu == "") {
+  target_cpu = host_cpu
+}
+if (current_cpu == "") {
+  current_cpu = target_cpu
+}
+if (current_os == "") {
+  current_os = target_os
+}
+
+declare_args() {
+  is_debug = true
+}
+
+if (target_os == "android") {
+  is_android = true
+}
+else {
+  is_android = false
+}
+
+if (host_os == "win") {
+  executable_suffix = ".exe"
+} else {
+  executable_suffix = ""
+}
+
+set_default_toolchain("//build/config/toolchain:gcc")

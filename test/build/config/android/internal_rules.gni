@@ -1,0 +1,182 @@
+import("//build/config/android/config.gni")
+
+rebased_android_sdk_jar = rebase_path(android_sdk_jar, root_build_dir)
+rebased_android_sdk_build_tools =
+              rebase_path(android_sdk_build_tools, root_build_dir)
+android_default_aapt_path = "$rebased_android_sdk_build_tools/aapt${executable_suffix}"
+
+# 生成*.build_config文件
+template("write_build_config") {
+  type = invoker.type
+
+  action(target_name) {
+    script = "//build/android/gyp/write_build_config.py"
+
+    forward_variables_from(invoker, 
+                        [ 
+                          "testonly",
+                          "possible_config_deps",
+                          "deps",
+                          "build_config",
+                        ])
+    if (!defined(possible_config_deps)) {
+      possible_config_deps = []
+    }
+    if (!defined(deps)) {
+      deps = []
+    }
+
+    direct_deps_configs = []
+    foreach(dep, possible_config_deps) {
+      _target = get_label_info(dep, "label_no_toolchain")
+      _target_name = get_label_info(_target, "name")
+      _target_build_config = "${_target}__build_config"
+      deps += [ _target_build_config ]
+      _target_build_config_path = get_label_info(_target, "target_gen_dir") 
+        + "${_target_name}.build_config"
+      direct_deps_configs += [ _target_build_config ]
+    }
+
+    rebased_direct_deps_configs = rebase_path(direct_deps_configs, root_build_dir)
+    rebased_build_config = rebase_path(build_config, root_build_dir)
+
+    sources = [] + direct_deps_configs
+    outputs = [
+      build_config,
+    ]
+
+    args = [
+      "--type",
+      type,
+      "--build-config",
+      rebased_build_config,
+      "--deps-configs=$rebased_direct_deps_configs",
+    ]
+
+    if (type == "android_resources") {
+      assert(defined(invoker.resources_zip))
+      args += [
+        "--resources-zip",
+        rebase_path(invoker.resources_zip, root_build_dir)
+      ]
+      assert(defined(invoker.resource_dirs))
+      rebased_resource_dirs = rebase_path(invoker.resource_dirs, root_build_dir)
+      args += [
+        "--resource-dirs=$rebased_resource_dirs",
+      ]
+      if (defined(invoker.android_manifest)) {
+        args += [
+          "--android-manifest",
+          rebase_path(invoker.android_manifest, root_build_dir)
+        ]
+      }
+    }
+  }
+
+}
+
+# 生成资源包
+template("process_resources") {
+  
+  zip_path = invoker.zip_path
+  srcjar_path = invoker.srcjar_path
+  r_text_path = invoker.r_text_path
+  android_manifest = invoker.android_manifest
+  build_config = invoker.build_config
+
+  action(target_name) {
+    forward_variables_from(invoker, 
+                          [
+                            "deps",
+                            "visibility",
+                          ])
+    script = "//build/android/gyp/process_resources.py"
+    outputs = [
+      zip_path,
+      srcjar_path,
+      r_text_path,
+    ]
+    inputs = [
+      build_config,
+      android_manifest,
+    ]
+
+    depfile = "$target_gen_dir/$target_name.d"
+
+    _rebased_all_resource_dirs = rebase_path(invoker.resource_dirs, root_build_dir)
+    _rebased_android_sdk_jar = rebased_android_sdk_jar
+    _android_aapt_path = android_default_aapt_path
+    _rebased_android_manifest = rebase_path(android_manifest, root_build_dir)
+    rebase_build_config = rebase_path(build_config, root_build_dir)
+
+    args = [
+      "--depfile",
+      rebase_path(depfile, root_build_dir),
+      "--resource-dirs=$_rebased_all_resource_dirs",
+      "--resource-zip-out",
+        rebase_path(zip_path, root_build_dir),
+      "--srcjar-out",
+      rebase_path(srcjar_path, root_build_dir),
+      "--android-sdk-jar",
+      _rebased_android_sdk_jar,
+      "--aapt-path",
+      _android_aapt_path,
+      "--android-manifest",
+      _rebased_android_manifest,
+      "--dependencies-res-zips=@FileArg($rebase_build_config:resources:dependency_zips)",
+    ]
+
+    # 跳过一些强制性的检查，如用paddingStart代码paddingLeft
+    if (defined(invoker.v14_skip) && invoker.v14_skip) {
+      args += [ "--v14-skip" ]
+    }
+  }
+
+}
+
+# 编译java文件的目标
+template("compile_java") {
+  set_sources_assignment_filter([])
+  forward_variables_from(invoker, [ "testonly" ])
+
+  assert(defined(invoker.jar_path))
+
+  _javac_target_name = "${target_name}__javac"
+  _final_target_name = target_name
+
+  # 生成的jar的路径
+  _javac_jar_path = invoker.jar_path
+
+  action(_javac_target_name) {
+    script="//build/android/gyp/javac.py"
+    depfile = "$target_gen_dir/$target_name.d"
+
+    outputs = [
+      _javac_jar_path,
+      _javac_jar_path + ".md5.stamp",
+    ]
+
+    sources = invoker.java_files
+
+    _rebased_jar_path = rebase_path(_javac_jar_path, root_build_dir)
+    _rebased_dep_file = rebase_path(depfile, root_build_dir)
+    _rebased_classpath = rebase_path(invoker.classpath, root_build_dir)
+
+    args = [
+      "--depfile",
+      _rebased_dep_file,
+      "--jar-path",
+      _rebased_jar_path,
+      "--classpath=$_rebased_classpath",
+    ]
+
+    args += rebase_path(sources, root_build_dir)
+  }
+
+  # 最终目标
+  group(_final_target_name) {
+    deps = [
+      ":$_javac_target_name",
+    ]
+  }
+}
