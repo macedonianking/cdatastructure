@@ -54,3 +54,9 @@ template("android_resources") {
     ]
   }
 }
+
+template("java_library") {
+  java_library_impl(target_name) {
+    forward_variables_from(invoker, "*")
+  }
+}

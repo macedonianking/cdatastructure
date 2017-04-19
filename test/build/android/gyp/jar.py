@@ -58,10 +58,10 @@ def Jar(class_files, classes_dir, jar_path, manifest_file=None,
       empty_file = os.path.join(classes_dir, '.empty')
       build_utils.Touch(empty_file)
       jar_cmd.append(os.path.relpath(empty_file, jar_cwd))
-    build_utils.CheckOutput(jar_cmd, cwd=jar_cwd)
+  build_utils.CheckOutput(jar_cmd, cwd=jar_cwd)
 
-    # Zeros out timestamps so that builds are hermetic.
-    build_utils.MergeZips(jar_path, [tmp_jar.name])
+  # Zeros out timestamps so that builds are hermetic.
+  build_utils.MergeZips(jar_path, [tmp_jar.name])
 
 
 def JarDirectory(classes_dir, jar_path, manifest_file=None, predicate=None,

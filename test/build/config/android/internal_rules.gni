@@ -70,6 +70,31 @@ template("write_build_config") {
           rebase_path(invoker.android_manifest, root_build_dir)
         ]
       }
+    } else if (type == "java_library" || type == "java_binary") {
+      assert(defined(invoker.supports_android) && defined(invoker.supports_android))
+      if (defined(invoker.java_sources_file)) {
+        args += [
+          "--java-sources-file",
+          rebase_path(invoker.java_sources_file, root_build_dir),
+        ]
+      }
+
+      if (defined(invoker.jar_path)) {
+        args += [
+          "--jar-path",
+          rebase_path(invoker.jar_path, root_build_dir),
+        ]
+      }
+      if (invoker.supports_android) {
+        args += [
+          "--supports-android",
+        ]
+      }
+      if (invoker.requires_android) {
+        args += [
+          "--requires-android",
+        ]
+      }
     }
   }
 
@@ -117,6 +142,8 @@ template("process_resources") {
         rebase_path(zip_path, root_build_dir),
       "--srcjar-out",
       rebase_path(srcjar_path, root_build_dir),
+      "--r-text-out",
+      rebase_path(r_text_path, root_build_dir),
       "--android-sdk-jar",
       _rebased_android_sdk_jar,
       "--aapt-path",
@@ -141,6 +168,15 @@ template("compile_java") {
 
   assert(defined(invoker.jar_path))
 
+  _build_config = invoker.build_config
+  _rebased_build_config = rebase_path(_build_config, root_build_dir)
+  assert([ _rebased_build_config ] != [])
+
+  _java_srcjars = []
+  if (defined(invoker.srcjars)) {
+    _java_srcjars += invoker.srcjars
+  }
+
   _javac_target_name = "${target_name}__javac"
   _final_target_name = target_name
 
@@ -148,6 +184,12 @@ template("compile_java") {
   _javac_jar_path = invoker.jar_path
 
   action(_javac_target_name) {
+    forward_variables_from(invoker, 
+                           [
+                            "testonly",
+                            "deps",
+                           ])
+
     script="//build/android/gyp/javac.py"
     depfile = "$target_gen_dir/$target_name.d"
 
@@ -161,16 +203,31 @@ template("compile_java") {
     _rebased_jar_path = rebase_path(_javac_jar_path, root_build_dir)
     _rebased_dep_file = rebase_path(depfile, root_build_dir)
     _rebased_classpath = rebase_path(invoker.classpath, root_build_dir)
+    _rebased_java_srcjars = rebase_path(_java_srcjars, root_build_dir)
 
     args = [
       "--depfile",
       _rebased_dep_file,
       "--jar-path",
       _rebased_jar_path,
+      "--java-srcjars=$_rebased_java_srcjars",
       "--classpath=$_rebased_classpath",
     ]
 
-    args += rebase_path(sources, root_build_dir)
+    if (defined(invoker.requires_android) && invoker.requires_android) {
+      args += [
+        "--requires-android"
+      ]
+    }
+    if (defined(invoker.supports_android) && invoker.supports_android) {
+      args += [
+        "--supports-android"
+      ]
+    }
+
+    if (invoker.java_files != []) {
+      args += [ "@" + rebase_path(invoker.java_sources_file, root_build_dir) ]
+    }
   }
 
   # 最终目标
@@ -178,5 +235,97 @@ template("compile_java") {
     deps = [
       ":$_javac_target_name",
     ]
+  }
+}
+
+template("java_library_impl") {
+  # testonly属性设置到所有的目标
+  set_sources_assignment_filter([])
+  forward_variables_from(invoker, [ "testonly" ])
+
+  assert(defined(invoker.java_files) || defined(invoker.srcjars) ||
+         defined(invoker.srcjars_deps))
+  _final_deps = []
+  _base_path = "$target_gen_dir/$target_name"
+
+  _jar_name = target_name
+  if (defined(invoker.jar_name)) {
+    _jar_name = invoker.jar_name
+  }
+  target_dir_name = get_label_info(":$target_name", "dir")
+  _jar_path = "$root_out_dir/lib.java$target_dir_name/$_jar_name.jar"
+  if (defined(invoker.jar_path)) {
+    _jar_path = invoker.jar_path
+  }
+
+  _java_files = []
+  if (defined(invoker.java_files)) {
+    _java_files += invoker.java_files
+  }
+
+  if (_java_files != []) {
+    # 源文件的列表
+    _java_sources_file = "$_base_path.source"
+    write_file(_java_sources_file, rebase_path(_java_files, root_build_dir))
+  }
+
+  _supports_android = defined(invoker.supports_android) && invoker.supports_android
+  _requires_android = defined(invoker.requires_android) && invoker.requires_android
+  if (_supports_android) {
+    _dex_path = "$_base_path.dex.jar"
+    if (defined(invoker.dex_path)) {
+      _dex_path = invoker.dex_path
+    }
+  }
+
+  _template_name = target_name
+  _accumulated_deps = []
+
+  # write_build_config目标的名字
+  _build_config_target_name = "${_template_name}__build_config"
+  # .build_config文件的路径
+  _build_config = "$_base_path.build_config"
+
+  _accumulated_deps += [ ":$_build_config_target_name" ]
+  write_build_config(_build_config_target_name) {
+    if (defined(invoker.is_java_binary) && invoker.is_java_binary) {
+      type = "java_binary"
+    } else {
+      type = "java_library"
+    }
+    requires_android = _requires_android
+    supports_android = _supports_android
+    build_config = _build_config
+    java_sources_file = _java_sources_file
+    jar_path = _jar_path
+  }
+
+  _srcjars = []
+  if (defined(invoker.srcjars)) {
+    _srcjars = invoker.srcjars
+  }
+
+  _compile_jar_target = "${target_name}__compile_java"
+  _final_deps += [ ":$_compile_jar_target" ]
+  compile_java(_compile_jar_target) {
+    forward_variables_from(invoker, 
+                          [
+                            "additional_files",
+                            "classpath",
+                          ])
+    deps = _accumulated_deps
+    jar_path = _jar_path
+    java_files = _java_files
+    if (_java_files != []) {
+      java_sources_file = _java_sources_file
+    }
+    build_config = _build_config
+    srcjars = _srcjars
+    supports_android = _supports_android
+    requires_android = _requires_android
+  }
+
+  group(target_name) {
+    public_deps = _final_deps
   }
 }

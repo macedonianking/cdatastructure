@@ -1,10 +1,16 @@
 import("//build/config/android/config.gni")
 import("//build/config/android/internal_rules.gni")
+import("//build/config/android/rules.gni")
 
-compile_java("print_java") {
+# 便于java库
+java_library("print_java") {
   java_files = [
     "src/com/oppo/main/Main.java",
   ]
-  jar_path = "$target_out_dir/print_java.jar"
+  srcjars = [
+    "guava-14.0.1.jar"
+  ]
   classpath = []
+  requires_android=false
+  supports_android=false
 }

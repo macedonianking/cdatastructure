@@ -30,7 +30,7 @@ import gn_helpers
 COLORAMA_ROOT = os.path.join(host_paths.DIR_SOURCE_ROOT,
                              'third_party', 'colorama', 'src')
 # aapt should ignore OWNERS files in addition the default ignore pattern.
-AAPT_IGNORE_PATTERN = ('!OWNERS:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:' +
+AAPT_IGNORE_PATTERN = ('!OWNERS:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:' + 
                        '!CVS:!thumbs.db:!picasa.ini:!*~:!*.d.stamp')
 HERMETIC_TIMESTAMP = (2001, 1, 1, 0, 0, 0)
 _HERMETIC_FILE_ATTR = (0644 << 16L)
@@ -200,11 +200,10 @@ def IsDeviceReady():
 
 
 def CheckZipPath(name):
-  if os.path.normpath(name) != name:
-    raise Exception('Non-canonical zip path: %s' % name)
-  if os.path.isabs(name):
-    raise Exception('Absolute zip path: %s' % name)
-
+#     if os.path.normpath(name) != name:
+#         raise Exception('Non-canonical zip path: %s' % name)
+    if os.path.isabs(name):
+        raise Exception('Absolute zip path: %s' % name)
 
 def IsSymlink(zip_file, name):
   zi = zip_file.getinfo(name)
@@ -268,7 +267,7 @@ def AddToZipHermetic(zip_file, zip_path, src_path=None, data=None,
 
   if src_path and os.path.islink(src_path):
     zipinfo.filename = zip_path
-    zipinfo.external_attr |= stat.S_IFLNK << 16L # mark as a symlink
+    zipinfo.external_attr |= stat.S_IFLNK << 16L  # mark as a symlink
     zip_file.writestr(zipinfo, os.readlink(src_path))
     return
 
