@@ -1,0 +1,32 @@
+
+config("compiler") {
+  cflags = [ "-std=gnu99", 
+             "-Werror",
+           ]
+  configs = []
+  if (is_android) {
+    configs += [ "//build/config/android:compiler", ]
+  }
+}
+
+config("static_library") {
+  cflags = []
+}
+
+config("shared_library") {
+  cflags = []
+  if (host_os != "win") {
+    cflags += [ "-fPIC" ]
+  }
+  
+  ldflags = [ "-shared" ]
+}
+
+config("debug") {
+  cflags = [ "-g",
+           ]
+}
+
+config("release") {
+  cflags = []
+}

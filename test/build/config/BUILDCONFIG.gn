@@ -21,15 +21,47 @@ declare_args() {
 
 if (target_os == "android") {
   is_android = true
+  is_win = false
 }
 else {
   is_android = false
+  is_win = false
 }
 
-if (host_os == "win") {
-  executable_suffix = ".exe"
+_default_toolchain_name = "//build/config/toolchain:gcc"
+if (is_android) {
+  _default_toolchain_name = "//build/toolchain/android:mingw_x64"
+}
+
+set_default_toolchain(_default_toolchain_name)
+
+_default_toolchain_configs = [ "//build/config/compiler:compiler",
+                             ]
+
+_default_shared_library_configs = _default_toolchain_configs
+_default_shared_library_configs += [
+          "//build/config/compiler:shared_library",
+        ]
+
+_default_static_library_configs = _default_toolchain_configs
+_default_static_library_configs += [
+    "//build/config/compiler:static_library",
+  ]
+
+if (is_debug) {
+  _default_static_library_configs += [ "//build/config/compiler:debug" ]
+  _default_shared_library_configs += [ "//build/config/compiler:debug" ]
 } else {
-  executable_suffix = ""
+  _default_static_library_configs += [ "//build/config/compiler:release" ]
+  _default_shared_library_configs += [ "//build/config/compiler:release" ]
 }
 
-set_default_toolchain("//build/config/toolchain:gcc")
+set_defaults("static_library") {
+  configs = _default_static_library_configs
+}
+
+set_defaults("shared_library") {
+  configs = _default_shared_library_configs
+}
+
+

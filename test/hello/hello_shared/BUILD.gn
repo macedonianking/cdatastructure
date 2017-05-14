@@ -1,0 +1,47 @@
+
+
+shared_library("hello_shared") {
+  sources = [
+    "hello_shared.c",
+    "hello_shared.h",
+  ]
+
+  defines = [ "HELLO_SHARED_IMPLEMENTATION" ]
+
+  all_dependent_configs = [
+    ":hello_shared_config",
+  ]
+}
+
+config("hello_shared_config") {
+  include_dirs = [
+    ".",
+  ]
+}
+
+copy("hello_shared_dep") {
+  sources = [
+    "$root_build_dir/libhello_shared.dll",
+  ]
+  outputs = [
+    "$root_build_dir/libhelloshared.dll",
+  ]
+  deps = [
+    ":hello_shared",
+  ]
+  public_configs = [
+    ":hello_shared_dep_config",
+  ]
+}
+
+config("hello_shared_dep_config") {
+  include_dirs = [
+    "."
+  ]
+  libs = [
+    "helloshared",
+  ]
+  lib_dirs = [
+    "$root_build_dir",
+  ]
+}

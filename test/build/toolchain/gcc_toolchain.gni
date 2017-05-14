@@ -1,0 +1,111 @@
+# 设置使用的默认的gcc_toolchain的模板
+
+template("gcc_toolchain") {
+  assert(defined(invoker.cc), "gcc_toolchain() must set a \"cc\" variable.")
+  assert(defined(invoker.ar), "gcc_toolchain() must set a \"ar\" variable.")
+  assert(defined(invoker.ld), "gcc_toolchain() must set a \"ld\" variable.")
+
+  cc = invoker.cc
+  ar = invoker.ar
+  ld = invoker.ld
+  forward_variables_from(invoker, 
+                         [ "toolchain_args_current_os",
+                           "toolchain_args_current_cpu",
+                           "shlib_extension",
+                           "static_lib_extension",
+                           "executable_extension",
+                         ]
+                        )
+  assert(defined(toolchain_args_current_cpu))
+  assert(defined(toolchain_args_current_os))
+  assert(defined(shlib_extension))
+  assert(defined(static_lib_extension))
+  assert(defined(executable_extension))
+
+  toolchain(target_name) {
+    # 目标文件的子目录
+    object_subdir = "{{target_out_dir}}/{{label_name}}"
+
+    lib_switch = "-l"
+    lib_dir_switch = "-L"
+
+    tool ("cc") {
+      depfile = "{{output}}.d"
+      command = "$cc -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_c}} -c {{source}} -o {{output}}"
+      depsformat = "gcc"
+      description = "CC {{output}}"
+      outputs = [
+        "$object_subdir/{{source_name_part}}.o",
+      ]
+    }
+
+    tool("alink") {
+      afile_name = "{{target_output_name}}{{output_extension}}"
+      command = "$ar crsD {{output}} {{inputs}}"
+      description = "ALINK $afile_name"
+      outputs = [
+        "{{output_dir}}/$afile_name",
+      ]
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = static_lib_extension
+      output_prefix = "lib"
+    }
+
+    tool("solink") {
+      soname = "{{target_output_name}}{{output_extension}}"
+      sofile = "{{output_dir}}/$soname"
+
+      unstripped_sofile = sofile
+
+      cmds = "$ld {{ldflags}}"
+      cmds += " -o $unstripped_sofile"
+      cmds += " {{inputs}} "
+      cmds += " -Wl,-soname,$soname"
+      cmds += " -Wl,--whole-archive"
+      cmds += " {{libs}} {{solibs}} "
+      cmds += " -Wl,--no-whole-archive"
+
+      command = "$cmds"
+      description = "SOLINK $soname"
+      outputs = [
+        "$sofile",
+      ]
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = shlib_extension
+      output_prefix = "lib"
+    }
+
+    tool("link") {
+      cmds = "$ld {{ldflags}}"
+      cmds += " -o {{output}}"
+      cmds += " {{inputs}}"
+      cmds += " {{libs}}"
+      command = "$cmds"
+      description = "LINK {{inputs}}"
+      outputs = [
+        "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+      ]
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = executable_extension
+    }
+
+    tool("stamp") {
+      command = "touch {{output}}"
+      description = "STAMP {{output}}"
+    }
+
+    tool("copy") {
+      command = "cp -f {{source}} {{output}}"
+      description = "COPY {{output}}"
+    }
+
+    toolchain_args() {
+      current_cpu = toolchain_args_current_cpu
+      current_os = toolchain_args_current_os
+    }
+  }
+}
+

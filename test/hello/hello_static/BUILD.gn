@@ -1,0 +1,17 @@
+
+static_library("hello_static") {
+  sources = [
+    "hello_static.c",
+    "hello_static.h",
+  ]
+
+  public_configs = [
+    ":hello_static_config",
+  ]
+}
+
+config("hello_static_config") {
+  include_dirs = [
+    ".",
+  ]
+}

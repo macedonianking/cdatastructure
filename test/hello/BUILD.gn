@@ -2,8 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-group("main") {
+executable("hello") {
+  sources = [
+    "hello.c",
+  ]
+
   deps = [
-    "hello:hello",
+    "hello_shared:hello_shared_dep",
+    "hello_static:hello_static",
   ]
 }
+
+
