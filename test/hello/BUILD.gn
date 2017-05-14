@@ -8,7 +8,7 @@ executable("hello") {
   ]
 
   deps = [
-    "hello_shared:hello_shared_dep",
+    "hello_shared:hello_shared",
     "hello_static:hello_static",
   ]
 }

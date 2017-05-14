@@ -83,7 +83,7 @@ template("gcc_toolchain") {
       cmds += " {{inputs}}"
       cmds += " {{libs}}"
       command = "$cmds"
-      description = "LINK {{inputs}}"
+      description = "LINK {{label_name}}"
       outputs = [
         "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       ]

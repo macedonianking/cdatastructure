@@ -1,0 +1,52 @@
+
+template("shared_lib") {
+
+  _shared_library_target_name = "${target_name}__impl_"
+  _solib_name = get_label_info(":$target_name", "name")
+
+  assert(defined(invoker.shlib_ext), 
+         "shared_lib() must specify a \"solib_ext\" variable")
+  _shlib_ext = invoker.shlib_ext
+  _solib_filename = "lib${_solib_name}${_shlib_ext}"
+
+  shared_library(_shared_library_target_name) {
+    forward_variables_from(invoker, "*",
+                           [ "shared_lib_dependent_configs" 
+                           ])
+    output_dir = "$target_out_dir"
+    output_name = _solib_name
+  }
+
+  copy(target_name) {
+    forward_variables_from(invoker, 
+                           [ "deps",
+                             "public_deps",
+                             "all_dependent_configs",
+                             "public_configs",
+                           ])
+    _source_target_out_dir = get_label_info(":${_shared_library_target_name}", "target_out_dir")
+
+    if (!defined(deps)) {
+      deps = []
+    }
+
+    if (!defined(public_configs)) {
+      public_configs = []
+    }
+    if (defined(invoker.shared_lib_dependent_configs)) {
+      public_configs += invoker.shared_lib_dependent_configs
+    }
+
+    deps += [
+      ":$_shared_library_target_name",
+    ]
+
+    sources = [
+      "$_source_target_out_dir/$_solib_filename",
+    ]
+
+    outputs = [
+      "$root_out_dir/$_solib_filename",
+    ]
+  }
+}
