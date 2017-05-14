@@ -1,8 +1,14 @@
 
 config("compiler") {
-  cflags = [ "-std=gnu99", 
-             "-Werror",
-           ]
+  cflags = [ 
+    "-Werror",
+  ]
+  cflags_c = [
+    "-std=gnu99",
+  ]
+  cflags_cc = [
+    "-std=c++0x",
+  ]
   configs = []
   if (is_android) {
     configs += [ "//build/config/android:compiler", ]

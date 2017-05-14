@@ -5,6 +5,7 @@ template("android_mingw_gcc_toolchain") {
       forward_variables_from(invoker, ["toolchain_args_current_cpu"])
       toolchain_args_current_os = "android"
       cc = "gcc"
+      cxx = "g++"
       ar = "ar"
       ld = "gcc"
 

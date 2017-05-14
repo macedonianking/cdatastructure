@@ -2,10 +2,12 @@
 
 template("gcc_toolchain") {
   assert(defined(invoker.cc), "gcc_toolchain() must set a \"cc\" variable.")
+  assert(defined(invoker.cxx), "gcc_toolchain() must set a \"cxx\" variable.")
   assert(defined(invoker.ar), "gcc_toolchain() must set a \"ar\" variable.")
   assert(defined(invoker.ld), "gcc_toolchain() must set a \"ld\" variable.")
 
   cc = invoker.cc
+  cxx = invoker.cxx
   ar = invoker.ar
   ld = invoker.ld
   forward_variables_from(invoker, 
@@ -34,6 +36,16 @@ template("gcc_toolchain") {
       command = "$cc -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_c}} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       description = "CC {{output}}"
+      outputs = [
+        "$object_subdir/{{source_name_part}}.o",
+      ]
+    }
+
+    tool ("cxx") {
+      depfile = "{{output}}.d"
+      command = "$cxx -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_c}} -c {{source}} -o {{output}}"
+      depsformat = "gcc"
+      description = "CXX {{output}}"
       outputs = [
         "$object_subdir/{{source_name_part}}.o",
       ]
