@@ -53,7 +53,14 @@ template("gcc_toolchain") {
 
     tool("alink") {
       afile_name = "{{target_output_name}}{{output_extension}}"
-      command = "$ar crsD {{output}} {{inputs}}"
+      ar_wrapper = rebase_path("//build/toolchain/gcc_ar_wrapper.py", root_build_dir)
+      cmd = "$python_path $ar_wrapper"
+      cmd += " --ar=\"$ar\""
+      cmd += " --output=\"{{output}}\""
+      cmd += " {{arflags}}"
+      cmd += " rcsD"
+      cmd += " {{inputs}}"
+      command = "$cmd"
       description = "ALINK $afile_name"
       outputs = [
         "{{output_dir}}/$afile_name",

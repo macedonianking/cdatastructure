@@ -6,7 +6,6 @@ shared_lib("print_hello") {
     "print_hello.h",
   ]
 
-  libs = [ "stdc++" ]
   defines = [ "PRINT_HELLO_IMPLEMENTATION" ]
   shared_lib_dependent_configs = [ ":print_hello_config" ]
   shlib_ext = ".dll"
