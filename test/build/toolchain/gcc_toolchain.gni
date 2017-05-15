@@ -7,11 +7,14 @@ template("gcc_toolchain") {
   assert(defined(invoker.cxx), "gcc_toolchain() must set a \"cxx\" variable.")
   assert(defined(invoker.ar), "gcc_toolchain() must set a \"ar\" variable.")
   assert(defined(invoker.ld), "gcc_toolchain() must set a \"ld\" variable.")
+  assert(defined(invoker.nm), "gcc_toolchain() must set a \"nm\" variable.")
+
 
   cc = invoker.cc
   cxx = invoker.cxx
   ar = invoker.ar
   ld = invoker.ld
+  nm = invoker.nm
   forward_variables_from(invoker, 
                          [ "toolchain_args_current_os",
                            "toolchain_args_current_cpu",
@@ -89,16 +92,27 @@ template("gcc_toolchain") {
 
       unstripped_sofile = sofile
 
-      cmds = "$ld {{ldflags}}"
-      cmds += " -o $unstripped_sofile"
-      cmds += " {{inputs}}"
-      cmds += " -Wl,-soname,$soname"
-      cmds += " -Wl,--whole-archive"
-      cmds += " {{libs}} {{solibs}} "
-      cmds += " -Wl,--no-whole-archive"
+      link_command = "$ld {{ldflags}}"
+      link_command += " -o $unstripped_sofile"
+      link_command += " -Wl,-soname,$soname"
+      link_command += " -Wl,--whole-archive"
+      link_command += " {{inputs}} {{solibs}} "
+      link_command += " -Wl,--no-whole-archive"
+      link_command += " {{libs}}"
+
+      tocfile = "{{output_dir}}/$soname.TOC"
+
+      solink_wrapper = rebase_path("//build/toolchain/gcc_solink_wrapper.py")
+      cmds = "$python_path \"$solink_wrapper\""
+      cmds += " --nm=\"$nm\""
+      cmds += " --tocfile=\"$tocfile\""
+      cmds += " --soname=\"$soname\""
+      cmds += " --sofile=\"$unstripped_sofile\""
+      cmds += " --output=\"$sofile\""
+      cmds += " -- \"$link_command\""
 
       command = "$cmds"
-      description = "SOLINK $soname"
+      description = "SOLINK $sofile"
       outputs = [
         "$sofile",
       ]

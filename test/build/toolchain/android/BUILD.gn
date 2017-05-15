@@ -8,6 +8,7 @@ template("android_mingw_gcc_toolchain") {
       cxx = "g++"
       ar = "ar"
       ld = "g++"
+      nm = "nm"
 
       shlib_extension = ".dll"
       static_lib_extension = ".a"
