@@ -5,10 +5,10 @@ Created on 2017年5月14日
 '''
 import argparse
 import os.path
+import subprocess
 import sys
 
 import wrapper_utils
-import subprocess
 
 
 def main():
@@ -17,6 +17,8 @@ def main():
     parser.add_argument("--ar",
                         required=True,
                         help="The ar binary to run.")
+    parser.add_argument("--depfile",
+                        help="The depfile path.")
     parser.add_argument("--output",
                         required=True,
                         help="Output archive file.")
@@ -51,7 +53,17 @@ def main():
                 raise
         pass
 
-    return subprocess.call(command, universal_newlines=True)
+    return_code = subprocess.call(command, universal_newlines=True)
+    if return_code:
+        return return_code
+
+    if options.depfile:
+        # 忽略掉.rsp文件，应为rsp文件在任务执行完毕后被删除
+        inputs = options.inputs
+        inputs = [v for v in inputs if not (v.startswith("@") and v.endswith(".rsp"))]
+        wrapper_utils.WriteDepfile(options.depfile, options.output, inputs=inputs,
+                                   add_pydep=True)
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

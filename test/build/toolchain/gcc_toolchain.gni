@@ -1,5 +1,7 @@
 # 设置使用的默认的gcc_toolchain的模板
 
+import ("//build/config/android/config.gni")
+
 template("gcc_toolchain") {
   assert(defined(invoker.cc), "gcc_toolchain() must set a \"cc\" variable.")
   assert(defined(invoker.cxx), "gcc_toolchain() must set a \"cxx\" variable.")
@@ -54,14 +56,24 @@ template("gcc_toolchain") {
     tool("alink") {
       afile_name = "{{target_output_name}}{{output_extension}}"
       ar_wrapper = rebase_path("//build/toolchain/gcc_ar_wrapper.py", root_build_dir)
+      whitelist_flags = ""
+      if (enable_resource_whitelist_generation) {
+        whitelist_flags = " --resource-whitelist=\"{{output}}.whitelist\""
+      }
+
+      depfile = "{{output}}.d"
+      rspfile = "{{output}}.rsp"
       cmd = "$python_path $ar_wrapper"
-      cmd += " --ar=\"$ar\""
+      cmd += " --depfile=\"$depfile\""
+      cmd += " --ar=\"$ar\"${whitelist_flags}"
       cmd += " --output=\"{{output}}\""
       cmd += " {{arflags}}"
       cmd += " rcsD"
-      cmd += " {{inputs}}"
+      cmd += " @\"${rspfile}\""
       command = "$cmd"
-      description = "ALINK $afile_name"
+      depsformat = "gcc"
+      rspfile_content = "{{inputs}}"
+      description = "ALINK {{label}}"
       outputs = [
         "{{output_dir}}/$afile_name",
       ]
@@ -79,7 +91,7 @@ template("gcc_toolchain") {
 
       cmds = "$ld {{ldflags}}"
       cmds += " -o $unstripped_sofile"
-      cmds += " {{inputs}} "
+      cmds += " {{inputs}}"
       cmds += " -Wl,-soname,$soname"
       cmds += " -Wl,--whole-archive"
       cmds += " {{libs}} {{solibs}} "
@@ -102,7 +114,7 @@ template("gcc_toolchain") {
       cmds += " {{inputs}}"
       cmds += " {{libs}}"
       command = "$cmds"
-      description = "LINK {{label_name}}"
+      description = "LINK {{label}}"
       outputs = [
         "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       ]
