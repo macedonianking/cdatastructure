@@ -115,7 +115,10 @@ template("gcc_toolchain") {
       description = "SOLINK $sofile"
       outputs = [
         "$sofile",
+        "$tocfile",
       ]
+      link_output = "$sofile"
+      depend_output = "$tocfile"
 
       default_output_dir = "{{root_out_dir}}"
       default_output_extension = shlib_extension
@@ -127,6 +130,7 @@ template("gcc_toolchain") {
       cmds += " -o {{output}}"
       cmds += " {{inputs}}"
       cmds += " {{libs}}"
+      cmds += " {{solibs}}"
       command = "$cmds"
       description = "LINK {{label}}"
       outputs = [

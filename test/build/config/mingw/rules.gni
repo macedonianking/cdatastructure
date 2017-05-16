@@ -1,0 +1,14 @@
+
+template("mingw_write_file") {
+
+  action(target_name) {
+    forward_variables_from(invoker,
+                           "*")
+    script = "//build/script/write_file.py"
+    args = [
+      "--output", 
+      rebase_path(outputs[0], root_build_dir),
+    ]
+  }
+
+}

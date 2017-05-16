@@ -2,16 +2,28 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/mingw/rules.gni")
+
 executable("hello") {
   sources = [
     "hello.c",
+    "$target_gen_dir/test.txt",
   ]
 
   deps = [
     "hello_shared:hello_shared",
     "hello_static:hello_static",
     "print_hello:print_hello",
+    ":test",
+  ]
+
+  configs = [
+    "hello_shared:hello_shared_config",
   ]
 }
 
-
+mingw_write_file("test") {
+  outputs = [
+    "$target_gen_dir/test.txt",
+  ]
+}
