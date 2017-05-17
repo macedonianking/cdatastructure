@@ -7,3 +7,4 @@
 *.pyc
 /target/out
 /test/.settings
+/test/.idea

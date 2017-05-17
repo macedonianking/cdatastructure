@@ -128,9 +128,11 @@ template("gcc_toolchain") {
     tool("link") {
       cmds = "$ld {{ldflags}}"
       cmds += " -o {{output}}"
+      cmds += " -Wl,--start-group"
       cmds += " {{inputs}}"
-      cmds += " {{libs}}"
       cmds += " {{solibs}}"
+      cmds += " -Wl,--end-group"
+      cmds += " {{libs}}"
       command = "$cmds"
       description = "LINK {{label}}"
       outputs = [
