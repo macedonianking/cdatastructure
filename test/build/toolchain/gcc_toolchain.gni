@@ -133,6 +133,7 @@ template("gcc_toolchain") {
       cmds += " {{solibs}}"
       cmds += " -Wl,--end-group"
       cmds += " {{libs}}"
+      cmds += " {{solibs}}"
       command = "$cmds"
       description = "LINK {{label}}"
       outputs = [

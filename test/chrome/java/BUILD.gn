@@ -1,0 +1,23 @@
+import("//build/config/android/internal_rules.gni")
+
+
+write_build_config("read_mode_java__build_config") {
+  type = "java_library"
+  build_config = "$target_gen_dir/read_mode_java.build_config"
+
+  jar_path = "$target_out_dir/read_mode_java.jar"
+}
+
+write_build_config("download_manager_java__build_config") {
+  type = "java_library"
+  build_config = "$target_gen_dir/download_manager.build_config"
+
+  jar_path = "$target_out_dir/download_manager.jar"
+}
+
+group("chromium_java") {
+  deps = [
+    ":read_mode_java__build_config",
+    ":download_manager_java__build_config",
+  ]
+}
