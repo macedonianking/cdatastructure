@@ -159,6 +159,11 @@ template("gcc_toolchain") {
       current_cpu = toolchain_args_current_cpu
       current_os = toolchain_args_current_os
     }
+
+    forward_variables_from(invoker, 
+                           [
+                            "deps",
+                           ])
   }
 }
 

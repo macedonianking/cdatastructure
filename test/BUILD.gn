@@ -6,6 +6,5 @@ group("main") {
   deps = [
     "hello:hello",
     "chrome/java:chromium_java",
-    "third_party/ijar:ijar",
   ]
 }

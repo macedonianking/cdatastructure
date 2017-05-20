@@ -1,0 +1,15 @@
+
+if (host_toolchain == current_toolchain) {
+  copy("toolchain_prepare") {
+    sources = [
+      "$root_out_dir/ijar.exe",
+    ]
+    outputs = [
+      "$root_build_dir/{{source_file_part}}",
+    ]
+
+    deps = [
+      "//third_party/ijar:ijar",
+    ]
+  }
+}

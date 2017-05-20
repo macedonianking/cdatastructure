@@ -2,7 +2,11 @@ import ("//build/toolchain/gcc_toolchain.gni")
 
 template("android_mingw_gcc_toolchain") {
   gcc_toolchain(target_name) {
-      forward_variables_from(invoker, ["toolchain_args_current_cpu"])
+      forward_variables_from(invoker, 
+                             [
+                              "toolchain_args_current_cpu",
+                              "deps",
+                             ])
       toolchain_args_current_os = "android"
       cc = "gcc"
       cxx = "g++"
@@ -18,4 +22,8 @@ template("android_mingw_gcc_toolchain") {
 
 android_mingw_gcc_toolchain("mingw_x64") {
   toolchain_args_current_cpu = "x86"
+
+  deps = [
+    "//build/toolchain:toolchain_prepare($host_toolchain)",
+  ]
 }

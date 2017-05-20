@@ -1,0 +1,21 @@
+import ("//build/toolchain/gcc_toolchain.gni")
+
+template("mingw_gcc_toolchain") {
+  gcc_toolchain(target_name) {
+      forward_variables_from(invoker, ["toolchain_args_current_cpu"])
+      toolchain_args_current_os = "android"
+      cc = "gcc"
+      cxx = "g++"
+      ar = "ar"
+      ld = "g++"
+      nm = "nm"
+
+      shlib_extension = ".dll"
+      static_lib_extension = ".a"
+      executable_extension = ".exe"
+  }
+}
+
+mingw_gcc_toolchain("win_mingw_x64") {
+  toolchain_args_current_cpu = "x86"
+}
