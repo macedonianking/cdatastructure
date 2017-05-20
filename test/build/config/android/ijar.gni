@@ -18,5 +18,9 @@ template("generate_interface_jar") {
       rebase_path(invoker.input_jar, root_build_dir),
       rebase_path(invoker.output_jar, root_build_dir),
     ]
+
+    deps = [
+      "//third_party/ijar:ijar($host_toolchain)",
+    ]
   }
 }
