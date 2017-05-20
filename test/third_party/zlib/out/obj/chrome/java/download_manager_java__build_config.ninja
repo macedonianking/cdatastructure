@@ -1,0 +1,9 @@
+rule __chrome_java_download_manager_java__build_config___build_toolchain_android_mingw_x64__rule
+  command = D$:/share/Python34/python.exe ../../../build/android/gyp/write_build_config.py --type java_library --depfile gen/chrome/java/download_manager_java__build_config.d --deps-configs=[] --build-config gen/chrome/java/download_manager.build_config --jar-path obj/chrome/java/download_manager.jar
+  description = ACTION //chrome/java:download_manager_java__build_config(//build/toolchain/android:mingw_x64)
+  restat = 1
+
+build gen/chrome/java/download_manager.build_config: __chrome_java_download_manager_java__build_config___build_toolchain_android_mingw_x64__rule | ../../../build/android/gyp/write_build_config.py
+  depfile = gen/chrome/java/download_manager_java__build_config.d
+
+build obj/chrome/java/download_manager_java__build_config.stamp: stamp gen/chrome/java/download_manager.build_config

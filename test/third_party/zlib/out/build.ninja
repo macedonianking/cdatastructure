@@ -1,0 +1,59 @@
+rule gn
+  command = D:/share/bin/gn.exe --root=D:/dir/cdatastructure/test -q gen //third_party/zlib/out/
+  description = Regenerating ninja files
+
+build build.ninja: gn
+  generator = 1
+  depfile = build.ninja.d
+
+pool link_pool
+  depth = 0
+
+subninja toolchain.ninja
+
+build main: phony obj/main.stamp
+build hello: phony ./hello.exe
+build ijar: phony ./ijar.exe
+build chromium_java: phony obj/chrome/java/chromium_java.stamp
+build download_manager_java__build_config: phony obj/chrome/java/download_manager_java__build_config.stamp
+build hello_shared: phony ./libhello_shared.dll.TOC
+build hello_static: phony ./libhello_static.a
+build print_hello: phony obj/hello/print_hello/print_hello.stamp
+build print_hello__impl_: phony obj/hello/print_hello/libprint_hello.dll.TOC
+build read_mode_java__build_config: phony obj/chrome/java/read_mode_java__build_config.stamp
+build test: phony obj/hello/test.stamp
+build z: phony ./libz.a
+build $:main: phony obj/main.stamp
+build chrome/java$:chromium_java: phony obj/chrome/java/chromium_java.stamp
+build chrome/java$:download_manager_java__build_config: phony obj/chrome/java/download_manager_java__build_config.stamp
+build chrome/java$:read_mode_java__build_config: phony obj/chrome/java/read_mode_java__build_config.stamp
+build hello$:hello: phony ./hello.exe
+build hello$:test: phony obj/hello/test.stamp
+build hello/hello_shared$:hello_shared: phony ./libhello_shared.dll.TOC
+build hello/hello_shared: phony ./libhello_shared.dll.TOC
+build hello/hello_static$:hello_static: phony ./libhello_static.a
+build hello/hello_static: phony ./libhello_static.a
+build hello/print_hello$:print_hello: phony obj/hello/print_hello/print_hello.stamp
+build hello/print_hello: phony obj/hello/print_hello/print_hello.stamp
+build hello/print_hello$:print_hello__impl_: phony obj/hello/print_hello/libprint_hello.dll.TOC
+build src$:main: phony ./libmain.a
+build third_party/ijar$:ijar: phony ./ijar.exe
+build third_party/ijar: phony ./ijar.exe
+build third_party/zlib$:z: phony ./libz.a
+
+build all: phony $
+    obj/main.stamp $
+    obj/chrome/java/chromium_java.stamp $
+    obj/chrome/java/download_manager_java__build_config.stamp $
+    obj/chrome/java/read_mode_java__build_config.stamp $
+    ./hello.exe $
+    obj/hello/test.stamp $
+    ./libhello_shared.dll.TOC $
+    ./libhello_static.a $
+    obj/hello/print_hello/print_hello.stamp $
+    obj/hello/print_hello/libprint_hello.dll.TOC $
+    ./libmain.a $
+    ./ijar.exe $
+    ./libz.a
+
+default all

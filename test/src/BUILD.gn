@@ -1,0 +1,20 @@
+
+static_library("main") {
+  sources = [
+    "main/cpp/util/errors.h",
+    "main/cpp/util/exit_code.h",
+    "main/cpp/util/file.cc",
+    "main/cpp/util/file.h",
+    "main/cpp/util/file_windows.cc.h",
+    "main/cpp/util/file_platform.cc.h",
+    "main/cpp/util/port.h",
+    "main/cpp/util/port.cc",    
+    "main/cpp/util/strings.h",
+    "main/cpp/util/strings.cc",
+  ]
+
+  configs = []
+  configs += [
+    "//third_party/ijar:ijar_config",
+  ]
+}

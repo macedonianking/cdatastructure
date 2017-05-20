@@ -1,0 +1,8 @@
+rule __hello_test___build_toolchain_android_mingw_x64__rule
+  command = D$:/share/Python34/python.exe ../../../build/script/write_file.py --output gen/hello/test.txt
+  description = ACTION //hello:test(//build/toolchain/android:mingw_x64)
+  restat = 1
+
+build gen/hello/test.txt: __hello_test___build_toolchain_android_mingw_x64__rule | ../../../build/script/write_file.py
+
+build obj/hello/test.stamp: stamp gen/hello/test.txt

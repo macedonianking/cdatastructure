@@ -1,0 +1,26 @@
+{
+  "deps_info": {
+    "deps_configs": [],
+    "is_prebuilt": false,
+    "jar_path": "obj/chrome/java/read_mode_java.jar",
+    "java": {
+      "full_classpath": []
+    },
+    "name": "read_mode_java.build_config",
+    "path": "gen/chrome/java/read_mode_java.build_config",
+    "requires_android": null,
+    "supports_android": null,
+    "type": "java_library"
+  },
+  "gradle": {
+    "dependent_android_projects": [],
+    "dependent_java_projects": [],
+    "dependent_prebuilt_jars": []
+  },
+  "javac": {
+    "classpath": [],
+    "interface_classpath": [],
+    "resource_packages": [],
+    "srcjars": []
+  }
+}

@@ -1,0 +1,18 @@
+defines =
+include_dirs = -I../../../hello/hello_shared -I../../../hello/hello_static -I../../../hello/print_hello
+cflags =
+cflags_c =
+label = //hello$:hello
+label_name = hello
+target_out_dir = obj/hello
+target_output_name = hello
+
+build obj/hello/hello.inputdeps.stamp: stamp obj/hello/test.stamp obj/hello/print_hello/print_hello.stamp
+build obj/hello/hello/hello.o: cc ../../../hello/hello.c || obj/hello/hello.inputdeps.stamp
+
+build ./hello.exe: link obj/hello/hello/hello.o ./libhello_static.a | ./libhello_shared.dll.TOC || obj/hello/print_hello/print_hello.stamp obj/hello/test.stamp
+  ldflags = -L.
+  libs = -lprint_hello
+  output_extension = .exe
+  output_dir = .
+  solibs = ./libhello_shared.dll

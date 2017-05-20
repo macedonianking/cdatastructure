@@ -48,7 +48,7 @@ template("gcc_toolchain") {
 
     tool ("cxx") {
       depfile = "{{output}}.d"
-      command = "$cxx -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_c}} -c {{source}} -o {{output}}"
+      command = "$cxx -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_cc}} -c {{source}} -o {{output}}"
       depsformat = "gcc"
       description = "CXX {{output}}"
       outputs = [

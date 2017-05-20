@@ -1,0 +1,17 @@
+defines = -DBLAZE_OPENSOURCE
+include_dirs = -I../../..
+cflags =
+cflags_cc = -std=c++0x
+label = //src$:main
+label_name = main
+target_out_dir = obj/src
+target_output_name = libmain
+
+build obj/src/main/file.o: cxx ../../../src/main/cpp/util/file.cc
+build obj/src/main/port.o: cxx ../../../src/main/cpp/util/port.cc
+build obj/src/main/strings.o: cxx ../../../src/main/cpp/util/strings.cc
+
+build ./libmain.a: alink obj/src/main/file.o obj/src/main/port.o obj/src/main/strings.o
+  arflags =
+  output_extension = .a
+  output_dir = .

@@ -1,0 +1,50 @@
+config("ijar_config") {
+  include_dirs = [
+    "//",
+  ]
+
+  cflags_cc = [
+    "-std=c++0x",
+  ]
+
+  defines = [
+    "BLAZE_OPENSOURCE",
+  ]
+
+}
+
+executable("ijar") {
+  sources = [
+    "classfile.cc",
+    "common.h",
+    "dummy_zlib_client.cc",
+    "ijar.cc",
+    "mapped_file.h",
+    "platform_utils.cc",
+    "platform_utils.h",
+    "zip.cc",
+    "zip.h",
+    "zip_main.cc",
+    "zlib_client.cc",
+    "zlib_client.h",
+  ]
+
+  if (host_os == "win") {
+    sources += [
+      "mapped_file_windows.cc",
+    ]
+  } else {
+    sources += [
+      "mapped_file_unix.cc",
+    ]
+  }
+
+  configs = [
+    ":ijar_config",
+  ]
+
+  deps = [
+    "//src:main",
+    "//third_party/zlib:z",
+  ]
+}
