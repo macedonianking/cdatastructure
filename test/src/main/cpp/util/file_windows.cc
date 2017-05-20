@@ -1256,7 +1256,10 @@ string NormalizeWindowsPath(string path) {
         if (!segments.empty() &&
             !HasDriveSpecifierPrefix(segments[0].c_str())) {
           segments.pop_back();
-        }
+		}
+		else {
+			segments.push_back(segment);
+		}
       } else if (segment != dot) {
         segments.push_back(segment);
       }
