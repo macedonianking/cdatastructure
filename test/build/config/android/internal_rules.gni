@@ -1,7 +1,9 @@
 import("//build/config/android/config.gni")
+import("//build/config/android/ijar.gni")
 
 assert(is_android)
 
+# 添加的生成target.build_config的模板
 template("write_build_config") {
   type = invoker.type
 
@@ -34,8 +36,8 @@ template("write_build_config") {
 
     _deps_configs = []
     if (defined(invoker.possible_config_deps)) {
+      set_sources_assignment_filter([])
       foreach(_possible_dep, invoker.possible_config_deps) {
-        set_sources_assignment_filter(_java_target_whitelist)
         _target_label = get_label_info(_possible_dep, "label_no_toolchain")
         deps += [ "${_target_label}__build_config" ]
         _dep_gen_dir = get_label_info(_possible_dep, "target_gen_dir")
@@ -268,3 +270,286 @@ template("write_build_config") {
     }
   }
 }
+  template("process_java_prebuilt") {
+    set_sources_assignment_filter([])
+    forward_variables_from(invoker, [ "testonly" ])
+
+    assert(invoker.build_config != "")
+    _build_config = invoker.build_config
+    _rebased_build_config = rebase_path(_build_config, root_build_dir)
+    assert(_rebased_build_config != "" || true)  # Mark used.
+
+    _proguard_preprocess =
+        defined(invoker.proguard_preprocess) && invoker.proguard_preprocess
+    _input_jar_path = invoker.input_jar_path
+    _output_jar_path = invoker.output_jar_path
+
+    _jar_excluded_patterns = []
+    if (defined(invoker.jar_excluded_patterns)) {
+      _jar_excluded_patterns = invoker.jar_excluded_patterns
+    }
+    _strip_resource_classes = defined(invoker.strip_resource_classes) &&
+                              invoker.strip_resource_classes
+    _filter_jar = _jar_excluded_patterns != [] || _strip_resource_classes
+
+    if (_filter_jar) {
+      _filter_target = "${target_name}__filter"
+      _output_jar_target = _filter_target
+    }
+    if (_proguard_preprocess) {
+      _proguard_target = "${target_name}__proguard_process"
+      _output_jar_target = _proguard_target
+    }
+    if (!_filter_jar && !_proguard_preprocess) {
+      _copy_target = "${target_name}__copy"
+      _output_jar_target = _copy_target
+    }
+
+    if (_filter_jar) {
+      _filtered_jar_path = _output_jar_path
+      if (_proguard_preprocess) {
+        _filtered_jar_path = "$target_out_dir/$target_name-filtered.jar"
+      }
+      action(_filter_target) {
+        script = "//build/android/gyp/jar.py"
+        forward_variables_from(invoker,
+                               [
+                                 "deps",
+                                 "public_deps",
+                               ])
+        inputs = [
+          _build_config,
+          _input_jar_path,
+        ]
+        outputs = [
+          _filtered_jar_path,
+        ]
+        args = [
+          "--input-jar",
+          rebase_path(_input_jar_path, root_build_dir),
+          "--jar-path",
+          rebase_path(_filtered_jar_path, root_build_dir),
+          "--excluded-classes=$_jar_excluded_patterns",
+        ]
+        if (_strip_resource_classes) {
+          args += [ "--strip-resource-classes-for=@FileArg($_rebased_build_config:javac:resource_packages)" ]
+        }
+      }
+    }
+
+    if (_proguard_preprocess) {
+      _proguard_config_path = invoker.proguard_preprocess_config
+      proguard(_proguard_target) {
+        if (_filter_jar) {
+          _proguard_input_jar = _filtered_jar_path
+          public_deps = [
+            ":$_filter_target",
+          ]
+        } else {
+          _proguard_input_jar = _input_jar_path
+          public_deps = []
+        }
+        if (defined(invoker.deps)) {
+          deps = invoker.deps
+        }
+        if (defined(invoker.public_deps)) {
+          public_deps += invoker.public_deps
+        }
+        inputs = [
+          _build_config,
+          _proguard_config_path,
+          _proguard_input_jar,
+        ]
+        output_jar_path = _output_jar_path
+
+        _rebased_input_paths = [ rebase_path(_input_jar_path, root_build_dir) ]
+        _rebased_proguard_configs =
+            [ rebase_path(_proguard_config_path, root_build_dir) ]
+        args = [
+          "--input-paths=$_rebased_input_paths",
+          "--proguard-configs=$_rebased_proguard_configs",
+          "--classpath=@FileArg($_rebased_build_config:javac:classpath)",
+        ]
+      }
+    } else if (!_filter_jar) {
+      copy(_copy_target) {
+        forward_variables_from(invoker,
+                               [
+                                 "deps",
+                                 "public_deps",
+                               ])
+        sources = [
+          _input_jar_path,
+        ]
+        outputs = [
+          _output_jar_path,
+        ]
+      }
+    }
+
+    group(target_name) {
+      forward_variables_from(invoker,
+                             [
+                               "data_deps",
+                               "visibility",
+                             ])
+      public_deps = [
+        ":$_output_jar_target",
+      ]
+    }
+  }
+  template("java_prebuilt_impl") {
+    set_sources_assignment_filter([])
+    forward_variables_from(invoker, [ "testonly" ])
+    _supports_android =
+        defined(invoker.supports_android) && invoker.supports_android
+
+    assert(defined(invoker.jar_path))
+    _base_path = "${target_gen_dir}/$target_name"
+
+    # Jar files can be needed at runtime (by Robolectric tests or java binaries),
+    # so do not put them under gen/.
+    _target_dir_name = get_label_info(":$target_name", "dir")
+    _jar_path = "$root_out_dir/lib.java$_target_dir_name/$target_name.jar"
+    _ijar_path =
+        "$root_out_dir/lib.java$_target_dir_name/$target_name.interface.jar"
+    _build_config = _base_path + ".build_config"
+
+    if (_supports_android) {
+      _dex_path = _base_path + ".dex.jar"
+    }
+    _deps = []
+    if (defined(invoker.deps)) {
+      _deps = invoker.deps
+    }
+    _jar_deps = []
+    if (defined(invoker.jar_dep)) {
+      _jar_deps = [ invoker.jar_dep ]
+    }
+
+    _template_name = target_name
+
+    _build_config_target_name = "${_template_name}__build_config"
+    _process_jar_target_name = "${_template_name}__process_jar"
+    _ijar_target_name = "${_template_name}__ijar"
+    if (_supports_android) {
+      _dex_target_name = "${_template_name}__dex"
+    }
+
+    write_build_config(_build_config_target_name) {
+      type = "java_prebuilt"
+      forward_variables_from(invoker,
+                             [
+                               "input_jars_paths",
+                               "proguard_configs",
+                             ])
+      supports_android = _supports_android
+      requires_android =
+          defined(invoker.requires_android) && invoker.requires_android
+
+      if (defined(invoker.deps)) {
+        possible_config_deps = _deps
+      }
+      build_config = _build_config
+      jar_path = _jar_path
+      if (_supports_android) {
+        dex_path = _dex_path
+      }
+    }
+
+    process_java_prebuilt(_process_jar_target_name) {
+      forward_variables_from(invoker,
+                             [
+                               "jar_excluded_patterns",
+                               "proguard_preprocess",
+                               "proguard_preprocess_config",
+                               "strip_resource_classes",
+                             ])
+
+      visibility = [
+        ":$_ijar_target_name",
+        ":$_template_name",
+      ]
+      if (_supports_android) {
+        visibility += [ ":$_dex_target_name" ]
+      }
+
+      build_config = _build_config
+      input_jar_path = invoker.jar_path
+      output_jar_path = _jar_path
+
+      deps = [ ":$_build_config_target_name" ] + _deps + _jar_deps
+    }
+
+    generate_interface_jar(_ijar_target_name) {
+      if (!defined(invoker.proguard_preprocess) ||
+          !invoker.proguard_preprocess) {
+        # Always used the unfiltered .jar to create the interface jar so that
+        # other targets will resolve filtered classes when depending on
+        # BuildConfig, NativeLibraries, etc.
+        input_jar = invoker.jar_path
+        deps = _deps + _jar_deps
+      } else {
+        # However, still apply pre-proguarding, since ignoring that can break
+        # compiles.
+        input_jar = _jar_path
+        deps = [
+          ":$_process_jar_target_name",
+        ]
+      }
+
+      output_jar = _ijar_path
+    }
+
+    if (_supports_android) {
+      dex(_dex_target_name) {
+        sources = [
+          _jar_path,
+        ]
+        output = _dex_path
+        deps = [ ":$_process_jar_target_name" ] + _deps + _jar_deps
+      }
+    }
+
+    if (defined(invoker.main_class)) {
+      _binary_script_target_name = "${_template_name}__java_binary_script"
+      java_binary_script(_binary_script_target_name) {
+        forward_variables_from(invoker,
+                               [
+                                 "bootclasspath",
+                                 "deps",
+                                 "main_class",
+                                 "wrapper_script_args",
+                               ])
+        if (!defined(deps)) {
+          deps = []
+        }
+        build_config = _build_config
+        jar_path = _jar_path
+        script_name = _template_name
+        if (defined(invoker.wrapper_script_name)) {
+          script_name = invoker.wrapper_script_name
+        }
+        deps += [ ":$_build_config_target_name" ]
+      }
+    }
+
+    group(target_name) {
+      forward_variables_from(invoker, [ "data_deps" ])
+      public_deps = [
+        ":$_ijar_target_name",
+        ":$_process_jar_target_name",
+      ]
+      if (_supports_android) {
+        public_deps += [ ":$_dex_target_name" ]
+      }
+      if (defined(invoker.main_class)) {
+        # Some targets use the generated script while building, so make it a dep
+        # rather than a data_dep.
+        public_deps += [ ":$_binary_script_target_name" ]
+      }
+    }
+  }
+# // write_build_config
+
+

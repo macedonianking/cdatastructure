@@ -1,0 +1,66 @@
+
+template("compiled_action") {
+  if (host_os == "win") {
+    _host_executable_suffixe = ".exe"
+  } else {
+    _host_executable_suffixe = ""
+  }
+
+  action(target_name) {
+
+    forward_variables_from(invoker,
+                           [
+                            "deps",
+                            "inputs",
+                            "outputs",
+                            "visibility",
+                            "testonly",
+                            "tool",
+                           ])
+
+    _tool_path = get_label_info("$tool($host_toolchain)", "root_out_dir") + "/"
+                 + get_label_info(tool, "name") + _host_executable_suffixe
+
+    _rebased_tool_path = rebase_path(_tool_path, root_out_dir)
+    inputs += [
+      _rebased_tool_path,
+    ]
+
+    script = "//build/gn_run_binary.py"
+    assert(defined(invoker.args))
+    args = invoker.args
+  }
+}
+
+template("compile_action_foreach") {
+  if (host_os == "win") {
+    _host_executable_suffixe = ".exe"
+  } else {
+    _host_executable_suffixe = ""
+  }
+
+  action_foreach(target_name) {
+
+    forward_variables_from(invoker,
+                           [
+                            "deps",
+                            "inputs",
+                            "outputs",
+                            "visibility",
+                            "testonly",
+                            "tool",
+                           ])
+
+    _tool_path = get_label_info("$tool($host_toolchain)", "root_out_dir") + "/"
+                 + get_label_info(tool, "name") + _host_executable_suffixe
+
+    _rebased_tool_path = rebase_path(_tool_path, root_out_dir)
+    inputs += [
+      _rebased_tool_path,
+    ]
+
+    script = "//build/gn_run_binary.py"
+    assert(defined(invoker.args))
+    args = invoker.args
+  }
+}

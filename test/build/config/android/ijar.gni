@@ -1,0 +1,22 @@
+import ("//build/compiled_action.gni")
+
+template("generate_interface_jar") {
+  compiled_action(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "deps",
+                             "testonly",
+                           ])
+    tool = "//third_party/ijar"
+    inputs = [
+      invoker.input_jar,
+    ]
+    outputs = [
+      invoker.output_jar,
+    ]
+    args = [
+      rebase_path(invoker.input_jar, root_build_dir),
+      rebase_path(invoker.output_jar, root_build_dir),
+    ]
+  }
+}

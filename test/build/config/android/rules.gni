@@ -3,60 +3,146 @@ import("//build/config/android/internal_rules.gni")
 
 assert(is_android)
 
-template("android_resources") {
-  type = "android_resources"
-  
-  base_path = "${target_gen_dir}/${target_name}"
-  zip_path = base_path + ".resources.zip"
-  srcjar_path = base_path + ".srcjar"
-  r_text_path = base_path + "_R.txt"
-  build_config = base_path + ".build_config"
 
-  build_config_target_name = "${target_name}__build_config"
-  process_resources_target_name = "${target_name}__process_resources"
+  # Declare a Java executable target
+  #
+  # This target creates an executable from java code and libraries. The executable
+  # will be in the output folder's /bin/ directory.
+  #
+  # Variables
+  #   deps: Specifies the dependencies of this target. Java targets in this list
+  #     will be included in the executable (and the javac classpath).
+  #   java_files: List of .java files included in this library.
+  #   srcjar_deps: List of srcjar dependencies. The .java files in the srcjars
+  #     will be added to java_files and be included in this library.
+  #   srcjars: List of srcjars to be included in this library, together with the
+  #     ones obtained from srcjar_deps.
+  #   bypass_platform_checks: Disables checks about cross-platform (Java/Android)
+  #     dependencies for this target. This will allow depending on an
+  #     android_library target, for example.
+  #   chromium_code: If true, extra analysis warning/errors will be enabled.
+  #   enable_errorprone: If true, enables the errorprone compiler.
+  #   enable_incremental_javac_override: Overrides the
+  #     global enable_incremental_javac.
+  #   main_class: When specified, a wrapper script is created within
+  #     $root_build_dir/bin to launch the binary with the given class as the
+  #     entrypoint.
+  #   wrapper_script_args: List of additional arguments for the wrapper script.
+  #
+  #   data_deps, testonly
+  #
+  # Example
+  #   java_binary("foo") {
+  #     java_files = [ "org/chromium/foo/FooMain.java" ]
+  #     deps = [ ":bar_java" ]
+  #     main_class = "org.chromium.foo.FooMain"
+  #   }
+  template("java_binary") {
+    set_sources_assignment_filter([])
 
-  write_build_config(build_config_target_name) {
-    forward_variables_from(invoker, 
-                          [
-                            "testonly",
-                            "deps",
-                            "resource_dirs",
-                            "android_manifest",
-                          ])
-    if (!defined(deps)) {
-      deps = []
+    java_library_impl(target_name) {
+      forward_variables_from(invoker, "*")
+      supports_android = false
+      main_class = invoker.main_class
+      is_java_binary = true
     }
-    possible_config_deps = deps
-    assert(defined(resource_dirs))
-    resources_zip = zip_path
   }
 
-  process_resources(process_resources_target_name) {
-    forward_variables_from(invoker, 
-                          [
-                            "deps",
-                            "android_manifest",
-                            "custom_package",
-                            "resource_dirs",
-                            "v14_skip",
-                          ])
-    if (!defined(deps)) {
-      deps = []
-    }  
-    deps += [
-      ":${build_config_target_name}",
-    ]
+  # Declare a java library target
+  #
+  # Variables
+  #   deps: Specifies the dependencies of this target. Java targets in this list
+  #     will be added to the javac classpath.
+  #
+  #   java_files: List of .java files included in this library.
+  #   srcjar_deps: List of srcjar dependencies. The .java files in the srcjars
+  #     will be added to java_files and be included in this library.
+  #   srcjars: List of srcjars to be included in this library, together with the
+  #     ones obtained from srcjar_deps.
+  #
+  #   input_jars_paths: A list of paths to the jars that should be included
+  #     in the classpath. These are in addition to library .jars that
+  #     appear in deps.
+  #
+  #   chromium_code: If true, extra analysis warning/errors will be enabled.
+  #   enable_errorprone: If true, enables the errorprone compiler.
+  #   enable_incremental_javac_override: Overrides the global
+  #     enable_incremental_javac.
+  #
+  #   jar_excluded_patterns: List of patterns of .class files to exclude from the
+  #     final jar.
+  #
+  #   proguard_preprocess: If true, proguard preprocessing will be run. This can
+  #     be used to remove unwanted parts of the library.
+  #   proguard_preprocess_config: Path to the proguard config for preprocessing.
+  #   proguard_configs: List of proguard configs to use in final apk step for
+  #     any apk that depends on this library.
+  #
+  #   supports_android: If true, Android targets (android_library, android_apk)
+  #     may depend on this target. Note: if true, this target must only use the
+  #     subset of Java available on Android.
+  #   bypass_platform_checks: Disables checks about cross-platform (Java/Android)
+  #     dependencies for this target. This will allow depending on an
+  #     android_library target, for example.
+  #
+  #   additional_jar_files: Use to package additional files into the output jar.
+  #     Pass a list of length-2 lists with format
+  #     [ [ path_to_file, path_to_put_in_jar ] ]
+  #
+  #
+  #   data_deps, testonly
+  #
+  # Example
+  #   java_library("foo_java") {
+  #     java_files = [
+  #       "org/chromium/foo/Foo.java",
+  #       "org/chromium/foo/FooInterface.java",
+  #       "org/chromium/foo/FooService.java",
+  #     ]
+  #     deps = [
+  #       ":bar_java"
+  #     ]
+  #     srcjar_deps = [
+  #       ":foo_generated_enum"
+  #     ]
+  #     jar_excluded_patterns = [
+  #       "*/FooService.class", "*/FooService\$*.class"
+  #     ]
+  #   }
+  template("java_library") {
+    set_sources_assignment_filter([])
+    java_library_impl(target_name) {
+      forward_variables_from(invoker, "*")
+    }
   }
 
-  group(target_name) {
-    deps = [
-      ":${process_resources_target_name}",
-    ]
+  # Declare a java library target for a prebuilt jar
+  #
+  # Variables
+  #   deps: Specifies the dependencies of this target. Java targets in this list
+  #     will be added to the javac classpath.
+  #   jar_path: Path to the prebuilt jar.
+  #   jar_dep: Target that builds jar_path (optional).
+  #   proguard_preprocess: If true, proguard preprocessing will be run. This can
+  #     be used to remove unwanted parts of the library.
+  #   proguard_preprocess_config: Path to the proguard config for preprocessing.
+  #   proguard_configs: List of proguard configs to use in final apk step for
+  #     any apk that depends on this library.
+  #   supports_android: If true, Android targets (android_library, android_apk)
+  #     may depend on this target. Note: if true, this target must only use the
+  #     subset of Java available on Android.
+  #
+  # Example
+  #   java_prebuilt("foo_java") {
+  #     jar_path = "foo.jar"
+  #     deps = [
+  #       ":foo_resources",
+  #       ":bar_java"
+  #     ]
+  #   }
+  template("java_prebuilt") {
+    set_sources_assignment_filter([])
+    java_prebuilt_impl(target_name) {
+      forward_variables_from(invoker, "*")
+    }
   }
-}
-
-template("java_library") {
-  java_library_impl(target_name) {
-    forward_variables_from(invoker, "*")
-  }
-}
