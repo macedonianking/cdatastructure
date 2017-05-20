@@ -21,11 +21,20 @@
 #include <vector>
 
 #include "src/main/cpp/util/errors.h"
+#include "src/main/cpp/util/compiler.h"
 #include "src/main/cpp/util/exit_code.h"
 #include "src/main/cpp/util/file.h"
 #include "src/main/cpp/util/strings.h"
 #include "src/main/native/windows_file_operations.h"
 #include "src/main/native/windows_util.h"
+
+#ifdef MINGW_GNUC
+#include <winioctl.h>
+#endif
+
+#ifndef MOVEFILE_FAIL_IF_NOT_TRACKABLE
+#define MOVEFILE_FAIL_IF_NOT_TRACKABLE  0x00000020
+#endif
 
 namespace blaze_util {
 

@@ -2,15 +2,22 @@
 static_library("main") {
   sources = [
     "main/cpp/util/errors.h",
+    "main/cpp/util/errors.cc",
+    "main/cpp/util/errors_windows.cc",
+    "main/cpp/util/compiler.h",
     "main/cpp/util/exit_code.h",
     "main/cpp/util/file.cc",
     "main/cpp/util/file.h",
-    "main/cpp/util/file_windows.cc.h",
-    "main/cpp/util/file_platform.cc.h",
+    "main/cpp/util/file_windows.cc",
+    "main/cpp/util/file_platform.h",
     "main/cpp/util/port.h",
     "main/cpp/util/port.cc",    
     "main/cpp/util/strings.h",
     "main/cpp/util/strings.cc",
+    "main/native/windows_file_operations.h",
+    "main/native/windows_file_operations.cc",
+    "main/native/windows_util.h",
+    "main/native/windows_util.cc",
   ]
 
   configs = []

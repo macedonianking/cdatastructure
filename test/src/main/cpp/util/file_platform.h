@@ -20,6 +20,8 @@
 
 #include <string>
 
+#include "compiler.h"
+
 namespace blaze_util {
 
 class IPipe;
@@ -53,7 +55,7 @@ IFileMtime *CreateFileMtime();
 // Split a path to dirname and basename parts.
 std::pair<std::string, std::string> SplitPath(const std::string &path);
 
-#if defined(COMPILER_MSVC) || defined(__CYGWIN__)
+#if defined(COMPILER_MSVC) || defined(__CYGWIN__) || defined(MINGW_GNUC)
 // We cannot include <windows.h> because it #defines many symbols that conflict
 // with our function names, e.g. GetUserName, SendMessage.
 // Instead of typedef'ing HANDLE, let's use the actual type, void*. If that ever
@@ -208,7 +210,7 @@ class DirectoryEntryConsumer {
 void ForEachDirectoryEntry(const std::string &path,
                            DirectoryEntryConsumer *consume);
 
-#if defined(COMPILER_MSVC) || defined(__CYGWIN__)
+#if defined(COMPILER_MSVC) || defined(__CYGWIN__) || defined(MINGW_GNUC)
 // Like `AsWindowsPath` but the result is absolute and has UNC prefix if needed.
 bool AsWindowsPathWithUncPrefix(const std::string &path, std::wstring *wpath,
                                 size_t max_path = 260 /* MAX_PATH */);

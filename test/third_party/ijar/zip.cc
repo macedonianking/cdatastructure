@@ -68,6 +68,14 @@
   | GENERAL_PURPOSE_BIT_FLAG_UTF8_ENCODED \
   | GENERAL_PURPOSE_BIT_FLAG_COMPRESSION_SPEED)
 
+#ifdef __WIN32__
+static char* strdup(const char *src) {
+	char *dst = (char *)malloc(strlen(src) + 1);
+	strcpy(dst, src);
+	return dst;
+}
+#endif
+
 namespace devtools_ijar {
 // In the absence of ZIP64 support, zip files are limited to 4GB.
 // http://www.info-zip.org/FAQ.html#limits

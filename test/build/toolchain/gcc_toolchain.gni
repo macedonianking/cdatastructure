@@ -93,6 +93,7 @@ template("gcc_toolchain") {
       unstripped_sofile = sofile
 
       link_command = "$ld {{ldflags}}"
+      link_command += " -shared"
       link_command += " -o $unstripped_sofile"
       link_command += " -Wl,-soname,$soname"
       link_command += " -Wl,--whole-archive"
