@@ -157,7 +157,7 @@ def _MergeAssets(all_assets):
             dest_map[dest] = src
 
     def create_list(asset_map):
-        ret = ['%s:%s' % (src, dest) for dest, src in asset_map.iteritems()]
+        ret = ['%s:%s' % (src, dest) for dest, src in asset_map.items()]
         # Sort to ensure deterministic ordering.
         ret.sort()
         return ret

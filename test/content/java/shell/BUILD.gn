@@ -8,6 +8,19 @@ android_resources("content_shell_resources") {
   v14_skip = true
 }
 
+android_apk("content_shell_apk") {
+  android_manifest = "AndroidManifest.xml"
+  java_files = [
+    "src/com/android/button/MainActivity.java",
+    "src/com/android/button/SecondActivity.java",
+    "src/com/android/button/ThirdActivity.java",
+  ]
+  deps = [
+    ":content_shell_resources",
+  ]
+  apk_name = "MainButton"
+}
+
 group("content_shell") {
   deps = [
     ":content_shell_resources",

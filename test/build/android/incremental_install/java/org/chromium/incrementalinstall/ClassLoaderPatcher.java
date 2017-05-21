@@ -134,7 +134,7 @@ final class ClassLoaderPatcher {
                 }
             }
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= 23) {
                 // TODO: Work around this issue by using APK splits to install each dex / lib.
                 throw new RuntimeException("Incremental install does not work on Android M+ "
                         + "with isolated processes. Use the gn arg:\n"
@@ -239,7 +239,7 @@ final class ClassLoaderPatcher {
             File file = files[i];
             Object dexFile;
             if (Build.VERSION.CODENAME.equals("N")
-                    || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                    || Build.VERSION.SDK_INT > 23) {
                 // loadDexFile requires that ret contain all previously added elements.
                 dexFile = Reflect.invokeMethod(clazz, "loadDexFile", file, optimizedDirectory,
                                                mClassLoader, ret);

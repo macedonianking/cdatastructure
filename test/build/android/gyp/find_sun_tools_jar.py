@@ -15,40 +15,48 @@ import sys
 
 from util import build_utils
 
-RT_JAR_FINDER = re.compile(r'\[Opened (.*)/jre/lib/rt.jar\]')
+RT_JAR_FINDER = re.compile('\\[Opened\\s+(.*rt.jar)\\]')
+
 
 def main():
-  parser = argparse.ArgumentParser(description='Find Sun Tools Jar')
-  parser.add_argument('--depfile',
-                      help='Path to depfile. This must be specified as the '
-                           'action\'s first output.')
-  parser.add_argument('--output', required=True)
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='Find Sun Tools Jar')
+    parser.add_argument('--depfile',
+                        help='Path to depfile. This must be specified as the '
+                             'action\'s first output.')
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
 
-  sun_tools_jar_path = FindSunToolsJarPath()
+    sun_tools_jar_path = FindSunToolsJarPath()
 
-  if sun_tools_jar_path is None:
-    raise Exception("Couldn\'t find tools.jar")
+    if sun_tools_jar_path is None:
+        raise Exception("Couldn\'t find tools.jar")
 
-  # Using copyfile instead of copy() because copy() calls copymode()
-  # We don't want the locked mode because we may copy over this file again
-  shutil.copyfile(sun_tools_jar_path, args.output)
+    # Using copyfile instead of copy() because copy() calls copymode()
+    # We don't want the locked mode because we may copy over this file again
+    shutil.copyfile(sun_tools_jar_path, args.output)
 
-  if args.depfile:
-    build_utils.WriteDepfile(args.depfile, args.output, [sun_tools_jar_path])
+    if args.depfile:
+        build_utils.WriteDepfile(args.depfile, args.output, [sun_tools_jar_path])
 
 
 def FindSunToolsJarPath():
-  # This works with at least openjdk 1.6, 1.7 and sun java 1.6, 1.7
-  stdout = build_utils.CheckOutput(
-      ["java", "-verbose", "-version"], print_stderr=False)
-  for ln in stdout.splitlines():
-    match = RT_JAR_FINDER.match(ln)
-    if match:
-      return os.path.join(match.group(1), 'lib', 'tools.jar')
+    # This works with at least openjdk 1.6, 1.7 and sun java 1.6, 1.7
+    stdout = build_utils.CheckOutput(
+        ["java", "-verbose", "-version"], print_stderr=False)
+    rt_path = None
+    for ln in stdout.splitlines():
+        match = RT_JAR_FINDER.match(ln)
+        if match:
+            rt_path = match.group(1)
+    if not rt_path:
+        return None
 
-  return None
+    tools_jar_path = os.path.join(os.path.dirname(rt_path), os.pardir, os.pardir, "lib", "tools.jar")
+    tools_jar_path = os.path.abspath(tools_jar_path)
+    if os.path.isfile(tools_jar_path):
+        return tools_jar_path
+    return None
 
 
 if __name__ == '__main__':
-  sys.exit(main())
+    sys.exit(main())

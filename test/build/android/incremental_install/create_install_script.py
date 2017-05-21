@@ -17,7 +17,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, 'gyp'))
 from pylib.constants import host_paths
 from util import build_utils
 
-
 SCRIPT_TEMPLATE = """\
 #!/usr/bin/env python
 #
@@ -78,81 +77,81 @@ if __name__ == '__main__':
 
 
 def _ParseArgs(args):
-  args = build_utils.ExpandFileArgs(args)
-  parser = argparse.ArgumentParser()
-  build_utils.AddDepfileOption(parser)
-  parser.add_argument('--script-output-path',
-                      help='Output path for executable script.',
-                      required=True)
-  parser.add_argument('--output-directory',
-                      help='Path to the root build directory.',
-                      default='.')
-  parser.add_argument('--apk-path',
-                      help='Path to the .apk to install.',
-                      required=True)
-  parser.add_argument('--split',
-                      action='append',
-                      dest='splits',
-                      default=[],
-                      help='A glob matching the apk splits. '
-                           'Can be specified multiple times.')
-  parser.add_argument('--native-libs',
-                      action='append',
-                      default=[],
-                      help='GYP-list of paths to native libraries. Can be '
-                      'repeated.')
-  parser.add_argument('--dex-file',
-                      action='append',
-                      default=[],
-                      dest='dex_files',
-                      help='List of dex files to include.')
-  parser.add_argument('--dex-file-list',
-                      help='GYP-list of dex files.')
-  parser.add_argument('--show-proguard-warning',
-                      action='store_true',
-                      default=False,
-                      help='Print a warning about proguard being disabled')
-  parser.add_argument('--dont-even-try',
-                      help='Prints this message and exits.')
+    args = build_utils.ExpandFileArgs(args)
+    parser = argparse.ArgumentParser()
+    build_utils.AddDepfileOption(parser)
+    parser.add_argument('--script-output-path',
+                        help='Output path for executable script.',
+                        required=True)
+    parser.add_argument('--output-directory',
+                        help='Path to the root build directory.',
+                        default='.')
+    parser.add_argument('--apk-path',
+                        help='Path to the .apk to install.',
+                        required=True)
+    parser.add_argument('--split',
+                        action='append',
+                        dest='splits',
+                        default=[],
+                        help='A glob matching the apk splits. '
+                             'Can be specified multiple times.')
+    parser.add_argument('--native-libs',
+                        action='append',
+                        default=[],
+                        help='GYP-list of paths to native libraries. Can be '
+                             'repeated.')
+    parser.add_argument('--dex-file',
+                        action='append',
+                        default=[],
+                        dest='dex_files',
+                        help='List of dex files to include.')
+    parser.add_argument('--dex-file-list',
+                        help='GYP-list of dex files.')
+    parser.add_argument('--show-proguard-warning',
+                        action='store_true',
+                        default=False,
+                        help='Print a warning about proguard being disabled')
+    parser.add_argument('--dont-even-try',
+                        help='Prints this message and exits.')
 
-  options = parser.parse_args(args)
-  options.dex_files += build_utils.ParseGnList(options.dex_file_list)
-  all_libs = []
-  for gyp_list in options.native_libs:
-    all_libs.extend(build_utils.ParseGnList(gyp_list))
-  options.native_libs = all_libs
-  return options
+    options = parser.parse_args(args)
+    options.dex_files += build_utils.ParseGnList(options.dex_file_list)
+    all_libs = []
+    for gyp_list in options.native_libs:
+        all_libs.extend(build_utils.ParseGnList(gyp_list))
+    options.native_libs = all_libs
+    return options
 
 
 def main(args):
-  options = _ParseArgs(args)
+    options = _ParseArgs(args)
 
-  def relativize(path):
-    script_dir = os.path.dirname(options.script_output_path)
-    return path and os.path.relpath(path, script_dir)
+    def relativize(path):
+        script_dir = os.path.dirname(options.script_output_path)
+        return path and os.path.relpath(path, script_dir)
 
-  installer_path = os.path.join(host_paths.DIR_SOURCE_ROOT, 'build', 'android',
-                                'incremental_install', 'installer.py')
-  pformat = pprint.pformat
-  template_args = {
-      'cmd_path': pformat(relativize(installer_path)),
-      'apk_path': pformat(relativize(options.apk_path)),
-      'output_directory': pformat(relativize(options.output_directory)),
-      'native_libs': pformat([relativize(p) for p in options.native_libs]),
-      'dex_files': pformat([relativize(p) for p in options.dex_files]),
-      'dont_even_try': pformat(options.dont_even_try),
-      'show_proguard_warning': pformat(options.show_proguard_warning),
-      'splits': pformat([relativize(p) for p in options.splits]),
-  }
+    installer_path = os.path.join(host_paths.DIR_SOURCE_ROOT, 'build', 'android',
+                                  'incremental_install', 'installer.py')
+    pformat = pprint.pformat
+    template_args = {
+        'cmd_path': pformat(relativize(installer_path)),
+        'apk_path': pformat(relativize(options.apk_path)),
+        'output_directory': pformat(relativize(options.output_directory)),
+        'native_libs': pformat([relativize(p) for p in options.native_libs]),
+        'dex_files': pformat([relativize(p) for p in options.dex_files]),
+        'dont_even_try': pformat(options.dont_even_try),
+        'show_proguard_warning': pformat(options.show_proguard_warning),
+        'splits': pformat([relativize(p) for p in options.splits]),
+    }
 
-  with open(options.script_output_path, 'w') as script:
-    script.write(SCRIPT_TEMPLATE.format(**template_args))
+    with open(options.script_output_path, 'w') as script:
+        script.write(SCRIPT_TEMPLATE.format(**template_args))
 
-  os.chmod(options.script_output_path, 0750)
+    os.chmod(options.script_output_path, 0o750)
 
-  if options.depfile:
-    build_utils.WriteDepfile(options.depfile, options.script_output_path)
+    if options.depfile:
+        build_utils.WriteDepfile(options.depfile, options.script_output_path)
 
 
 if __name__ == '__main__':
-  sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))
