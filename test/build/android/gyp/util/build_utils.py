@@ -45,6 +45,18 @@ def TempDir():
         shutil.rmtree(dirname)
 
 
+@contextlib.contextmanager
+def TempFile(**kwargs):
+    assert("delete" not in kwargs.keys())
+    file_obj = tempfile.NamedTemporaryFile(delete=False, **kwargs)
+    name = file_obj.name
+    file_obj.close()
+    try:
+        yield name
+    finally:
+        os.remove(name)
+
+
 def MakeDirectory(dir_path):
     try:
         os.makedirs(dir_path)

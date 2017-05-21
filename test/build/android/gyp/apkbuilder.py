@@ -233,7 +233,7 @@ def main(args):
                     if item.filename == "AndroidManifest.xml":
                         android_manifest_info = item
                         break;
-                assert(android_manifest_info)
+                assert (android_manifest_info)
                 # 1. AndroidManifest.xml
                 copy_resource(android_manifest_info)
 
@@ -274,8 +274,9 @@ def main(args):
                     build_utils.AddToZipHermetic(out_apk, apk_path, data='')
 
                 # 5. Resources
-                for info in resource_infos[1:]:
-                    copy_resource(info)
+                for info in resource_infos:
+                    if info.filename != "AndroidManifest.xml":
+                        copy_resource(info)
 
                 # 6. Java resources. Used only when coverage is enabled, so order
                 # doesn't matter).

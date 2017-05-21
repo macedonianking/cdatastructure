@@ -131,11 +131,9 @@ def main(args):
 
 
 def FinalizeApk(options):
-    with tempfile.NamedTemporaryFile() as signed_apk_path_tmp, \
-            tempfile.NamedTemporaryFile() as apk_to_sign_tmp:
+    with build_utils.TempFile() as signed_apk_path_tmp, \
+            build_utils.TempFile() as apk_to_sign_tmp:
 
-        signed_apk_path_tmp.close()
-        apk_to_sign_tmp.close()
         if options.load_library_from_zip:
             # We alter the name of the library so that the Android Package Manager
             # does not extract it into a separate file. This must be done before
@@ -143,18 +141,18 @@ def FinalizeApk(options):
             # time we uncompress the library, which is necessary so that it can be
             # loaded directly from the APK.
             # Move the library to a page boundary by adding a page alignment file.
-            apk_to_sign = apk_to_sign_tmp.name
+            apk_to_sign = apk_to_sign_tmp
             RenameInflateAndAddPageAlignment(
                 options.rezip_apk_jar_path, options.unsigned_apk_path, apk_to_sign)
         else:
             apk_to_sign = options.unsigned_apk_path
 
-        signed_apk_path = signed_apk_path_tmp.name
+        signed_apk_path = signed_apk_path_tmp
         JarSigner(options.key_path, options.key_name, options.key_passwd,
                   apk_to_sign, signed_apk_path)
 
         # Make the signing files hermetic.
-        with tempfile.NamedTemporaryFile(suffix='.zip') as hermetic_signed_apk:
+        with build_utils.TempFile(suffix='.zip') as hermetic_signed_apk:
             with zipfile.ZipFile(signed_apk_path, 'r') as zi:
                 with zipfile.ZipFile(hermetic_signed_apk, 'w') as zo:
                     for info in zi.infolist():
@@ -169,7 +167,7 @@ def FinalizeApk(options):
                         info.date_time = build_utils.HERMETIC_TIMESTAMP
                         zo.writestr(info, zi.read(info.filename))
 
-            shutil.copy(hermetic_signed_apk.name, signed_apk_path)
+            shutil.copy(hermetic_signed_apk, signed_apk_path)
 
         if options.load_library_from_zip:
             # Reorder the contents of the APK. This re-establishes the canonical
