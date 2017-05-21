@@ -271,6 +271,18 @@ template("write_build_config") {
   }
 }
 
+
+  rebased_android_sdk = rebase_path(android_sdk, root_build_dir)
+  rebased_android_sdk_build_tools =
+      rebase_path(android_sdk_build_tools, root_build_dir)
+
+  android_sdk_jar = "$android_sdk/android.jar"
+  rebased_android_sdk_jar = rebase_path(android_sdk_jar, root_build_dir)
+  android_default_aapt_path = "$rebased_android_sdk_build_tools/aapt"
+  if (host_os == "win") {
+    android_default_aapt_path += ".exe"
+  }
+
   # process_java_prebuilt 
 
   # Generates a script in the output bin.java directory to run a java binary.
@@ -1170,6 +1182,155 @@ template("write_build_config") {
       public_deps = _final_deps
       if (_has_lint_target) {
         data_deps += [ ":${_template_name}__analysis" ]
+      }
+    }
+  }
+
+  # Runs process_resources.py
+  template("process_resources") {
+    set_sources_assignment_filter([])
+    forward_variables_from(invoker, [ "testonly" ])
+
+    zip_path = invoker.zip_path
+    srcjar_path = invoker.srcjar_path
+    r_text_path = invoker.r_text_path
+    build_config = invoker.build_config
+    android_manifest = invoker.android_manifest
+
+    non_constant_id = true
+    if (defined(invoker.generate_constant_ids) &&
+        invoker.generate_constant_ids) {
+      non_constant_id = false
+    }
+
+    action(target_name) {
+      forward_variables_from(invoker,
+                             [
+                               "deps",
+                               "visibility",
+                             ])
+      script = "//build/android/gyp/process_resources.py"
+
+      depfile = "$target_gen_dir/$target_name.d"
+      outputs = [
+        zip_path,
+        srcjar_path,
+        r_text_path,
+      ]
+
+      _all_resource_dirs = []
+      sources = []
+
+      if (defined(invoker.resource_dirs)) {
+        _all_resource_dirs += invoker.resource_dirs
+
+        # Speed up "gn gen" by short-circuiting the empty directory.
+        if (invoker.resource_dirs != [ "//build/android/ant/empty/res" ] &&
+            invoker.resource_dirs != []) {
+          _sources_build_rel =
+              exec_script("//build/android/gyp/find.py",
+                          rebase_path(invoker.resource_dirs, root_build_dir),
+                          "list lines")
+          sources += rebase_path(_sources_build_rel, ".", root_build_dir)
+        }
+      }
+
+      if (defined(invoker.generated_resource_dirs)) {
+        assert(defined(invoker.generated_resource_files))
+        _all_resource_dirs += invoker.generated_resource_dirs
+        sources += invoker.generated_resource_files
+      }
+
+      inputs = [
+        build_config,
+        android_manifest,
+      ]
+
+      _rebased_all_resource_dirs =
+          rebase_path(_all_resource_dirs, root_build_dir)
+      rebase_build_config = rebase_path(build_config, root_build_dir)
+
+      if (defined(invoker.android_aapt_path)) {
+        _android_aapt_path = invoker.android_aapt_path
+      } else {
+        _android_aapt_path = android_default_aapt_path
+      }
+
+      if (defined(invoker.alternative_android_sdk_jar)) {
+        _rebased_android_sdk_jar =
+            rebase_path(invoker.alternative_android_sdk_jar)
+      } else {
+        _rebased_android_sdk_jar = rebased_android_sdk_jar
+      }
+
+      args = [
+        "--depfile",
+        rebase_path(depfile, root_build_dir),
+        "--android-sdk-jar",
+        _rebased_android_sdk_jar,
+        "--aapt-path",
+        _android_aapt_path,
+        "--android-manifest",
+        rebase_path(android_manifest, root_build_dir),
+        "--resource-dirs=$_rebased_all_resource_dirs",
+        "--srcjar-out",
+        rebase_path(srcjar_path, root_build_dir),
+        "--resource-zip-out",
+        rebase_path(zip_path, root_build_dir),
+        "--r-text-out",
+        rebase_path(r_text_path, root_build_dir),
+        "--dependencies-res-zips=@FileArg($rebase_build_config:resources:dependency_zips)",
+        "--extra-res-packages=@FileArg($rebase_build_config:resources:extra_package_names)",
+        "--extra-r-text-files=@FileArg($rebase_build_config:resources:extra_r_text_files)",
+      ]
+
+      if (non_constant_id) {
+        args += [ "--non-constant-id" ]
+      }
+
+      if (defined(invoker.custom_package)) {
+        args += [
+          "--custom-package",
+          invoker.custom_package,
+        ]
+      }
+
+      if (defined(invoker.v14_skip) && invoker.v14_skip) {
+        args += [ "--v14-skip" ]
+      }
+
+      if (defined(invoker.shared_resources) && invoker.shared_resources) {
+        args += [ "--shared-resources" ]
+      }
+
+      if (defined(invoker.app_as_shared_lib) && invoker.app_as_shared_lib) {
+        args += [ "--app-as-shared-lib" ]
+      }
+
+      if (defined(invoker.include_all_resources) &&
+          invoker.include_all_resources) {
+        args += [ "--include-all-resources" ]
+      }
+
+      if (defined(invoker.all_resources_zip_path)) {
+        all_resources_zip = invoker.all_resources_zip_path
+        outputs += [ all_resources_zip ]
+        args += [
+          "--all-resources-zip-out",
+          rebase_path(all_resources_zip, root_build_dir),
+        ]
+      }
+
+      if (defined(invoker.proguard_file)) {
+        outputs += [ invoker.proguard_file ]
+        args += [
+          "--proguard-file",
+          rebase_path(invoker.proguard_file, root_build_dir),
+        ]
+      }
+
+      if (defined(invoker.args)) {
+        args += invoker.args
       }
     }
   }

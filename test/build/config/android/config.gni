@@ -1,8 +1,63 @@
 
 if (is_android) {
+  if (!defined(default_android_ndk_root)) {
+    default_android_ndk_root = "//third_party/android_tools/ndk"
+    default_android_ndk_version = "r12b"
+    default_android_ndk_major_version = "12"
+  } else {
+    assert(defined(default_android_ndk_version))
+    assert(defined(default_android_ndk_major_version))
+  }
+
+  if (!defined(default_android_sdk_root)) {
+    default_android_sdk_root = "//third_party/android_tools/sdk"
+    default_android_sdk_version = "23"
+    default_android_sdk_build_tools_version = "23.0.1"
+  }
+
+  if (!defined(default_lint_android_sdk_root)) {
+    # Purposefully repeated so that downstream can change
+    # default_android_sdk_root without changing lint version.
+    default_lint_android_sdk_root = "//third_party/android_tools/sdk"
+    default_lint_android_sdk_version = "23"
+  }
+
+  if (!defined(default_android_keystore_path)) {
+    default_android_keystore_path =
+        "//build/android/ant/chromium-debug.keystore"
+    default_android_keystore_name = "chromiumdebugkey"
+    default_android_keystore_password = "chromium"
+  }
+
   declare_args() {
-    android_sdk_root = "//third_party/android_tools/sdk"
-    android_sdk_version = "23"
+    android_ndk_root = default_android_ndk_root
+    android_ndk_version = default_android_ndk_version
+    android_ndk_major_version = default_android_ndk_major_version
+
+    android_sdk_root = default_android_sdk_root
+    android_sdk_version = default_android_sdk_version
+    android_sdk_build_tools_version = default_android_sdk_build_tools_version
+
+    lint_android_sdk_root = default_lint_android_sdk_root
+    lint_android_sdk_version = default_lint_android_sdk_version
+
+    # Libc++ library directory. Override to use a custom libc++ binary.
+    android_libcpp_lib_dir = ""
+
+    # Android versionCode for android_apk()s that don't expclitly set one.
+    android_default_version_code = "1"
+
+    # Android versionName for android_apk()s that don't expclitly set one.
+    android_default_version_name = "Developer Build"
+
+    # The path to the keystore to use for signing builds.
+    android_keystore_path = default_android_keystore_path
+
+    # The name of the keystore to use for signing builds.
+    android_keystore_name = default_android_keystore_name
+
+    # The password for the keystore to use for signing builds.
+    android_keystore_password = default_android_keystore_password
 
     # Set to true to run findbugs on JAR targets.
     run_findbugs = false
@@ -40,8 +95,16 @@ if (is_android) {
     # Adds intrumentation to each function. Writes a file with the order that
     # functions are called at startup.
     use_order_profiling = false
-    android_sdk_build_tools_version = "23.0.1"
+}
+
+  # We need a second declare_args block to make sure we are using the overridden
+  # value of the arguments set above.
+  declare_args() {
+    # Speed up dexing using dx --incremental.
+    enable_incremental_dx = is_java_debug
   }
+
+
 
   android_sdk = "${android_sdk_root}/platforms/android-${android_sdk_version}"
   android_sdk_tools = "${android_sdk_root}/tools"

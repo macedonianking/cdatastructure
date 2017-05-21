@@ -6,5 +6,6 @@ group("main") {
   deps = [
     "hello:hello",
     "chrome/java:chromium_java",
+    "content/java/shell:content_shell",
   ]
 }

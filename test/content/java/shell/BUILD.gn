@@ -1,5 +1,3 @@
-import("//build/config/android/config.gni")
-import("//build/config/android/internal_rules.gni")
 import("//build/config/android/rules.gni")
 
 android_resources("content_shell_resources") {
@@ -10,3 +8,8 @@ android_resources("content_shell_resources") {
   v14_skip = true
 }
 
+group("content_shell") {
+  deps = [
+    ":content_shell_resources",
+  ]
+}
