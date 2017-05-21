@@ -19,6 +19,7 @@ android_apk("content_shell_apk") {
     ":content_shell_resources",
   ]
   apk_name = "MainButton"
+  chromium_code = false
 }
 
 group("content_shell") {

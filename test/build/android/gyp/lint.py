@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import traceback
+import shutil
 from xml.dom import minidom
 
 from util import build_utils
@@ -46,7 +47,7 @@ def _OnStaleMd5(lint_path, config_path, processed_config_path,
             content = f.read().replace(
                 'PRODUCT_DIR', _RebasePath(product_dir))
 
-        with open(processed_config_path, 'wb') as f:
+        with open(processed_config_path, 'w') as f:
             f.write(content)
 
     def _ProcessResultFile():
@@ -61,7 +62,7 @@ def _OnStaleMd5(lint_path, config_path, processed_config_path,
         dom = minidom.parse(result_path)
         issues = dom.getElementsByTagName('issue')
         if not silent:
-            print >> sys.stderr
+            print(file=sys.stderr)
             for issue in issues:
                 issue_id = issue.attributes['id'].value
                 message = issue.attributes['message'].value
@@ -73,11 +74,11 @@ def _OnStaleMd5(lint_path, config_path, processed_config_path,
                 else:
                     # Issues in class files don't have a line number.
                     error = '%s %s: %s [warning]' % (path, message, issue_id)
-                print >> sys.stderr, error.encode('utf-8')
+                print(error.encode('utf-8'), file=sys.stderr)
                 for attr in ['errorLine1', 'errorLine2']:
                     error_line = issue.getAttribute(attr)
                     if error_line:
-                        print >> sys.stderr, error_line.encode('utf-8')
+                        print(error_line.encode('utf-8'), file=sys.stderr)
         return len(issues)
 
     with build_utils.TempDir() as temp_dir:
@@ -150,8 +151,8 @@ def _OnStaleMd5(lint_path, config_path, processed_config_path,
             if not src_dir:
                 src_dir = _NewTempSubdir('SRC_ROOT')
                 src_dirs.append(src_dir)
-                cmd.extend(['--sources', _RebasePath(src_dir)])
-            os.symlink(os.path.abspath(src), PathInDir(src_dir, src))
+                cmd.extend(['--sources', os.path.abspath(src_dir)])
+            shutil.copy(os.path.abspath(src), PathInDir(src_dir, src))
 
         project_dir = _NewTempSubdir('SRC_ROOT')
         if android_sdk_version:
@@ -165,8 +166,10 @@ def _OnStaleMd5(lint_path, config_path, processed_config_path,
         # sibling res/ and src/ directories (which should be pass explicitly if they
         # are to be included).
         if manifest_path:
-            os.symlink(os.path.abspath(manifest_path),
-                       os.path.join(project_dir, 'AndroidManifest.xml'))
+            shutil.copy(os.path.abspath(manifest_path),
+                        project_dir)
+            # os.symlink(os.path.abspath(manifest_path),
+            #          os.path.join(project_dir, 'AndroidManifest.xml'))
         cmd.append(project_dir)
 
         if os.path.exists(result_path):
@@ -365,4 +368,5 @@ def main():
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.join("D:\\dir\\cdatastructure\\test\\out"))
     sys.exit(main())
