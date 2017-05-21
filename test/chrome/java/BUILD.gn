@@ -1,20 +1,24 @@
 import("//build/config/android/rules.gni")
 
-
-write_build_config("read_mode_java__build_config") {
-  type = "java_library"
-  build_config = "$target_gen_dir/read_mode_java.build_config"
-
-  jar_path = "$target_out_dir/read_mode_java.jar"
-}
-
 java_prebuilt("guava_java") {
   jar_path = "guava-14.0.1.jar"
 }
 
+# generate the binary *.jar
+java_binary("chrome_binary") {
+  java_files = [
+    "src/com/oppo/main/Main.java",
+  ]
+
+  main_class = "com.oppo.main.Main"
+  
+  deps = [
+    ":guava_java",
+  ]
+}
+
 group("chromium_java") {
   deps = [
-    ":read_mode_java__build_config",
-    ":guava_java",
+    ":chrome_binary",
   ]
 }

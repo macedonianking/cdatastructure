@@ -64,54 +64,55 @@ java_cmd.extend(jar_arguments)
 os.execvp("java", java_cmd)
 """
 
+
 def main(argv):
-  argv = build_utils.ExpandFileArgs(argv)
-  parser = optparse.OptionParser()
-  build_utils.AddDepfileOption(parser)
-  parser.add_option('--output', help='Output path for executable script.')
-  parser.add_option('--jar-path', help='Path to the main jar.')
-  parser.add_option('--main-class',
-      help='Name of the java class with the "main" entry point.')
-  parser.add_option('--classpath', action='append', default=[],
-      help='Classpath for running the jar.')
-  parser.add_option('--bootclasspath', action='append', default=[],
-      help='zip/jar files to add to bootclasspath for java cmd.')
-  parser.add_option('--noverify', action='store_true',
-      help='JVM flag: noverify.')
+    argv = build_utils.ExpandFileArgs(argv)
+    parser = optparse.OptionParser()
+    build_utils.AddDepfileOption(parser)
+    parser.add_option('--output', help='Output path for executable script.')
+    parser.add_option('--jar-path', help='Path to the main jar.')
+    parser.add_option('--main-class',
+                      help='Name of the java class with the "main" entry point.')
+    parser.add_option('--classpath', action='append', default=[],
+                      help='Classpath for running the jar.')
+    parser.add_option('--bootclasspath', action='append', default=[],
+                      help='zip/jar files to add to bootclasspath for java cmd.')
+    parser.add_option('--noverify', action='store_true',
+                      help='JVM flag: noverify.')
 
-  options, extra_program_args = parser.parse_args(argv)
+    options, extra_program_args = parser.parse_args(argv)
 
-  if (options.noverify):
-    noverify_flag = 'java_cmd.append("-noverify")'
-  else:
-    noverify_flag = ''
+    if (options.noverify):
+        noverify_flag = 'java_cmd.append("-noverify")'
+    else:
+        noverify_flag = ''
 
-  classpath = [options.jar_path]
-  for cp_arg in options.classpath:
-    classpath += build_utils.ParseGnList(cp_arg)
+    classpath = [options.jar_path]
+    for cp_arg in options.classpath:
+        classpath += build_utils.ParseGnList(cp_arg)
 
-  bootclasspath = []
-  for bootcp_arg in options.bootclasspath:
-    bootclasspath += build_utils.ParseGnList(bootcp_arg)
+    bootclasspath = []
+    for bootcp_arg in options.bootclasspath:
+        bootclasspath += build_utils.ParseGnList(bootcp_arg)
 
-  run_dir = os.path.dirname(options.output)
-  bootclasspath = [os.path.relpath(p, run_dir) for p in bootclasspath]
-  classpath = [os.path.relpath(p, run_dir) for p in classpath]
+    run_dir = os.path.dirname(options.output)
+    bootclasspath = [os.path.relpath(p, run_dir) for p in bootclasspath]
+    classpath = [os.path.relpath(p, run_dir) for p in classpath]
 
-  with open(options.output, 'w') as script:
-    script.write(script_template.format(
-      classpath=('"%s"' % '", "'.join(classpath)),
-      bootclasspath=('"%s"' % '", "'.join(bootclasspath)
-                     if bootclasspath else ''),
-      main_class=options.main_class,
-      extra_program_args=repr(extra_program_args),
-      noverify_flag=noverify_flag))
+    with open(options.output, 'w') as script:
+        script.write(script_template.format(
+            classpath=('"%s"' % '", "'.join(classpath)),
+            bootclasspath=('"%s"' % '", "'.join(bootclasspath)
+                           if bootclasspath else ''),
+            main_class=options.main_class,
+            extra_program_args=repr(extra_program_args),
+            noverify_flag=noverify_flag))
 
-  os.chmod(options.output, 0750)
+    os.chmod(options.output, 0o750)
 
-  if options.depfile:
-    build_utils.WriteDepfile(options.depfile, options.output)
+    if options.depfile:
+        build_utils.WriteDepfile(options.depfile, options.output)
 
 
 if __name__ == '__main__':
-  sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

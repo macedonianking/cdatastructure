@@ -157,7 +157,11 @@ def CheckOutput(args, cwd=None, env=None,
         cwd = os.getcwd()
 
     child = subprocess.Popen(args,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env)
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             cwd=cwd,
+                             env=env,
+                             universal_newlines=True)
     stdout, stderr = child.communicate()
 
     if stdout_filter is not None:
@@ -393,10 +397,13 @@ def GetSortedTransitiveDependencies(top, deps_func):
     sorted_deps = []
     unsorted_deps = dict(map(Node, all_deps))
     while unsorted_deps:
+        _library = None
         for library, dependencies in unsorted_deps.items():
             if not dependencies.intersection(unsorted_deps.keys()):
-                sorted_deps.append(library)
-                del unsorted_deps[library]
+                _library = library
+                break
+        sorted_deps.append(library)
+        del unsorted_deps[library]
 
     return sorted_deps
 

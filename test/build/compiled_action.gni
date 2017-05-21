@@ -24,8 +24,6 @@ template("compiled_action") {
     inputs += [
       _tool_path,
     ]
-    print(_tool_path)
-    print(_rebased_tool_path)
 
     script = "//build/gn_run_binary.py"
     assert(defined(invoker.args))
@@ -59,11 +57,13 @@ template("compile_action_foreach") {
 
     _rebased_tool_path = rebase_path(_tool_path, root_out_dir)
     inputs += [
-      _rebased_tool_path,
+      _tool_path,
     ]
 
     script = "//build/gn_run_binary.py"
     assert(defined(invoker.args))
-    args = invoker.args
+    args = [
+      _rebased_tool_path,
+    ] + invoker.args
   }
 }

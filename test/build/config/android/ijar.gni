@@ -4,8 +4,8 @@ template("generate_interface_jar") {
   compiled_action(target_name) {
     forward_variables_from(invoker,
                            [
-                             "deps",
                              "testonly",
+                             "visibility",
                            ])
     tool = "//third_party/ijar"
     inputs = [
@@ -22,5 +22,8 @@ template("generate_interface_jar") {
     deps = [
       "//third_party/ijar:ijar($host_toolchain)",
     ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
   }
 }
