@@ -115,7 +115,6 @@ if (is_android) {
   if (host_os == "win") {
     zipalign_path += ".exe"
   }
-  print(zipalign_path)
 }
 
 declare_args() {

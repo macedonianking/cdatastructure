@@ -27,6 +27,8 @@ def main():
     args = parser.parse_args()
 
     sun_tools_jar_path = FindSunToolsJarPath()
+    if not sun_tools_jar_path:
+        sun_tools_jar_path = FindSunToolsPathFromJavaHome()
 
     if sun_tools_jar_path is None:
         raise Exception("Couldn\'t find tools.jar")
@@ -56,6 +58,15 @@ def FindSunToolsJarPath():
     if os.path.isfile(tools_jar_path):
         return tools_jar_path
     return None
+
+
+def FindSunToolsPathFromJavaHome():
+    java_home = os.getenv('JAVA_HOME', None)
+    if not java_home:
+        return None
+
+    tools_jar = os.path.abspath(os.path.join(java_home, "lib", "tools.jar"))
+    return tools_jar
 
 
 if __name__ == '__main__':

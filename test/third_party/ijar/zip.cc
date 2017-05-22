@@ -68,13 +68,11 @@
   | GENERAL_PURPOSE_BIT_FLAG_UTF8_ENCODED \
   | GENERAL_PURPOSE_BIT_FLAG_COMPRESSION_SPEED)
 
-#ifdef __WIN32__
-static char* strdup(const char *src) {
+static char* strdup_local(const char *src) {
 	char *dst = (char *)malloc(strlen(src) + 1);
 	strcpy(dst, src);
 	return dst;
 }
-#endif
 
 namespace devtools_ijar {
 // In the absence of ZIP64 support, zip files are limited to 4GB.
@@ -895,7 +893,7 @@ int OutputZipFile::WriteEmptyFile(const char *filename) {
   entry->uncompressed_length = 0;
   entry->compression_method = 0;
   entry->extra_field = (const u1 *)"";
-  entry->file_name = (u1*) strdup((const char *) file_name);
+  entry->file_name = (u1*) strdup_local((const char *) file_name);
   entries_.push_back(entry);
 
   return 0;
