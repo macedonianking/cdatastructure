@@ -112,6 +112,9 @@ if (is_android) {
 
   android_sdk_jar = "${android_sdk}/android.jar"
   zipalign_path = "${android_sdk_build_tools}/zipalign"
+  if (host_os == "win") {
+    zipalign_path += ".exe"
+  }
 }
 
 declare_args() {
