@@ -2,14 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import ast
 import contextlib
 import fnmatch
 import json
 import os
 import pipes
+import platform
 import re
-import shlex
 import shutil
 import stat
 import subprocess
@@ -47,7 +46,7 @@ def TempDir():
 
 @contextlib.contextmanager
 def TempFile(**kwargs):
-    assert("delete" not in kwargs.keys())
+    assert ("delete" not in kwargs.keys())
     file_obj = tempfile.NamedTemporaryFile(delete=False, **kwargs)
     name = file_obj.name
     file_obj.close()
@@ -574,3 +573,10 @@ def CallAndWriteDepfileIfStale(function, options, record_path=None,
         output_paths=output_paths,
         force=force,
         pass_changes=True)
+
+
+def PlatformPathSep():
+    if platform.system() == "Windows":
+        return ";"
+    else:
+        return ":"

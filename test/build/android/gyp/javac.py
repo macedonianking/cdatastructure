@@ -6,15 +6,13 @@
 
 import optparse
 import os
-import shutil
 import re
+import shutil
 import sys
-import textwrap
-
-from util import build_utils
-from util import md5_check
 
 import jar
+from util import build_utils
+from util import md5_check
 
 sys.path.append(build_utils.COLORAMA_ROOT)
 import colorama
@@ -375,7 +373,7 @@ def main(argv):
         # Chromium only allows UTF8 source files.  Being explicit avoids
         # javac pulling a default encoding from the user's environment.
         '-encoding', 'UTF-8',
-        '-classpath', ':'.join(options.classpath),
+        '-classpath', build_utils.PlatformPathSep().join(options.classpath),
         # Prevent compiler from compiling .java files not listed as inputs.
         # See: http://blog.ltgt.net/most-build-tools-misuse-javac/
         '-sourcepath', ''
@@ -383,7 +381,7 @@ def main(argv):
 
     if options.bootclasspath:
         javac_cmd.extend([
-            '-bootclasspath', ':'.join(options.bootclasspath)
+            '-bootclasspath', build_utils.PlatformPathSep().join(options.bootclasspath)
         ])
 
     if options.java_version:
