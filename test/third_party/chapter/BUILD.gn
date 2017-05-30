@@ -12,9 +12,7 @@ executable("chapter") {
                                 "list lines")
   sources = all_source_file
   cflags_c = [ 
-    "-g",
     "-Wall", 
-    "-std=gnu99",
   ]
   include_dirs = [
     "src",

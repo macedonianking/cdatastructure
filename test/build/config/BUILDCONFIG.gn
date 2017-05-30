@@ -75,5 +75,5 @@ set_defaults("shared_library") {
 }
 
 set_defaults("executable") {
-  configs = [ "//build/config/compiler:compiler" ]
+  configs = _default_executable_configs
 }
