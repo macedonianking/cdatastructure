@@ -38,7 +38,7 @@ executable("ijar") {
     ]
   }
 
-  configs = [
+  configs += [
     ":ijar_config",
   ]
 

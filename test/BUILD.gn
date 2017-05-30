@@ -7,5 +7,6 @@ group("main") {
     "hello:hello",
     "chrome/java:chromium_java",
     "content/java/shell:content_shell",
+    "third_party/chapter:chapter",
   ]
 }

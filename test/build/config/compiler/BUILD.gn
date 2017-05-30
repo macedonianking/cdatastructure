@@ -1,8 +1,5 @@
 
 config("compiler") {
-  cflags = [ 
-    "-Werror",
-  ]
   cflags_c = [
     "-std=gnu99",
   ]
@@ -29,8 +26,9 @@ config("shared_library") {
 }
 
 config("debug") {
-  cflags = [ "-g",
-           ]
+  cflags = [ 
+    "-g",
+  ]
 }
 
 config("release") {

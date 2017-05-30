@@ -51,12 +51,19 @@ _default_static_library_configs += [
   "//build/config/compiler:static_library",
 ]
 
+_default_executable_configs = _default_toolchain_configs
+
+_debug_config = "//build/config/compiler:debug"
+_release_ccofig = "//build/config/compiler:release"
+
 if (is_debug) {
-  _default_static_library_configs += [ "//build/config/compiler:debug" ]
-  _default_shared_library_configs += [ "//build/config/compiler:debug" ]
+  _default_static_library_configs += [ _debug_config  ]
+  _default_shared_library_configs += [ _debug_config ]
+  _default_executable_configs += [ _debug_config ]
 } else {
-  _default_static_library_configs += [ "//build/config/compiler:release" ]
-  _default_shared_library_configs += [ "//build/config/compiler:release" ]
+  _default_static_library_configs += [ _release_ccofig ]
+  _default_shared_library_configs += [ _release_ccofig ]
+  _default_executable_configs += [ _release_ccofig ]
 }
 
 set_defaults("static_library") {
@@ -67,3 +74,6 @@ set_defaults("shared_library") {
   configs = _default_shared_library_configs
 }
 
+set_defaults("executable") {
+  configs = [ "//build/config/compiler:compiler" ]
+}

@@ -1,6 +1,3 @@
 
 config("compiler") {
-  cflags = [
-    "-O2",
-  ]
 }

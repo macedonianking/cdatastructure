@@ -17,7 +17,7 @@ executable("hello") {
     ":test",
   ]
 
-  configs = [
+  configs += [
     "hello_shared:hello_shared_config",
   ]
 }

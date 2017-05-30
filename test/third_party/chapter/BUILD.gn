@@ -1,0 +1,22 @@
+
+executable("chapter") {
+  all_source_file = exec_script("//build/find_all_files_under.py",
+                                [
+                                  "--include-patterns",
+                                  "*",
+                                  "--dir",
+                                  rebase_path("src", root_build_dir),
+                                  "--relative-dir",
+                                  rebase_path(".", root_build_dir),
+                                ],
+                                "list lines")
+  sources = all_source_file
+  cflags_c = [ 
+    "-g",
+    "-Wall", 
+    "-std=gnu99",
+  ]
+  include_dirs = [
+    "src",
+  ]
+}
