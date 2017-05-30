@@ -120,6 +120,7 @@ template("gcc_toolchain") {
       ]
       link_output = "$sofile"
       depend_output = "$tocfile"
+      restat = true
 
       default_output_dir = "{{root_out_dir}}"
       default_output_extension = shlib_extension

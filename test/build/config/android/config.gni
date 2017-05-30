@@ -10,16 +10,16 @@ if (is_android) {
   }
 
   if (!defined(default_android_sdk_root)) {
-    default_android_sdk_root = "//third_party/android_tools/sdk"
-    default_android_sdk_version = "23"
-    default_android_sdk_build_tools_version = "23.0.1"
+    default_android_sdk_root = "D:\\android-sdk-windows"
+    default_android_sdk_version = "19"
+    default_android_sdk_build_tools_version = "19.0.0"
   }
 
   if (!defined(default_lint_android_sdk_root)) {
     # Purposefully repeated so that downstream can change
     # default_android_sdk_root without changing lint version.
-    default_lint_android_sdk_root = "//third_party/android_tools/sdk"
-    default_lint_android_sdk_version = "23"
+    default_lint_android_sdk_root = "D:\\android-sdk-windows"
+    default_lint_android_sdk_version = "19"
   }
 
   if (!defined(default_android_keystore_path)) {
