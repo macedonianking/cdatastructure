@@ -12,7 +12,7 @@ if (is_android) {
   if (!defined(default_android_sdk_root)) {
     default_android_sdk_root = "D:\\android-sdk-windows"
     default_android_sdk_version = "19"
-    default_android_sdk_build_tools_version = "19.0.0"
+    default_android_sdk_build_tools_version = "24.0.0"
   }
 
   if (!defined(default_lint_android_sdk_root)) {
@@ -95,6 +95,8 @@ if (is_android) {
     # Adds intrumentation to each function. Writes a file with the order that
     # functions are called at startup.
     use_order_profiling = false
+
+    android_app_abi = "armeabi-v7a"
 }
 
   # We need a second declare_args block to make sure we are using the overridden

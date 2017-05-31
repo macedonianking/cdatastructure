@@ -148,7 +148,7 @@ def _MergeAssets(all_assets):
         dest_map = uncompressed if disable_compression else compressed
         other_map = compressed if disable_compression else uncompressed
         outputs = entry.get('outputs', [])
-        for src, dest in itertools.izip_longest(entry['sources'], outputs):
+        for src, dest in itertools.zip_longest(entry['sources'], outputs):
             if not dest:
                 dest = os.path.basename(src)
             # Merge so that each path shows up in only one of the lists, and that
