@@ -1,16 +1,32 @@
 #include "chapter1/chapter1.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "utils/math_help.h"
 #include "utils/utils.h"
+#include "utils/list.h"
+#include "utils/get_line.h"
 
 #define LOWER   0
 #define UPPER   300
 #define STEP    20
 
-void chapter_tutorial_1() {
-    chapter_tutorial_1_6();
+struct histogram_t {
+    struct list_head node;
+    int x;
+    int y;
+};
+
+struct string_node_t {
+    struct list_head    node;
+    char                *str;
+};
+
+void chapter_tutorial_1(int argc, char **argv) {
+    chapter_exercise_1_18(argc, argv);
 }
 
 /**
@@ -124,10 +140,12 @@ void chapter_tutorial_1_6() {
 
     while ((ch = getchar()) != EOF) {
         if ('0' <= ch && ch <= '9') {
-            ++ndigits[ch-'0'];
-        } else if (ch == '\n' || ch == ' ' || ch == '\t') {
+            ++ndigits[ch - '0'];
+        }
+        else if (ch == '\n' || ch == ' ' || ch == '\t') {
             ++nblanks;
-        } else {
+        }
+        else {
             ++nothers;
         }
     }
@@ -139,4 +157,315 @@ void chapter_tutorial_1_6() {
     printf("\n");
     printf("nblanks: %d\n", nblanks);
     printf("nothers: %d\n", nothers);
+}
+
+/**
+*@param ch 输出的字符
+*@param n 输出的总字符个数
+*@param max 每行输出的最大字符个数
+*@param prefix 前缀空格大小
+*/
+static inline void PrintChars(int ch, int n, int max, int prefix) {
+    int output_prefix = 0;
+    int count;
+
+    while (n > 0) {
+        if (output_prefix) {
+            for (int i = 0; i < prefix; ++i)
+                putchar(' ');
+        }
+
+        count = MIN(n, max);
+        n -= count;
+        for (int i = 0; i < count; ++i) {
+            putchar(ch);
+        }
+        if (n > 0) {
+            putchar('\n');
+        }
+
+        output_prefix = 1;
+    }
+}
+
+static void PrintHorizontal(int nblanks, int nothers, int *ndigits) {
+    const char *format = "%-6s : ";
+    int prefix, nwhitespace;
+
+    // 输出nblanks的个数
+    prefix = printf(format, "nblansk");
+    PrintChars('*', nblanks, 100, prefix);
+    putchar('\n');
+
+    // 输出nothers的个数
+    prefix = printf(format, "nothers");
+    PrintChars('*', nothers, 100, prefix);
+    putchar('\n');
+
+    // 输出个数
+    format = "%-6s %d: ";
+    prefix = printf(format, "ndigits", 0);
+    nwhitespace = prefix - 3;
+    PrintChars('*', ndigits[0], 100, prefix);
+    putchar('\n');
+    for (int i = 1; i < 10; ++i) {
+        PrintChars(' ', nwhitespace, 100, 0);
+        printf("%d: ", i);
+        PrintChars('*', ndigits[i], 100, prefix);
+        putchar('\n');
+    }
+}
+
+#if 0
+
+/*
+* 格式化
+*/
+static void FormatHistogram(struct list_head *list, int *x, int max, int n) {
+    int count;
+    struct histogram_t *hist;
+
+    while (n > 0) {
+        count = MIN(n, max);
+        n -= count;
+
+        hist = (struct histogram_t*) malloc(sizeof(*hist));
+        INIT_LIST_HEAD(&hist->node);
+        hist->x = *x;
+        *x += 1;
+        hist->y = count;
+        list_add_tail(&hist->node, list);
+    }
+}
+
+/**
+* 输出统计条
+*/
+static void PrintHisogram(struct list_head *list) {
+    int max_x, max_y, x, y;
+    struct histogram_t *ptr;
+
+    max_x = 0;
+    max_y = 0;
+    LIST_FOR_EACH_ENTRY(ptr, list, node) {
+        max_y = MAX(max_y, ptr->y);
+        max_x = MAX(max_x, ptr->x);
+    }
+
+    for (y = 0; y < max_y; ++y) {
+        x = -1;
+        LIST_FOR_EACH_ENTRY(ptr, list, node) {
+            while (x + 1 < ptr->x) {
+                putchar(' ');
+                ++x;
+            }
+            if (y < ptr->y) {
+                putchar('*');
+            }
+            else {
+                putchar(' ');
+            }
+            ++x;
+        }
+        putchar('\n');
+    }
+}
+
+#endif 
+
+void chapter_exercise_1_13() {
+    int nblanks, nothers;
+    int ndigits[10];
+    int ch;
+
+    nblanks = nothers = 0;
+    for (int i = 0; i < 10; ++i) {
+        ndigits[i] = 0;
+    }
+
+    while ((ch = getchar()) != EOF) {
+        if ('0' <= ch && ch <= '9') {
+            ++ndigits[ch - '0'];
+        }
+        else if (ch == '\n' || ch == '\t' || ch == ' ') {
+            ++nblanks;
+        }
+        else {
+            ++nothers;
+        }
+    }
+    PrintHorizontal(nblanks, nothers, ndigits);
+}
+
+#define NCHAR_COUNT ('z' - 'a')
+
+void chapter_exercise_1_14() {
+    int nlower[NCHAR_COUNT];
+    int nupper[NCHAR_COUNT];
+    int ch;
+
+    while ((ch = getchar()) != EOF) {
+        if (ch >= 'a' && ch <= 'z') {
+            ++nlower[ch - 'a'];
+        } else if (ch >= 'A' && ch <= 'Z') {
+            ++nupper[ch - 'A'];
+        }
+    }
+    printf("nlower : ");
+    for (int i = 0; i < NARRAY(nlower); ++i) {
+        printf("%d ", nlower[i]);
+    }
+    printf("\n");    
+
+    printf("nupper : ");
+    for (int i = 0; i < NARRAY(nupper); ++i) {
+        printf("%d ", nupper[i]);
+    }
+    printf("\n");
+}
+
+void chapter_tutorial_1_9(int argc, char **argv) {
+    char *line, *max_line;
+    int nline, max_line_capacity, max_line_length;
+    int line_length;
+    struct get_line_t *get;
+    FILE *fp;
+
+    line = NULL;
+    nline = 0;
+    max_line_capacity = 3;
+    max_line_length = -1;
+    max_line = (char*) malloc(sizeof(char) * max_line_capacity);
+
+    get = open_getline();
+
+    fp = NULL;
+    if (argc >= 2) {
+        fp = fopen(argv[1], "r");
+    }    
+    if (fp) {
+        while (read_getline(get, fp, &line, &nline)) {
+            line_length = strlen(line);
+            if (line_length > max_line_length) {
+                if (max_line_capacity < line_length + 1) {
+                    max_line_capacity = line_length + 1;
+                    max_line = (char*) realloc(max_line, max_line_capacity);
+                }
+                strcpy(max_line, line);
+                max_line_length = line_length;
+            }
+        }
+    }
+
+    fclose(fp);
+    free(line);
+    close_getline(get);
+    get = NULL;
+
+    if (max_line_length >= 0) {
+        printf("%s", max_line);
+        if (max_line_length > 0 && max_line[max_line_length-1] != '\n') {
+            putchar('\n');
+        }
+    }
+    free(max_line);
+    max_line = NULL;
+}
+
+void chapter_exercise_1_17(int argc, char **argv) {
+    FILE *fp;
+    struct get_line_t *get;
+    char *line;
+    int nline, line_length;
+    DEFINE_LIST_HEAD(out_list);
+    struct string_node_t *item;
+
+    if (argc < 2) {
+        return;
+    }
+
+    fp = fopen(argv[1], "r");
+    if (!fp) {
+        fprintf(stderr, "can't open file '%s' error is '%s'\n", argv[1], strerror(errno));
+        return;
+    }
+
+    get = open_getline();
+    line = NULL;
+    nline = 0;
+
+    while (read_getline(get, fp, &line, &nline)) {
+        line_length = strlen(line);
+        if (line_length >= 80) {
+            item = (struct string_node_t*) malloc(sizeof(*item));
+            INIT_LIST_HEAD(&item->node);
+            item->str = (char*) malloc((line_length + 1) * sizeof(char));
+            strcpy(item->str, line);
+            list_add_tail(&item->node, &out_list);
+        }
+    }
+
+    close_getline(get);
+    fclose(fp);
+
+    LIST_FOR_EACH_ENTRY(item, &out_list, node) {
+        printf("%s", item->str);
+    }
+
+    LIST_FOR_EACH_ENTRY_SAFE(item, &out_list, node) {
+        list_del(&item->node);
+        free(item->str);
+        free(item);
+    }
+}
+
+/*
+* 移除行尾的空格符
+*/
+static int remove_trailing_whitespace(char *str) {
+    char *anchor, *ptr;
+
+    anchor = NULL;
+    for (ptr = str; *ptr != '\0'; ++ptr) {
+        if (*ptr == '\n' || *ptr == '\t' || *ptr == ' ') {
+            if (!anchor) {
+                anchor = ptr;
+            }
+        } else {
+            anchor =  NULL;
+        }
+    }
+    if (anchor) {
+        *anchor = '\0';
+        ptr = anchor;
+    }
+    return ptr != str;
+}
+
+void chapter_exercise_1_18(int argc, char **argv) {
+    FILE *fp;
+    struct get_line_t *get;
+    char *line = NULL;
+    int nline = 0;
+
+    if (argc < 2) {
+        return;
+    }
+
+    if (!(fp = fopen(argv[1], "r"))) {
+        fprintf(stderr, "can't open file '%s', error is '%s'\n", 
+            argv[1], strerror(errno));
+        return;
+    }
+
+    get = open_getline();
+    while (read_getline(get, fp, &line, &nline)) {
+        if (remove_trailing_whitespace(line)) {
+            printf("%s\n", line);
+        }
+    }
+    close_getline(get);
+
+    fclose(fp);
+    fp = NULL;
 }

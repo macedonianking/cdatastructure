@@ -1,12 +1,11 @@
 #include <stdio.h>
 
-#include "chapter1/chapter1.h"
+#include "chapter3/chapter3.h"
 
 /**
-* Ö÷³ÌĞòÈë¿Ú
+* ä¸»ç¨‹åºå…¥å£
 */
 int main(int argc, char **argv) {
-    chapter_tutorial_1();
-
+    chapter3_main(argc, argv);
     return 0;
 }

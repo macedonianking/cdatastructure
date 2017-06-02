@@ -6,7 +6,7 @@ group("main") {
   deps = [
     "hello:hello",
     "chrome/java:chromium_java",
-    "content/java/shell:content_shell",
+#    "content/java/shell:content_shell",
     "third_party/chapter:chapter",
   ]
 }

@@ -13,6 +13,7 @@ executable("chapter") {
   sources = all_source_file
   cflags_c = [ 
     "-Wall", 
+    "-Werror=implicit-function-declaration",
   ]
   include_dirs = [
     "src",
