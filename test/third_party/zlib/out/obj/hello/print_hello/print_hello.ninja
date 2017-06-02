@@ -1,3 +1,0 @@
-build libprint_hello.dll: copy obj/hello/print_hello/libprint_hello.dll
-
-build obj/hello/print_hello/print_hello.stamp: stamp libprint_hello.dll

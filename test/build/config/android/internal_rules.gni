@@ -1,6 +1,7 @@
 import("//build_overrides/build.gni")
 import("//build/config/android/config.gni")
 import("//build/config/zip.gni")
+import("//build/config/unzip.gni")
 import("//third_party/ijar/ijar.gni")
 
 

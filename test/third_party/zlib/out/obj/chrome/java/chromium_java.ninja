@@ -1,1 +1,0 @@
-build obj/chrome/java/chromium_java.stamp: stamp obj/chrome/java/read_mode_java__build_config.stamp obj/chrome/java/download_manager_java__build_config.stamp

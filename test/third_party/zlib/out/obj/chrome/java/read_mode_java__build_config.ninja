@@ -1,9 +1,0 @@
-rule __chrome_java_read_mode_java__build_config___build_toolchain_android_mingw_x64__rule
-  command = D$:/share/Python34/python.exe ../../../build/android/gyp/write_build_config.py --type java_library --depfile gen/chrome/java/read_mode_java__build_config.d --deps-configs=[] --build-config gen/chrome/java/read_mode_java.build_config --jar-path obj/chrome/java/read_mode_java.jar
-  description = ACTION //chrome/java:read_mode_java__build_config(//build/toolchain/android:mingw_x64)
-  restat = 1
-
-build gen/chrome/java/read_mode_java.build_config: __chrome_java_read_mode_java__build_config___build_toolchain_android_mingw_x64__rule | ../../../build/android/gyp/write_build_config.py
-  depfile = gen/chrome/java/read_mode_java__build_config.d
-
-build obj/chrome/java/read_mode_java__build_config.stamp: stamp gen/chrome/java/read_mode_java.build_config

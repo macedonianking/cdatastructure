@@ -20,6 +20,8 @@ android_apk("content_shell_apk") {
   ]
   apk_name = "MainButton"
   chromium_code = false
+  package_name = "com.oppo.button"
+  package_path = "com/oppo/button"
 }
 
 group("content_shell") {

@@ -1089,23 +1089,21 @@ assert(is_android)
     _srcjar_deps += [ ":$_build_config_java_target_name" ]
 
     generated_java_target = "${_template_name}__generated_java"
-    java_library_impl(generated_java_target) {
-      forward_variables_from(invoker,
-                             [
-                               "chromium_code",
-                               "run_findbugs_override",
-                             ])
-      supports_android = true
-      requires_android = true
-
-      android_manifest = _android_manifest
-      srcjar_deps = [
+    unzip(generated_java_target) {
+      deps = [
         ":$process_resources_target",
         ":$_build_config_java_target_name",
       ]
-      jar_path = "${base_path}_generated.jar"
-      dex_path = "${base_path}_generated.dex.jar"
-      emma_never_instrument = _emma_never_instrument
+      output = "$target_out_dir/$generated_java_target.txt"
+    
+      _input_srcjars = []
+      foreach(_dep, deps) {
+        _dep_target_name = get_label_info(_dep, "name")
+        _dep_srcjar = get_label_info(_dep, "target_gen_dir") + "/$_dep_target_name.srcjar"
+        _input_srcjars += [ _dep_srcjar ]
+      }
+      inputs = _input_srcjars
+      base_dir = "$target_gen_dir/$_template_name/generated"
     }
 
     java_target = "${_template_name}__java"

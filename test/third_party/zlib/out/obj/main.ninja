@@ -1,1 +1,0 @@
-build obj/main.stamp: stamp ./hello.exe obj/chrome/java/chromium_java.stamp ./libmain.a ./libz.a
