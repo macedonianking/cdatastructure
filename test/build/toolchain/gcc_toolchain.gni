@@ -31,7 +31,6 @@ template("gcc_toolchain") {
 
   toolchain(target_name) {
     # 目标文件的子目录
-    object_subdir = "{{target_out_dir}}/{{label_name}}"
 
     lib_switch = "-l"
     lib_dir_switch = "-L"
@@ -42,7 +41,7 @@ template("gcc_toolchain") {
       depsformat = "gcc"
       description = "CC {{output}}"
       outputs = [
-        "$object_subdir/{{source_name_part}}.o",
+        "{{source_out_dir}}/{{label_name}}_{{source_name_part}}.o",
       ]
     }
 
@@ -52,7 +51,7 @@ template("gcc_toolchain") {
       depsformat = "gcc"
       description = "CXX {{output}}"
       outputs = [
-        "$object_subdir/{{source_name_part}}.o",
+        "{{source_out_dir}}/{{label_name}}_{{source_name_part}}.o",
       ]
     }
 
