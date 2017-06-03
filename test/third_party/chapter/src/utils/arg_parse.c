@@ -6,17 +6,17 @@
 #include "utils/string_ext.h"
 #include "utils/utils.h"
 
-struct arg_parser {
+struct arg_parser_t {
     struct list_head arg_list;
 };
 
-struct arg_parser *open_arg_parser() {
-    struct arg_parser *parser = (struct arg_parser*) malloc(sizeof(struct arg_parser));
+struct arg_parser_t *open_arg_parser() {
+    struct arg_parser_t *parser = (struct arg_parser_t*) malloc(sizeof(struct arg_parser_t));
     INIT_LIST_HEAD(&parser->arg_list);
     return parser;
 }
 
-static struct arg_desc_t *arg_parser_find_arg_desc(struct arg_parser *parser,
+static struct arg_desc_t *arg_parser_find_arg_desc(struct arg_parser_t *parser,
         const char *option_name) {
     struct arg_desc_t *ptr;
 
@@ -110,7 +110,7 @@ static int check_arg_desc(struct arg_desc_t *desc) {
 /**
 * Find the positons argument descrition.
 */
-static struct arg_desc_t *arg_parser_get_positions_desc(struct arg_parser *parser) {
+static struct arg_desc_t *arg_parser_get_positions_desc(struct arg_parser_t *parser) {
     struct arg_desc_t *ptr;
 
     LIST_FOR_EACH_ENTRY(ptr, &parser->arg_list, node) {
@@ -149,7 +149,7 @@ static void free_arg_desc(struct arg_desc_t *desc) {
     free(desc);
 }
 
-int arg_parser_add_argument(struct arg_parser *parser, struct arg_desc_t *desc) {
+int arg_parser_add_argument(struct arg_parser_t *parser, struct arg_desc_t *desc) {
     struct arg_desc_t *ptr;
     char option_name[NBUF_SIZE];
 
@@ -175,6 +175,7 @@ int arg_parser_add_argument(struct arg_parser *parser, struct arg_desc_t *desc) 
     ptr->option_name = s_strdup(option_name);
     ptr->desc = desc->desc ? s_strdup(desc->desc) : NULL;
     ptr->is_required = desc->is_required;
+    ptr->metavar = s_strdup(desc->metavar);
 
     switch(ptr->type) {
         case arg_type_int_switch: {
@@ -191,7 +192,7 @@ int arg_parser_add_argument(struct arg_parser *parser, struct arg_desc_t *desc) 
     return 0;
 }
 
-void close_arg_parser(struct arg_parser *parser) {
+void close_arg_parser(struct arg_parser_t *parser) {
     struct arg_desc_t *ptr;
 
     LIST_FOR_EACH_ENTRY_SAFE(ptr, &parser->arg_list, node) {
@@ -229,7 +230,7 @@ static int print_arg_desc(FILE *fp, struct arg_desc_t *desc) {
     return n;
 }
 
-static void print_arg_parser_desc(FILE *fp, struct arg_parser *parser, const char *exec_name) {
+static void print_arg_parser_desc(FILE *fp, struct arg_parser_t *parser, const char *exec_name) {
     int n;
     struct arg_desc_t *ptr;
 
@@ -248,6 +249,6 @@ static void print_arg_parser_desc(FILE *fp, struct arg_parser *parser, const cha
     }
 }
 
-void arg_parser_print_help(FILE *fp, struct arg_parser *parser, const char *exec_name) {
+void arg_parser_print_help(FILE *fp, struct arg_parser_t *parser, const char *exec_name) {
     print_arg_parser_desc(fp, parser, exec_name);
 }

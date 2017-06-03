@@ -37,7 +37,7 @@
         int r; \
         int start, end; \
         \
-        start = fprintf(stdout, "%s", name); \
+        start = fprintf(stdout, "%s", #name); \
         end = start + 4; \
         end = end - end % 4; \
         if (end < _TEST_PREFIX_WIDTH) { \
@@ -55,5 +55,7 @@
             exit(-1); \
         } \
     } while (0)
+
+#define TEST_VOID(name, statement) TEST_CASE(name, ({statement; 1;}))
 
 #endif

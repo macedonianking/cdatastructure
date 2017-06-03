@@ -8,7 +8,7 @@
 
 #define DEFAULT_INT_NONE    INT_MAX
 
-struct arg_parser;
+struct arg_parser_t;
 struct arg_parser_result_t;
 
 enum arg_type_t {
@@ -38,10 +38,10 @@ struct arg_desc_t {
 };
 
 // 参数解析器
-struct arg_parser *open_arg_parser();
-void close_arg_parser(struct arg_parser *parser);
-int arg_parser_add_argument(struct arg_parser *parser, struct arg_desc_t *desc);
-void arg_parser_print_help(FILE *fp, struct arg_parser *parser, const char *exec_name);
+struct arg_parser_t *open_arg_parser();
+void close_arg_parser(struct arg_parser_t *parser);
+int arg_parser_add_argument(struct arg_parser_t *parser, struct arg_desc_t *desc);
+void arg_parser_print_help(FILE *fp, struct arg_parser_t *parser, const char *exec_name);
 
 // 解析参数
 struct arg_parser_result_t *arg_parser_parse_args(char **str, int start, int end);
