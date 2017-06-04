@@ -34,24 +34,24 @@
 
 #define TEST_CASE(name, method) \
     do { \
-        int r; \
-        int start, end; \
+        int __r; \
+        int __start, __end; \
         \
-        start = fprintf(stdout, "%s", #name); \
-        end = start + 4; \
-        end = end - end % 4; \
-        if (end < _TEST_PREFIX_WIDTH) { \
-            end = _TEST_PREFIX_WIDTH; \
+        __start = fprintf(stdout, "%s", #name); \
+        __end = __start + 4; \
+        __end = __end - __end % 4; \
+        if (__end < _TEST_PREFIX_WIDTH) { \
+            __end = _TEST_PREFIX_WIDTH; \
         } \
-        for (int i = start; i < end; ++i) { \
+        for (int i = __start; i < __end; ++i) { \
             fputc(' ', stdout); \
         } \
-        start = end; \
+        __start = __end; \
         fprintf(stdout, "===> "); \
         \
-        r = (method); \
-        fprintf(stdout, "[%s]\n", r ? "TRUE" : "FALSE"); \
-        if (!r) { \
+        __r = (method); \
+        fprintf(stdout, "[%s]\n", __r ? "TRUE" : "FALSE"); \
+        if (!__r) { \
             exit(-1); \
         } \
     } while (0)
