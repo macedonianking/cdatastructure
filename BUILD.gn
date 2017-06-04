@@ -1,9 +1,6 @@
 
-copy("main") {
-  sources = [ "$target_out_dir/src/main.exe" ]
-  outputs = [ "$root_build_dir/../main.exe" ]
-
+group("main") {
   deps = [
-    "//src:main",
+    "third_party/chapter:chapter",
   ]
 }

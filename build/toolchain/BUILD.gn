@@ -1,0 +1,15 @@
+import("//build/toolchain/gcc_toolchain.gni")
+
+gcc_toolchain("linux_toolchain") {
+    cc = "gcc"
+    cxx = "g++"
+    ar = "ar"
+    ld = "gcc"
+    nm = "nm"
+
+    toolchain_args_current_os = "linux"
+    toolchain_args_current_cpu = "x86_64"
+    shlib_extension = ".so"
+    static_lib_extension =".a"
+    executable_extension = ""
+}

@@ -1,0 +1,47 @@
+
+all_source_file = exec_script("//build/find_all_files_under.py",
+                              [
+                                "--include-patterns",
+                                "*",
+                                "--dir",
+                                rebase_path("src", root_build_dir),
+                                "--relative-dir",
+                                rebase_path(".", root_build_dir),
+                              ],
+                              "list lines")
+all_source_file -= [ "src/main.c" ]
+
+executable("chapter") {
+  sources = [ "src/main.c" ] + all_source_file
+
+  cflags_c = [ 
+    "-Wall",
+    "-Werror=implicit-function-declaration",
+  ]
+  include_dirs = [
+    "src",
+  ]
+}
+
+executable("test_chapter") {
+  all_test_source_files = exec_script("//build/find_all_files_under.py",
+                                      [
+                                        "--include-patterns",
+                                        "*",
+                                        "--dir",
+                                        rebase_path("test", root_build_dir),
+                                        "--relative-dir",
+                                        rebase_path(".", root_build_dir),
+                                      ],
+                                      "list lines")
+  sources = all_test_source_files + all_source_file
+
+  cflags_c = [ 
+    "-Wall",
+    "-Werror=implicit-function-declaration",
+  ]
+  include_dirs = [
+    "src",
+    "test",
+  ]
+}

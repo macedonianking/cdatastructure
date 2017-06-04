@@ -1,0 +1,164 @@
+# 设置使用的默认的gcc_toolchain的模板
+
+template("gcc_toolchain") {
+  assert(defined(invoker.cc), "gcc_toolchain() must set a \"cc\" variable.")
+  assert(defined(invoker.cxx), "gcc_toolchain() must set a \"cxx\" variable.")
+  assert(defined(invoker.ar), "gcc_toolchain() must set a \"ar\" variable.")
+  assert(defined(invoker.ld), "gcc_toolchain() must set a \"ld\" variable.")
+  assert(defined(invoker.nm), "gcc_toolchain() must set a \"nm\" variable.")
+
+
+  cc = invoker.cc
+  cxx = invoker.cxx
+  ar = invoker.ar
+  ld = invoker.ld
+  nm = invoker.nm
+  forward_variables_from(invoker, 
+                         [ "toolchain_args_current_os",
+                           "toolchain_args_current_cpu",
+                           "shlib_extension",
+                           "static_lib_extension",
+                           "executable_extension",
+                         ]
+                        )
+  assert(defined(toolchain_args_current_cpu))
+  assert(defined(toolchain_args_current_os))
+  assert(defined(shlib_extension))
+  assert(defined(static_lib_extension))
+  assert(defined(executable_extension))
+
+  toolchain(target_name) {
+    # 目标文件的子目录
+
+    lib_switch = "-l"
+    lib_dir_switch = "-L"
+
+    tool ("cc") {
+      depfile = "{{output}}.d"
+      command = "$cc -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_c}} -c {{source}} -o {{output}}"
+      depsformat = "gcc"
+      description = "CC {{output}}"
+      outputs = [
+        "{{source_out_dir}}/{{label_name}}_{{source_name_part}}.o",
+      ]
+    }
+
+    tool ("cxx") {
+      depfile = "{{output}}.d"
+      command = "$cxx -MMD -MF $depfile {{cflags}} {{include_dirs}} {{defines}} {{cflags_cc}} -c {{source}} -o {{output}}"
+      depsformat = "gcc"
+      description = "CXX {{output}}"
+      outputs = [
+        "{{source_out_dir}}/{{label_name}}_{{source_name_part}}.o",
+      ]
+    }
+
+    tool("alink") {
+      afile_name = "{{target_output_name}}{{output_extension}}"
+      ar_wrapper = rebase_path("//build/toolchain/gcc_ar_wrapper.py", root_build_dir)
+      whitelist_flags = ""
+
+      depfile = "{{output}}.d"
+      rspfile = "{{output}}.rsp"
+      cmd = "$python_path $ar_wrapper"
+      cmd += " --depfile=\"$depfile\""
+      cmd += " --ar=\"$ar\"${whitelist_flags}"
+      cmd += " --output=\"{{output}}\""
+      cmd += " {{arflags}}"
+      cmd += " rcsD"
+      cmd += " @\"${rspfile}\""
+      command = "$cmd"
+      depsformat = "gcc"
+      rspfile_content = "{{inputs}}"
+      description = "ALINK {{label}}"
+      outputs = [
+        "{{output_dir}}/$afile_name",
+      ]
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = static_lib_extension
+      output_prefix = "lib"
+    }
+
+    tool("solink") {
+      soname = "{{target_output_name}}{{output_extension}}"
+      sofile = "{{output_dir}}/$soname"
+
+      unstripped_sofile = sofile
+
+      link_command = "$ld {{ldflags}}"
+      link_command += " -shared"
+      link_command += " -o $unstripped_sofile"
+      link_command += " -Wl,-soname,$soname"
+      link_command += " -Wl,--whole-archive"
+      link_command += " {{inputs}} {{solibs}} "
+      link_command += " -Wl,--no-whole-archive"
+      link_command += " {{libs}}"
+
+      tocfile = "{{output_dir}}/$soname.TOC"
+
+      solink_wrapper = rebase_path("//build/toolchain/gcc_solink_wrapper.py")
+      cmds = "$python_path \"$solink_wrapper\""
+      cmds += " --nm=\"$nm\""
+      cmds += " --tocfile=\"$tocfile\""
+      cmds += " --soname=\"$soname\""
+      cmds += " --sofile=\"$unstripped_sofile\""
+      cmds += " --output=\"$sofile\""
+      cmds += " -- \"$link_command\""
+
+      command = "$cmds"
+      description = "SOLINK $sofile"
+      outputs = [
+        "$sofile",
+        "$tocfile",
+      ]
+      link_output = "$sofile"
+      depend_output = "$tocfile"
+      restat = true
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = shlib_extension
+      output_prefix = "lib"
+    }
+
+    tool("link") {
+      cmds = "$ld {{ldflags}}"
+      cmds += " -o {{output}}"
+      cmds += " -Wl,--start-group"
+      cmds += " {{inputs}}"
+      cmds += " {{solibs}}"
+      cmds += " -Wl,--end-group"
+      cmds += " {{libs}}"
+      cmds += " {{solibs}}"
+      command = "$cmds"
+      description = "LINK {{label}}"
+      outputs = [
+        "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+      ]
+
+      default_output_dir = "{{root_out_dir}}"
+      default_output_extension = executable_extension
+    }
+
+    tool("stamp") {
+      command = "touch {{output}}"
+      description = "STAMP {{output}}"
+    }
+
+    tool("copy") {
+      command = "cp -f {{source}} {{output}}"
+      description = "COPY {{output}}"
+    }
+
+    toolchain_args() {
+      current_cpu = toolchain_args_current_cpu
+      current_os = toolchain_args_current_os
+    }
+
+    forward_variables_from(invoker, 
+                           [
+                            "deps",
+                           ])
+  }
+}
+
