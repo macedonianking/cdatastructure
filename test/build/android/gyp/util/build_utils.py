@@ -580,3 +580,10 @@ def PlatformPathSep():
         return ";"
     else:
         return ":"
+
+
+def WriteSourcesFile(path_list, out_file):
+    """写源文件列表"""
+    with open(out_file, mode="w", encoding="utf-8") as fileobj:
+        for item in path_list:
+            print(item, file=fileobj)

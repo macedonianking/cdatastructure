@@ -11,7 +11,7 @@ if (is_android) {
 
   if (!defined(default_android_sdk_root)) {
     default_android_sdk_root = "D:\\android-sdk-windows"
-    default_android_sdk_version = "19"
+    default_android_sdk_version = "25"
     default_android_sdk_build_tools_version = "24.0.0"
   }
 

@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sys
+import tempfile
 
 import jar
 from util import build_utils
@@ -194,7 +195,11 @@ def _OnStaleMd5(changes, options, javac_cmd, java_files, classpath_inputs):
 
             # Don't include the output directory in the initial set of args since it
             # being in a temp dir makes it unstable (breaks md5 stamping).
-            cmd = javac_cmd + ['-d', classes_dir] + java_files
+            sources = tempfile.mktemp(suffix=".sources")
+            with open(sources, mode="w", encoding="utf-8") as temp_file:
+                for item in java_files:
+                    print(item, file=temp_file)
+            cmd = javac_cmd + ['-d', classes_dir] + ["@" + sources]
 
             # JMake prints out some diagnostic logs that we want to ignore.
             # This assumes that all compiler output goes through stderr.
@@ -217,6 +222,9 @@ def _OnStaleMd5(changes, options, javac_cmd, java_files, classpath_inputs):
                       '(http://crbug.com/551449).')
                 os.unlink(pdb_path)
                 attempt_build()
+            finally:
+                os.remove(sources)
+                pass
         elif options.incremental:
             # Make sure output exists.
             build_utils.Touch(pdb_path)

@@ -106,6 +106,25 @@ assert(is_android)
     }
   }
 
+  template("android_build_config") {
+    forward_variables_from(invoker, [ "testonly" ])
+
+    java_cpp_template(target_name) {
+      assert(defined(invoker.package_name), "android_apk target must defined package_name variable")
+      assert(defined(invoker.package_path), "android_apk target must defined package_path variable")
+      package_name = invoker.package_path
+      sources = [
+        "//base/android/java/templates/build/BuildConfig.template",
+      ]
+      defines = []
+      if (is_java_debug) {
+        defines += [ "IS_DEBUG" ]
+      }
+      defines += [
+        "PACKAGE_NAME=${invoker.package_name}",
+      ]
+    }
+  }
 
   # Declare an Android resources target
   #
@@ -1068,23 +1087,9 @@ assert(is_android)
 
     # 编译生成BuildConfig.java文件
     _build_config_java_target_name = "${_template_name}__build_config_java"
-    java_cpp_template(_build_config_java_target_name) {
-      assert(defined(invoker.package_name), "android_apk target must defined package_name variable")
-      assert(defined(invoker.package_path), "android_apk target must defined package_path variable")
-      package_name = invoker.package_path
-      sources = [
-        "//base/android/java/templates/build/BuildConfig.template",
-      ]
-      deps = [
-        ":$build_config_target",
-      ]
-      defines = []
-      if (is_java_debug) {
-        defines += [ "IS_DEBUG" ]
-      }
-      defines += [
-        "PACKAGE_NAME=${invoker.package_name}",
-      ]
+    android_build_config(_build_config_java_target_name) {
+      package_name = invoker.package_name
+      package_path = invoker.package_path
     }
     _srcjar_deps += [ ":$_build_config_java_target_name" ]
 
