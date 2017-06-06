@@ -2,5 +2,6 @@
 group("main") {
   deps = [
     "third_party/chapter:chapter",
+    "third_party/apue:apue",
   ]
 }

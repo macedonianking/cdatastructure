@@ -1,0 +1,45 @@
+
+executable("apue") {
+  sources = exec_script("//build/find_all_files_under.py",
+                        [
+                          "--include-patterns",
+                          "*",
+                          "--dir",
+                          rebase_path("src", root_build_dir),
+                          "--relative-dir",
+                          rebase_path(".", root_build_dir),
+                        ],
+                        "list lines")
+  include_dirs = [
+    "src",
+  ]
+
+  deps = [
+    "//third_party/cprog/utils:cprog_utils",
+  ]
+}
+
+#executable("test_qpue") {
+#  sources = exec_script("//build/find_all_files_under.py",
+#                        [
+#                          "--include-patterns",
+#                          "*",
+#                          "--dir",
+#                          rebase_path("test", root_build_dir),
+#                          "--relative-dir",
+#                          rebase_path(".", root_build_dir),
+#                        ],
+#                        "list lines")
+#  cflags_c = [ 
+#    "-Wall",
+#    "-Werror=implicit-function-declaration",
+#  ]
+#  include_dirs = [
+#    "test",
+#  ]
+#
+#  deps = [
+#    "//third_party/cprog/utils:cprog_utils",
+#    "//third_party/cprog/test:cprog_test",
+#  ]
+#}

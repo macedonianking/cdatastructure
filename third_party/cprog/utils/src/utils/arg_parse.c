@@ -439,7 +439,7 @@ FAILURE:
     r = 0;
 
 OUT:
-    string_buffer_release(&buf);
+    string_buffer_free(&buf);
     return r;
 }
 

@@ -2,7 +2,7 @@
 
 #include <memory.h>
 
-#include "utils/test.h"
+#include "test/test.h"
 #include "utils/arg_parse.h"
 #include "utils/utils.h"
 

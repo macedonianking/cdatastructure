@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "utils/test.h"
-#include "utils/test_utils.h"
+#include "test/test.h"
+#include "test/test_utils.h"
 #include "utils/test_arg_parse.h"
 
 /**

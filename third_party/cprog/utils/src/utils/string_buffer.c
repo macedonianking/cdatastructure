@@ -17,7 +17,7 @@ void string_buffer_init(struct string_buffer_t *ptr) {
     ptr->size = 0;
 }
 
-void string_buffer_release(struct string_buffer_t *ptr) {
+void string_buffer_free(struct string_buffer_t *ptr) {
     free(ptr->buf);
     ptr->size = ptr->capacity = 0;
 }
@@ -60,4 +60,10 @@ void extend_string_buffer_size(struct string_buffer_t *ptr, int n) {
 int string_buffer_append(struct string_buffer_t *ptr,
         const char *str) {
     return string_buffer_printf(ptr, "%s", str);
+}
+
+int string_buffer_assign(string_buffer_t *ptr,
+        const char *str) {
+    ptr->size = 0;
+    return string_buffer_append(ptr, str);
 }
