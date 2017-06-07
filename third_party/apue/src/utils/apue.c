@@ -4,8 +4,7 @@
 #include <stdlib.h>
 
 void err_sys(const char *msg) {
-    fprintf(stdout, "%s\n", msg);
-    exit(-1);
+    perror(msg);
 }
 
 void err_quit(const char *msg) {

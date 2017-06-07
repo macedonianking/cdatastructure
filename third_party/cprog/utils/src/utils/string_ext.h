@@ -3,6 +3,13 @@
 
 #include <string.h>
 
+#include "utils/list.h"
+
+struct string_node_t {
+    struct list_head    node;
+    char                *str;
+};
+
 char *s_strdup(const char *str);
 
 static inline int s_is_empty(const char *str) {

@@ -5,10 +5,10 @@
 #include <string.h>
 #include <errno.h>
 
-#include "utils/math_help.h"
-#include "utils/utils.h"
 #include "utils/list.h"
-#include "utils/get_line.h"
+#include "utils/math_help.h"
+#include "utils/string_ext.h"
+#include "utils/utils.h"
 
 #define LOWER   0
 #define UPPER   300
@@ -18,11 +18,6 @@ struct histogram_t {
     struct list_head node;
     int x;
     int y;
-};
-
-struct string_node_t {
-    struct list_head    node;
-    char                *str;
 };
 
 void chapter_tutorial_1(int argc, char **argv) {
@@ -326,41 +321,38 @@ void chapter_exercise_1_14() {
 
 void chapter_tutorial_1_9(int argc, char **argv) {
     char *line, *max_line;
-    int nline, max_line_capacity, max_line_length;
+    size_t nline, max_line_capacity, max_line_length;
     int line_length;
-    struct get_line_t *get;
     FILE *fp;
+
+    if (argc < 2) {
+        return;
+    }
+
+    if (!(fp = fopen(argv[1], "r"))) {
+        return;
+    }
 
     line = NULL;
     nline = 0;
-    max_line_capacity = 3;
+    max_line_capacity = NBUF_SIZE;
     max_line_length = -1;
     max_line = (char*) malloc(sizeof(char) * max_line_capacity);
 
-    get = open_getline();
-
-    fp = NULL;
-    if (argc >= 2) {
-        fp = fopen(argv[1], "r");
-    }    
-    if (fp) {
-        while (read_getline(get, fp, &line, &nline)) {
-            line_length = strlen(line);
-            if (line_length > max_line_length) {
-                if (max_line_capacity < line_length + 1) {
-                    max_line_capacity = line_length + 1;
-                    max_line = (char*) realloc(max_line, max_line_capacity);
-                }
-                strcpy(max_line, line);
-                max_line_length = line_length;
+    while (getline(&line, &nline, fp) > 0) {
+        line_length = strlen(line);
+        if (line_length > max_line_length) {
+            if (max_line_capacity < line_length + 1) {
+                max_line_capacity = line_length + 1;
+                max_line = (char*) realloc(max_line, max_line_capacity);
             }
+            strcpy(max_line, line);
+            max_line_length = line_length;
         }
     }
 
     fclose(fp);
     free(line);
-    close_getline(get);
-    get = NULL;
 
     if (max_line_length >= 0) {
         printf("%s", max_line);
@@ -376,7 +368,7 @@ void chapter_exercise_1_17(int argc, char **argv) {
     FILE *fp;
     struct get_line_t *get;
     char *line;
-    int nline, line_length;
+    size_t nline, line_length;
     DEFINE_LIST_HEAD(out_list);
     struct string_node_t *item;
 
@@ -390,11 +382,10 @@ void chapter_exercise_1_17(int argc, char **argv) {
         return;
     }
 
-    get = open_getline();
     line = NULL;
     nline = 0;
 
-    while (read_getline(get, fp, &line, &nline)) {
+    while (getline(&line, &nline, fp) > 0) {
         line_length = strlen(line);
         if (line_length >= 80) {
             item = (struct string_node_t*) malloc(sizeof(*item));
@@ -405,8 +396,8 @@ void chapter_exercise_1_17(int argc, char **argv) {
         }
     }
 
-    close_getline(get);
     fclose(fp);
+    free(line);
 
     LIST_FOR_EACH_ENTRY(item, &out_list, node) {
         printf("%s", item->str);
@@ -444,9 +435,8 @@ static int remove_trailing_whitespace(char *str) {
 
 void chapter_exercise_1_18(int argc, char **argv) {
     FILE *fp;
-    struct get_line_t *get;
     char *line = NULL;
-    int nline = 0;
+    size_t nline = 0;
 
     if (argc < 2) {
         return;
@@ -458,14 +448,13 @@ void chapter_exercise_1_18(int argc, char **argv) {
         return;
     }
 
-    get = open_getline();
-    while (read_getline(get, fp, &line, &nline)) {
+    while (getline(&line, &nline, fp) > 0) {
         if (remove_trailing_whitespace(line)) {
             printf("%s\n", line);
         }
     }
-    close_getline(get);
 
     fclose(fp);
     fp = NULL;
+    free(line);
 }
