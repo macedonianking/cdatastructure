@@ -1,5 +1,9 @@
 
 config("compiler") {
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
   cflags_c = [
     "-std=gnu99",
   ]
@@ -11,6 +15,7 @@ config("compiler") {
 
 config("static_library") {
   cflags = []
+  configs = [ ":compiler" ]
 }
 
 config("shared_library") {
@@ -20,6 +25,7 @@ config("shared_library") {
   }
   
   ldflags = [ "-shared" ]
+  configs = [ ":compiler" ]
 }
 
 config("debug") {

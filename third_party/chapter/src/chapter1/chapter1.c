@@ -366,7 +366,6 @@ void chapter_tutorial_1_9(int argc, char **argv) {
 
 void chapter_exercise_1_17(int argc, char **argv) {
     FILE *fp;
-    struct get_line_t *get;
     char *line;
     size_t nline, line_length;
     DEFINE_LIST_HEAD(out_list);
@@ -390,8 +389,7 @@ void chapter_exercise_1_17(int argc, char **argv) {
         if (line_length >= 80) {
             item = (struct string_node_t*) malloc(sizeof(*item));
             INIT_LIST_HEAD(&item->node);
-            item->str = (char*) malloc((line_length + 1) * sizeof(char));
-            strcpy(item->str, line);
+            item->str = s_strdup(line);
             list_add_tail(&item->node, &out_list);
         }
     }

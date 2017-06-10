@@ -1,12 +1,14 @@
 #include "chapter1.h"
 
 #include <dirent.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "utils/apue.h"
 #include "utils/list.h"
@@ -16,7 +18,7 @@
 
 
 int chapter1_main(int argc, char **argv) {
-    chapter_tutorial_1_6(argc, argv);
+    chapter_tutorial_1_9(argc, argv);
     return 0;
 }
 
@@ -84,7 +86,7 @@ void chapter_tutorial_1_5(int argc, char **argv) {
     int n;
 
     while((n = read(STDIN_FILENO, buffer, NBUF_SIZE)) > 0) {
-        if((n = write(STDOUT_FILENO, buffer, n)) != n) {
+        if (write(STDOUT_FILENO, buffer, n) != n) {
             n = -1;
             break;
         }
@@ -120,7 +122,8 @@ static void parse_command_options(const char *str, char ***out, size_t *len) {
         str = end;
     }
 
-    *len = n;
+    if (len)
+        *len = n;
     if (!n) {
         return;
     }
@@ -162,7 +165,7 @@ void chapter_tutorial_1_6(int argc, char **argv) {
             parse_command_options(line, &args, &args_n);
             if (args_n > 0) {
                 execvp(args[0], args);
-                err_quit("");
+                err_quit("parse_command_options.args_n=%d", (int)args_n);
             }
             break;
         }
@@ -174,4 +177,58 @@ void chapter_tutorial_1_6(int argc, char **argv) {
     free(line);
     line = NULL;
     fputc('\n', stdout);
+}
+
+void chapter_tutorial_1_7(int argc, char **argv) {
+    fprintf(stderr, "%s\n", strerror(EACCES));
+    errno = ENOENT;
+    perror(argv[0]);
+}
+
+void chapter_tutorial_1_8(int argc, char **argv) {
+    fprintf(stdout, "uid=%d, gid=%d\n", getuid(), getgid());
+}
+
+static void sig_int(int signo) {
+    fprintf(stderr, "SIGINT received\n");
+}
+
+void chapter_tutorial_1_9(int argc, char **argv) {
+    char *line;
+    char **options;
+    size_t nline;
+    pid_t child;
+    int n;
+
+    line = NULL;
+    nline= 0;
+
+    if (signal(SIGINT, &sig_int) == SIG_ERR) {
+        err_quit("signal");
+    }
+
+    fprintf(stdout, "%%:");
+    while ((n = getline(&line, &nline, stdin)) > 0) {
+        if (line[n-1] == '\n') {
+            line[n-1] = '\0';
+            n -= 1;
+        }
+        parse_command_options(line, &options, NULL);
+        if ((child = fork()) < 0) {
+            err_quit("chapter_tutorial_1_9 fork");
+        }  else if (!child) {
+            execvp(options[0], options);
+            err_quit("child process exection error");
+        }
+
+        free(options);
+        options = NULL;
+        // parent process
+        if((child = waitpid(child, NULL, 0)) < 0) {
+            err_quit("waitpid");
+        }
+        fprintf(stdout, "%%:");
+    }
+
+    free(line);
 }
