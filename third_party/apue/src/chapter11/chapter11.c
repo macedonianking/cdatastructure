@@ -4,125 +4,126 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
+#include "thread/thread_loop.h"
 #include "utils/apue.h"
+#include "utils/log.h"
+#include "utils/time_util.h"
 
-enum {
-   ThreadUI,
-   ThreadIO,
-   ThreadCount,
-};
+typedef struct foo_object_t {
+    int                 f_id;
+    int                 f_count;
+    pthread_mutex_t     f_lock;
+    struct foo_object_t *f_next;
+} foo_object_t;
 
-static pthread_t *g_thread_buf[ThreadCount] = {0};
-
-#define UIThreadId      (*g_thread_buf[ThreadUI])
-#define IOThreadId      (*g_thread_buf[ThreadIO])
-
-static inline int in_ui_thread() {
-    return !!pthread_equal(pthread_self(), UIThreadId);
-}
-
-static void check_start_io_thread();
-static void check_init_main_thread();
-static void dump_current_system_time();
+static foo_object_t     *alloc_foo_object(int id);
+static void             free_foo_object(foo_object_t *obj);
+static void             foo_object_acquire(foo_object_t *obj);
+static void             foo_object_release(foo_object_t *obj);
+static void             foo_object_wait(foo_object_t *obj);
 
 int chapter11_main(int argc, char **argv) {
     chapter11_6(argc, argv);
     return 0;
 }
 
-static void *io_thread_func(void *data) {
-    for (;;) {
-        dump_current_system_time();
-        sleep(1);
-    }
-    return NULL;
-}
-
 void chapter11_3(int argc, char **argv) {
-    check_init_main_thread();
-    printf("in_ui_thread=%s\n", in_ui_thread() ? "TRUE" : "FALSE");
 }
 
 void chapter11_4(int argc, char **argv) {
-    check_init_main_thread();
-    check_start_io_thread();
 }
 
-void check_init_main_thread() {
-    if (!g_thread_buf[ThreadUI]) {
-        g_thread_buf[ThreadUI] = (pthread_t*) malloc(sizeof(pthread_t));
-        *g_thread_buf[ThreadUI] = pthread_self();
-    }
-}
-
-void check_start_io_thread() {
+static void chapter11_6_thread_func(void *args) {
+    struct timespec wait_time;
+    foo_object_t *ptr;
     pthread_t tid;
-    void *ret_data;
 
-    if (g_thread_buf[ThreadIO]) {
-        return;
+    wait_time.tv_sec = 0;
+    wait_time.tv_nsec = 1 * MILLI_IN_NANOS;
+
+    tid = pthread_self();
+    ptr = (foo_object_t*) args;
+    for (int i = 0; i < 10000; ++i) {
+        fprintf(stdout, "thread=%lx, id=%d, %d\n", (unsigned long) tid,
+            ptr->f_id, i);
+        nanosleep(&wait_time, NULL);
     }
-
-    if (pthread_create(&tid, NULL, &io_thread_func, NULL)) {
-        APUE_ERR_SYS();
-    }
-
-    if (pthread_join(tid, &ret_data)) {
-        APUE_ERR_SYS(); 
-    }
-}
-
-void dump_current_system_time() {
-    char buf[BUFSIZ];
-    time_t now;
-
-    time(&now);
-    ctime_r(&now, buf);
-    printf("%s", buf);
-}
-
-struct share_thread_data {
-    pthread_mutex_t sh_mutex;
-    int sh_seq;
-};
-
-static struct share_thread_data g_share_data;
-
-static void *test_mutex_func(void *data) {
-    struct share_thread_data *ptr;
-
-    ptr = (struct share_thread_data*) data;
-    for (int i = 0; i < 100000; ++i) {
-        while (pthread_mutex_trylock(&ptr->sh_mutex)) {
-            ;
-        }
-        ++ptr->sh_seq;
-        fprintf(stdout, "sh_seq=%d\n", ptr->sh_seq);
-        fflush(stdout);
-        pthread_mutex_unlock(&ptr->sh_mutex);
-    }
-
-    return 0;
+    foo_object_release(ptr);
 }
 
 void chapter11_6(int argc, char **argv) {
-    pthread_t tid0, tid1;
+    foo_object_t *obj;
 
-    g_share_data.sh_seq = 0;
-    pthread_mutex_init(&g_share_data.sh_mutex, NULL);
-    if (pthread_create(&tid0, NULL, &test_mutex_func, &g_share_data)) {
-        APUE_ERR_SYS();
-    }
-    if (pthread_create(&tid1, NULL, &test_mutex_func, &g_share_data)) {
-        APUE_ERR_SYS();
-    }
+    obj = alloc_foo_object(0);
+    foo_object_acquire(obj);
+    create_detach_thread(&chapter11_6_thread_func, obj);
 
-    if (pthread_join(tid0, NULL)) {
+    foo_object_acquire(obj);
+    create_detach_thread(&chapter11_6_thread_func, obj);
+
+    foo_object_wait(obj);
+}
+
+foo_object_t *alloc_foo_object(int id) {
+    foo_object_t *ptr;
+    pthread_mutexattr_t mutex_attr;
+
+    ptr = (foo_object_t*) malloc(sizeof(*ptr));
+    DCHECK(ptr != NULL);
+
+    ptr->f_id = id;
+    ptr->f_next = NULL;
+    ptr->f_count = 1;
+
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+    if (pthread_mutex_init(&ptr->f_lock, &mutex_attr)) {
         APUE_ERR_SYS();
     }
-    if (pthread_join(tid1, NULL)) {
-        APUE_ERR_SYS();
+    pthread_mutexattr_destroy(&mutex_attr);
+    return ptr;
+}
+
+void free_foo_object(foo_object_t *obj) {
+    DCHECK(!obj->f_count);
+    pthread_mutex_destroy(&obj->f_lock);
+    free(obj);
+}
+
+void foo_object_acquire(foo_object_t *obj) {
+    pthread_mutex_lock(&obj->f_lock);
+    ++obj->f_count;
+    pthread_mutex_unlock(&obj->f_lock);
+}
+
+void foo_object_release(foo_object_t *obj) {
+    pthread_mutex_lock(&obj->f_lock);
+    if (--obj->f_count) {
+        pthread_mutex_unlock(&obj->f_lock);
+        return;
     }
-    pthread_mutex_destroy(&g_share_data.sh_mutex);
+    pthread_mutex_unlock(&obj->f_lock);
+    free_foo_object(obj);
+}
+
+void foo_object_wait(foo_object_t *obj) {
+    int wait_done;
+    struct timespec time_val;
+
+    time_val.tv_sec = 0;
+    time_val.tv_nsec = 10e6;
+
+    wait_done = 0;
+    while (!wait_done) {
+        pthread_mutex_lock(&obj->f_lock);
+        wait_done = obj->f_count == 1;
+        pthread_mutex_unlock(&obj->f_lock);
+
+        if (!wait_done) {
+            nanosleep(&time_val, NULL);
+        }
+    }
+    foo_object_release(obj);
 }

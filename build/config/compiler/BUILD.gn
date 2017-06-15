@@ -11,6 +11,11 @@ config("compiler") {
     "-std=c++0x",
   ]
   configs = []
+
+  defines = []
+  if (target_os == "linux") {
+    defines += [ "OS_LINUX" ]
+  }
 }
 
 config("static_library") {

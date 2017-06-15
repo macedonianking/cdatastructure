@@ -3,10 +3,10 @@
 
 #include "utils.h"
 
-struct list_head {
+typedef struct list_head {
 	struct list_head *next;
 	struct list_head *prev;
-};
+} list_head;
 
 #define INIT_LIST_HEAD(ptr) (ptr)->next = (ptr)->prev = (ptr)
 #define DEFINE_LIST_HEAD(name) struct list_head name = {.next = &name, .prev=&name}
