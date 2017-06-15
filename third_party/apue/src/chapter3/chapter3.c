@@ -12,7 +12,7 @@
 #include "utils/string_buffer.h"
 
 int chapter3_main(int argc, char **argv) {
-    chapter3_13(argc, argv);
+    chapter_exercise_3_6(argc, argv);
     return 0;
 }
 
@@ -105,4 +105,66 @@ void chapter3_13(int argc, char **argv) {
     fprintf(stdout, "stdout open flags %s\n", buf);
 
     close(fd);
+}
+
+static int self_dup2(int fd, int fd2) {
+    char buf[BUFSIZ];
+    int fd_flags;
+    int fd2_flags;
+
+    if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0) {
+        return -1;
+    }
+
+    if((fd2 != fd)) {
+        if ((fd2_flags = fcntl(fd, F_GETFL, 0)) >= 0) {
+            close(fd2);
+        }
+    }
+
+    snprintf(buf, BUFSIZ, "/dev/fd/%d", fd);
+    if ((fd2 = open(buf, fd_flags, APUE_FILE_MODE)) < 0) {
+        return -1;
+    }
+    return fd2;
+}
+
+void chapter_exercise_3_2(int argc, char **argv) {
+    int fd2;
+
+    fd2 = self_dup2(STDOUT_FILENO, 3);
+    if (fd2 < 0) {
+        err_sys("can't dump STDOUT_FILENO");
+    }
+
+    fprintf(stdout, "self_dup2 success:%d\n", fd2);
+    close(fd2);
+}
+
+void chapter_exercise_3_6(int argc, char **argv) {
+    int fd;
+    int n;
+    off_t offset;
+    const char *str;
+
+    if (argc < 2) {
+        err_quit("command options error");
+    }
+
+    if ((fd = open(argv[1], O_RDWR | O_APPEND| O_CREAT, 
+            APUE_FILE_MODE)) < 0) {
+        err_sys("can't open file '%s'", argv[1]);
+    }
+
+    str = "Hello world\n";
+    n = strlen(str);
+    if (write(fd, str, n) != n) {
+        err_sys("write");
+    }
+
+    offset = lseek(fd, 0, SEEK_CUR);
+    fprintf(stdout, "lseek cur %d\n", (int)offset);
+
+    offset = lseek(fd, 0, SEEK_SET);
+    fprintf(stdout, "lseek begin %d\n", (int)offset);
 }

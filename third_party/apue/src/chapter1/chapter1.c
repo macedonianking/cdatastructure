@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "utils/apue.h"
@@ -24,6 +25,7 @@ int chapter1_main(int argc, char **argv) {
 
 static int list_files_rec(string_buffer_t *buf) {
     DIR *dir;
+    struct stat stat_obj;
     struct dirent dir_entry, *result;
     int n, old_size, r;
 
@@ -52,7 +54,11 @@ static int list_files_rec(string_buffer_t *buf) {
             goto out;
         }
         fprintf(stdout, "%s\n", buf->buf);
-        list_files_rec(buf);
+
+        if(!stat(buf->buf, &stat_obj) && S_ISDIR(stat_obj.st_mode)) {
+            list_files_rec(buf);
+        }
+
         buf->buf[n] = '\0';
         buf->size = n;
     }

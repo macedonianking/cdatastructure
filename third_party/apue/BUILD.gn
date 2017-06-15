@@ -17,6 +17,7 @@ executable("apue") {
   deps = [
     "//third_party/cprog/utils:cprog_utils",
   ]
+  libs = [ "pthread" ]
 }
 
 #executable("test_qpue") {

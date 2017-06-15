@@ -105,3 +105,21 @@ int apue_set_flags(int fd, int flags) {
     }
     return 0;
 }
+
+int apue_is_dir(const char *path) {
+    struct stat stat_obj;
+
+    if(!stat(path, &stat_obj)) {
+        return S_ISDIR(stat_obj.st_mode);
+    }
+    return 0;
+}
+
+int apue_is_file(const char *path) {
+    struct stat stat_obj;
+
+    if (!stat(path, &stat_obj)) {
+        return S_ISREG(stat_obj.st_mode);
+    }
+    return 0;
+}
