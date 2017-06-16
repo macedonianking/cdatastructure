@@ -15,7 +15,8 @@ ThreadId current_thread_id();
 int is_thread_id_equal(ThreadId src_thread_id, ThreadId dst_thread_id);
 
 int custom_thread_id();
-int thread_loop_check_custom_id(ThreadId tid);
+int thread_loop_enqueue_therad_id(ThreadId tid);
+int thread_loop_dequeue_therad_id(ThreadId tid);
 
 void ThreadLoopInitialize();
 void ThreadLoopInitializeEnterImpl();

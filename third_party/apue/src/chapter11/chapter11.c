@@ -25,6 +25,7 @@ static void             foo_object_release(foo_object_t *obj);
 static void             foo_object_wait(foo_object_t *obj);
 
 int chapter11_main(int argc, char **argv) {
+    ThreadLoopInitialize();
     chapter11_6(argc, argv);
     return 0;
 }
@@ -38,15 +39,15 @@ void chapter11_4(int argc, char **argv) {
 static void chapter11_6_thread_func(void *args) {
     struct timespec wait_time;
     foo_object_t *ptr;
-    pthread_t tid;
+    int cid;
 
     wait_time.tv_sec = 0;
     wait_time.tv_nsec = 1 * MILLI_IN_NANOS;
 
-    tid = pthread_self();
+    cid = custom_thread_id();
     ptr = (foo_object_t*) args;
     for (int i = 0; i < 10000; ++i) {
-        fprintf(stdout, "thread=%lx, id=%d, %d\n", (unsigned long) tid,
+        fprintf(stdout, "thread=%d, id=%d, %d\n", cid,
             ptr->f_id, i);
         nanosleep(&wait_time, NULL);
     }

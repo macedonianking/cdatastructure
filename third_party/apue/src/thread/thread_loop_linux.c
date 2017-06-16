@@ -12,9 +12,16 @@ typedef struct thread_params_t {
     void (*t_func)(void*);
 } thread_params_t;
 
+void ThreadRoutingClearUpCustomThreadId(void *args) {
+    thread_loop_dequeue_therad_id(current_thread_id());
+}
+
 static void *ThreadRouting(void *args) {
     thread_params_t *params;
     void (*func)(void *);
+
+    thread_loop_enqueue_therad_id(current_thread_id());
+    pthread_cleanup_push(&ThreadRoutingClearUpCustomThreadId, NULL);
 
     params = (thread_params_t*) args;
     func = params->t_func;
@@ -22,6 +29,7 @@ static void *ThreadRouting(void *args) {
     free(params);
     func(args);
 
+    pthread_cleanup_pop(1);
     return 0;
 }
 
