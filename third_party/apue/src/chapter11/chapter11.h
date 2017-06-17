@@ -6,5 +6,9 @@ int chapter11_main(int argc, char **argv);
 void chapter11_3(int argc, char **argv);
 void chapter11_4(int argc, char **argv);
 void chapter11_6(int argc, char **argv);
+void chapter11_7(int argc, char **argv);
+
+void chapter11_6_2(int argc, char **argv);
+void chapter11_6_6(int argc, char **argv);
 
 #endif
