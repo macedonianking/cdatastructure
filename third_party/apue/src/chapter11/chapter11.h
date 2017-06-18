@@ -10,5 +10,9 @@ void chapter11_7(int argc, char **argv);
 
 void chapter11_6_2(int argc, char **argv);
 void chapter11_6_6(int argc, char **argv);
+/**
+ * Demonstrate how to use pthread_spinlock_t
+ */
+void chapter11_6_7(int argc, char **argv);
 
 #endif

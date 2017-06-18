@@ -35,7 +35,7 @@ static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
     ThreadLoopInitialize();
-    chapter11_6_6(argc, argv);
+    chapter11_6_7(argc, argv);
     return 0;
 }
 
@@ -75,7 +75,7 @@ void chapter11_6(int argc, char **argv) {
 
     find_obj = foo_object_find(obj->f_id);
     if (find_obj) {
-        fprintf(stdout, "find_obj->f_id=%d, f_count=%d\n", 
+        fprintf(stdout, "find_obj->f_id=%d, f_count=%d\n",
             find_obj->f_id, find_obj->f_count);
     }
     foo_object_wait(obj);
@@ -197,7 +197,7 @@ void chapter11_7(int argc, char **argv) {
     pthread_mutexattr_destroy(&mutex_attr);
 
     if (r) {
-       APUE_ERR_SYS();      
+       APUE_ERR_SYS();
     }
 
     pthread_mutex_lock(&mutex_obj);
@@ -222,16 +222,11 @@ typedef struct queue_obj_t {
     list_head           q_list;
     pthread_mutex_t     q_lock;
     pthread_cond_t      q_list_cond;
-    pthread_cond_t      q_count_cond;
-    int                 q_count;
     int                 q_finish;
 } queue_obj_t;
 
 static queue_obj_t      *alloc_queue_obj();
-static void             free_queue_obj(queue_obj_t *queue);
-static void             queue_obj_acquire(queue_obj_t *queue);
-static void             queue_obj_release(queue_obj_t *queue);
-static void             queue_obj_wait(queue_obj_t *queue);
+static void             free_queue_obj(void *queue);
 static void             queue_obj_enqueue_msg(queue_obj_t *queue, string_node_t *msg);
 static string_node_t    *queue_obj_dequeue_msg(queue_obj_t *queue);
 
@@ -253,11 +248,13 @@ void chapter11_6_2(int argc, char **argv) {
 }
 
 static void chapter11_6_6_thread_function_product(void *args) {
+    thread_params_t *params;
     queue_obj_t *queue;
     char buffer[BUFSIZ];
     string_node_t *node;
 
-    queue = (queue_obj_t*) args;
+    params = (thread_params_t*) args;
+    queue = (queue_obj_t*) thread_params_getparams(params);
     // enqueue 10000 messages.
     for (int i = 0; i < 10000; ++i) {
         snprintf(buffer, BUFSIZ, "msg#%d", i);
@@ -271,16 +268,18 @@ static void chapter11_6_6_thread_function_product(void *args) {
     pthread_cond_signal(&queue->q_list_cond);
     pthread_mutex_unlock(&queue->q_lock);
 
-    queue_obj_release(queue);
+    thread_params_release(params);
 }
 
 static void chapter11_6_6_thread_function_consumer(void *args) {
+    thread_params_t *params;
     queue_obj_t *queue;
     string_node_t *msg;
     int cid;
 
     cid = custom_thread_id();
-    queue = (queue_obj_t*) args;
+    params = (thread_params_t*) args;
+    queue = (queue_obj_t*) thread_params_getparams(params);
     for (;;) {
         msg = queue_obj_dequeue_msg(queue);
         if (msg == NULL) {
@@ -290,22 +289,25 @@ static void chapter11_6_6_thread_function_consumer(void *args) {
         free_string_node(msg);
     }
 
-    queue_obj_release(queue);
+    thread_params_release(params);
 }
 
 void chapter11_6_6(int argc, char **argv) {
+    struct thread_params_t *params;
     queue_obj_t *queue;
 
+    params = alloc_thread_params();
     queue = alloc_queue_obj();
+    thread_params_setparams(params, queue, &free_queue_obj);
     // create product thread.
-    queue_obj_acquire(queue);
-    create_detach_thread(&chapter11_6_6_thread_function_product, queue);
+    thread_params_acquire(params);
+    create_detach_thread(&chapter11_6_6_thread_function_product, params);
 
     // create consumer thread.
-    queue_obj_acquire(queue);
-    create_detach_thread(&chapter11_6_6_thread_function_consumer, queue);
+    thread_params_acquire(params);
+    create_detach_thread(&chapter11_6_6_thread_function_consumer, params);
 
-    queue_obj_wait(queue);
+    thread_params_wait(params);
 }
 
 queue_obj_t *alloc_queue_obj() {
@@ -315,19 +317,19 @@ queue_obj_t *alloc_queue_obj() {
     INIT_LIST_HEAD(&ptr->q_list);
     pthread_mutex_init(&ptr->q_lock, NULL);
     pthread_cond_init(&ptr->q_list_cond, NULL);
-    pthread_cond_init(&ptr->q_count_cond, NULL);
-    ptr->q_count = 1;
     ptr->q_finish = 0;
 
     return ptr;
 }
 
-void free_queue_obj(queue_obj_t *ptr) {
-    DCHECK(list_empty(&ptr->q_list));
-    pthread_cond_destroy(&ptr->q_list_cond);
-    pthread_cond_destroy(&ptr->q_count_cond);
-    pthread_mutex_destroy(&ptr->q_lock);
-    free(ptr);
+void free_queue_obj(void *ptr) {
+    queue_obj_t *queue;
+
+    queue = (queue_obj_t*) ptr;
+    DCHECK(list_empty(&queue->q_list));
+    pthread_cond_destroy(&queue->q_list_cond);
+    pthread_mutex_destroy(&queue->q_lock);
+    free(queue);
 }
 
 void queue_obj_enqueue_msg(queue_obj_t *queue, string_node_t *node) {
@@ -354,33 +356,65 @@ string_node_t *queue_obj_dequeue_msg(queue_obj_t *queue) {
     return node;
 }
 
-void queue_obj_acquire(queue_obj_t *queue) {
-    pthread_mutex_lock(&queue->q_lock);
-    ++queue->q_count;
-    pthread_mutex_unlock(&queue->q_lock);
+struct monotonic_params_t {
+    pthread_spinlock_t      m_lock;
+    int                     m_count;
+};
+
+static void free_monotonic_params(void *args) {
+    struct monotonic_params_t *params;
+
+    params = (struct monotonic_params_t*) args;
+    pthread_spin_destroy(&params->m_lock);
+    free(args);
 }
 
-void queue_obj_release(queue_obj_t *queue) {
-    pthread_mutex_lock(&queue->q_lock);
-    --queue->q_count;
-    if (!queue->q_count) {
-        pthread_mutex_unlock(&queue->q_lock);
-        free_queue_obj(queue);
-        return;
+static void chapter11_6_7_thread_func(void *args) {
+    int cid;
+    struct thread_params_t *params;
+    struct monotonic_params_t *monotonic_params;
+
+    cid = custom_thread_id();
+    params = (thread_params_t*) args;
+    monotonic_params = (struct monotonic_params_t*) thread_params_getparams(params);
+    for (int i = 0; i < 10000; ++i) {
+        pthread_spin_lock(&monotonic_params->m_lock);
+        fprintf(stdout, "thread_id = %d, monotonic_params sequence:%05d\n",
+            cid,
+            monotonic_params->m_count++);
+        pthread_spin_unlock(&monotonic_params->m_lock);
     }
 
-    if (queue->q_count == 1) {
-        pthread_cond_signal(&queue->q_count_cond);
-    }
-    pthread_mutex_unlock(&queue->q_lock);
+    thread_params_release(params);
 }
 
-void queue_obj_wait(queue_obj_t *queue) {
-    pthread_mutex_lock(&queue->q_lock);
-    while (queue->q_count != 1) {
-        pthread_cond_wait(&queue->q_count_cond, &queue->q_lock);
-    }
-    pthread_mutex_unlock(&queue->q_lock);
-    DCHECK(queue->q_count == 1);
-    queue_obj_release(queue);
+void chapter11_6_7(int argc, char **argv) {
+    struct thread_params_t *params;
+    struct monotonic_params_t *monotonic_params;
+
+    /**
+     * Prepare parameters.
+     */
+    params = alloc_thread_params();
+    monotonic_params = (struct monotonic_params_t*) malloc(sizeof(struct monotonic_params_t));
+    monotonic_params->m_count = 0;
+    pthread_spin_init(&monotonic_params->m_lock, PTHREAD_PROCESS_PRIVATE);
+    thread_params_setparams(params, monotonic_params, &free_monotonic_params);
+
+    /**
+     * Create one thread.
+     */
+    thread_params_acquire(params);
+    create_detach_thread(&chapter11_6_7_thread_func, params);
+
+    /**
+     * Create another thread.
+     */
+    thread_params_acquire(params);
+    create_detach_thread(&chapter11_6_7_thread_func, params);
+
+    /**
+     * Wait all finish.
+     */
+    thread_params_wait(params);
 }

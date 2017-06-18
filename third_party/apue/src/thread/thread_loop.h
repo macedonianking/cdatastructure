@@ -9,6 +9,13 @@
 typedef pthread_t   ThreadId;
 #endif
 
+#define THREAD_PARAMS_DEFAULT_DCTOR (&thread_params_default_params_dctor)
+
+struct thread_params_t;
+typedef struct thread_params_t thread_params_t;
+
+
+
 ThreadId create_detach_thread(void (*start_routing)(void*), void *args);
 ThreadId current_thread_id();
 
@@ -24,5 +31,17 @@ void ThreadLoopInitializeLeaveImpl();
 
 void ThreadLoopGlobalLockAcquire();
 void ThreadLoopGlobalLockRelease();
+
+
+void                thread_params_default_params_dctor(void *);
+thread_params_t     *alloc_thread_params();
+void                free_thread_params(thread_params_t *params);
+void                thread_params_setparams(thread_params_t *params, void *args, void (*dctor)(void*));
+void                *thread_params_getparams(thread_params_t *params);
+void                thread_params_wait(thread_params_t *params);
+void                thread_params_acquire(thread_params_t *params);
+void                thread_params_release(thread_params_t *params);
+void                thread_params_lock(thread_params_t *params);
+void                thread_params_unlock(thread_params_t *params);
 
 #endif

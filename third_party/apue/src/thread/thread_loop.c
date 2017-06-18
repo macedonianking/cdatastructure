@@ -172,3 +172,7 @@ int custom_thread_id() {
 
     return cid;
 }
+
+void thread_params_default_params_dctor(void *args) {
+    free(args);
+}
