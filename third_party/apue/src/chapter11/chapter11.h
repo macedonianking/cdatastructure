@@ -14,5 +14,9 @@ void chapter11_6_6(int argc, char **argv);
  * Demonstrate how to use pthread_spinlock_t
  */
 void chapter11_6_7(int argc, char **argv);
+/**
+ * Demonstrate how to use barrier, a little like CountDownLatch.
+ */
+void chapter11_6_8(int argc, char **argv);
 
 #endif

@@ -35,7 +35,7 @@ static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
     ThreadLoopInitialize();
-    chapter11_6_7(argc, argv);
+    chapter11_6_8(argc, argv);
     return 0;
 }
 
@@ -417,4 +417,116 @@ void chapter11_6_7(int argc, char **argv) {
      * Wait all finish.
      */
     thread_params_wait(params);
+}
+
+#define NUMBER_COUNT        10000
+#define NTHREAD             8
+#define COUNT_PER_THREAD    (NUMBER_COUNT / NTHREAD)
+
+struct chapter11_6_8_thread_params {
+    pthread_barrier_t   *th_barrier;
+    int                 *th_data;
+    int                 th_length;
+};
+
+static int chapter11_6_8_compare_func(const void *lhs, const void *rhs) {
+    const int *lhs_ptr = (const int *) lhs;
+    const int *rhs_ptr = (const int *) rhs;
+
+    if (*lhs_ptr < *rhs_ptr) {
+        return -1;
+    } else if (*lhs_ptr > *rhs_ptr) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static void chapter11_6_8_thread_function(void *args) {
+    struct chapter11_6_8_thread_params *params;
+
+    params = (struct chapter11_6_8_thread_params*) args;
+    qsort(params->th_data, params->th_length,
+        sizeof(int), &chapter11_6_8_compare_func);
+    pthread_barrier_wait(params->th_barrier);
+}
+
+static void merge_nearby_buffer(int *data, int first, int second, int end) {
+    int buffer[NUMBER_COUNT];
+    int i, j, m;
+
+    m = 0;
+    for (i = first, j = second; i < second && j < end;) {
+        if (data[i] <= data[j]) {
+            buffer[m++] = data[i++];
+        } else {
+            buffer[m++] = data[j++];
+        }
+    }
+    while (i < second) {
+        buffer[m++] = data[i++];
+    }
+    while (j < end) {
+        buffer[m++] = data[j++];
+    }
+    memcpy(data + first, buffer, sizeof(int) * (end - first));
+}
+
+static void merge_sort_impl(int *data) {
+    int buffer_count;
+    int n;
+    int start, second, end;
+
+    buffer_count = COUNT_PER_THREAD;
+    n = NTHREAD;
+    while (n != 1) {
+        for (int i = 0; i < n; i += 2) {
+            start = i * buffer_count;
+            second = start + buffer_count;
+            end = second + buffer_count;
+            merge_nearby_buffer(data, start, second, end);
+        }
+        buffer_count <<= 1;
+        n >>= 1;
+    }
+}
+
+/**
+ * Demonstrate how to use barrier.
+ */
+void chapter11_6_8(int argc, char **argv) {
+    int data[NUMBER_COUNT];
+    struct chapter11_6_8_thread_params thread_params[NTHREAD], *thread_params_ptr;
+    int n, j, t;
+    pthread_barrier_t barrier;
+
+    srand(time(NULL));
+    for (int i = 0; i < NUMBER_COUNT; ++i) {
+        data[i] = i;
+    }
+    n = NUMBER_COUNT;
+    for (int i = 0; i < NUMBER_COUNT; ++i, --n) {
+        j = (rand() % n) + i;
+        t = data[i];
+        data[i] = data[j];
+        data[j] = t;
+    }
+
+    pthread_barrier_init(&barrier, NULL, NTHREAD+1);
+
+    for (int i = 0; i < NTHREAD; ++i) {
+        thread_params_ptr = &thread_params[i];
+        thread_params_ptr->th_barrier = &barrier;
+        thread_params_ptr->th_data = data + COUNT_PER_THREAD * i;
+        thread_params_ptr->th_length = COUNT_PER_THREAD;
+        create_detach_thread(&chapter11_6_8_thread_function, thread_params_ptr);
+    }
+
+    pthread_barrier_wait(&barrier);
+    pthread_barrier_destroy(&barrier);
+
+    merge_sort_impl(data);
+    for (int i = 0; i < NUMBER_COUNT; ++i) {
+        fprintf(stdout, "%04d\n", data[i]);
+    }
 }
