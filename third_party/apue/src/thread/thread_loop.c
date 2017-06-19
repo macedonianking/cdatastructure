@@ -109,7 +109,7 @@ static void clear_thread_id_bitmap(int id) {
     g_thread_id_bitmap[curr] &= flag;
 }
 
-int thread_loop_enqueue_therad_id(ThreadId tid) {
+int thread_loop_enqueue_thread_id(ThreadId tid) {
     list_head *head;
     thread_id_node *ptr;
     int r;
@@ -130,7 +130,7 @@ int thread_loop_enqueue_therad_id(ThreadId tid) {
     return r;
 }
 
-int thread_loop_dequeue_therad_id(ThreadId tid) {
+int thread_loop_dequeue_thread_id(ThreadId tid) {
     thread_id_node *ptr;
     int r;
 
@@ -154,7 +154,7 @@ void ThreadLoopInitialize() {
     for (int i = 0; i < HASH_SIZE; ++i) {
         INIT_LIST_HEAD(thread_id_map + i);
     }
-    thread_loop_enqueue_therad_id(current_thread_id());
+    thread_loop_enqueue_thread_id(current_thread_id());
 
     ThreadLoopInitializeEnterImpl();
 }

@@ -21,14 +21,14 @@ typedef struct thread_arg_entry_t {
 } thread_arg_entry_t;
 
 void ThreadRoutingClearUpCustomThreadId(void *args) {
-    thread_loop_dequeue_therad_id(current_thread_id());
+    thread_loop_dequeue_thread_id(current_thread_id());
 }
 
 static void *ThreadRouting(void *args) {
     thread_arg_entry_t *params;
     void (*func)(void *);
 
-    thread_loop_enqueue_therad_id(current_thread_id());
+    thread_loop_enqueue_thread_id(current_thread_id());
     pthread_cleanup_push(&ThreadRoutingClearUpCustomThreadId, NULL);
 
     params = (thread_arg_entry_t*) args;
