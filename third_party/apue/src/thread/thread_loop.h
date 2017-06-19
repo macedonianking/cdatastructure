@@ -15,8 +15,7 @@ struct thread_params_t;
 typedef struct thread_params_t thread_params_t;
 
 
-
-ThreadId create_detach_thread(void (*start_routing)(void*), void *args);
+ThreadId create_deamon_thread(void (*start_routing)(void*), void *args);
 ThreadId current_thread_id();
 
 int is_thread_id_equal(ThreadId src_thread_id, ThreadId dst_thread_id);
@@ -33,6 +32,9 @@ void ThreadLoopGlobalLockAcquire();
 void ThreadLoopGlobalLockRelease();
 
 
+/**
+ * Specified thread start parameters.
+ */
 void                thread_params_default_params_dctor(void *);
 thread_params_t     *alloc_thread_params();
 void                free_thread_params(thread_params_t *params);

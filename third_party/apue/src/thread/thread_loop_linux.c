@@ -41,7 +41,7 @@ static void *ThreadRouting(void *args) {
     return 0;
 }
 
-ThreadId create_detach_thread(void (*start_routing)(void*), void *args) {
+ThreadId create_deamon_thread(void (*start_routing)(void*), void *args) {
     thread_arg_entry_t *params;
     pthread_attr_t attr;
     pthread_t tid;

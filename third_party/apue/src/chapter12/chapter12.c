@@ -13,7 +13,7 @@
 
 int chapter12_main(int argc, char **argv) {
     ThreadLoopInitialize();
-    chapter12_6(argc, argv);
+    chapter12_6_2(argc, argv);
     return 0;
 }
 
@@ -139,4 +139,31 @@ void chapter12_6_dump_thread_specific_data() {
     flockfile(stdout);
     fprintf(stdout, "thread_id=%d, %s\n", custom_thread_id(), thread_data->thread_name);
     funlockfile(stdout);
+}
+
+pthread_barrier_t   g_barrier;
+pthread_once_t      g_once_initialzie = PTHREAD_ONCE_INIT;
+
+/**
+ * Initialize only one time.
+ */
+static void chapter12_6_2_pthread_once_initialization() {
+    int cid;
+
+    cid = custom_thread_id();
+    for (int i = 0; i < 1000; ++i) {
+        fprintf(stdout, "thread_id=%d, %d\n", cid, i);
+    }
+}
+
+static void chapter12_6_2_thread_function(void *args) {
+    pthread_once(&g_once_initialzie, &chapter12_6_2_pthread_once_initialization);
+    pthread_barrier_wait(&g_barrier);
+}
+
+void chapter12_6_2(int argc, char **argv) {
+    pthread_barrier_init(&g_barrier, NULL, 3);
+    create_deamon_thread(&chapter12_6_2_thread_function, NULL);
+    create_deamon_thread(&chapter12_6_2_thread_function, NULL);
+    pthread_barrier_wait(&g_barrier);
 }

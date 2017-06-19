@@ -19,5 +19,9 @@ void chapter12_5(int argc, char **argv);
  * Thread specified data.
  */
 void chapter12_6(int argc, char **argv);
+/**
+ * Demonstrate how to use pthread_once_t
+ */
+void chapter12_6_2(int argc, char **argv);
 
 #endif

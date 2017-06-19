@@ -68,10 +68,10 @@ void chapter11_6(int argc, char **argv) {
 
     obj = alloc_foo_object(0);
     foo_object_acquire(obj);
-    create_detach_thread(&chapter11_6_thread_func, obj);
+    create_deamon_thread(&chapter11_6_thread_func, obj);
 
     foo_object_acquire(obj);
-    create_detach_thread(&chapter11_6_thread_func, obj);
+    create_deamon_thread(&chapter11_6_thread_func, obj);
 
     find_obj = foo_object_find(obj->f_id);
     if (find_obj) {
@@ -301,11 +301,11 @@ void chapter11_6_6(int argc, char **argv) {
     thread_params_setparams(params, queue, &free_queue_obj);
     // create product thread.
     thread_params_acquire(params);
-    create_detach_thread(&chapter11_6_6_thread_function_product, params);
+    create_deamon_thread(&chapter11_6_6_thread_function_product, params);
 
     // create consumer thread.
     thread_params_acquire(params);
-    create_detach_thread(&chapter11_6_6_thread_function_consumer, params);
+    create_deamon_thread(&chapter11_6_6_thread_function_consumer, params);
 
     thread_params_wait(params);
 }
@@ -405,13 +405,13 @@ void chapter11_6_7(int argc, char **argv) {
      * Create one thread.
      */
     thread_params_acquire(params);
-    create_detach_thread(&chapter11_6_7_thread_func, params);
+    create_deamon_thread(&chapter11_6_7_thread_func, params);
 
     /**
      * Create another thread.
      */
     thread_params_acquire(params);
-    create_detach_thread(&chapter11_6_7_thread_func, params);
+    create_deamon_thread(&chapter11_6_7_thread_func, params);
 
     /**
      * Wait all finish.
@@ -519,7 +519,7 @@ void chapter11_6_8(int argc, char **argv) {
         thread_params_ptr->th_barrier = &barrier;
         thread_params_ptr->th_data = data + COUNT_PER_THREAD * i;
         thread_params_ptr->th_length = COUNT_PER_THREAD;
-        create_detach_thread(&chapter11_6_8_thread_function, thread_params_ptr);
+        create_deamon_thread(&chapter11_6_8_thread_function, thread_params_ptr);
     }
 
     pthread_barrier_wait(&barrier);
