@@ -14,7 +14,7 @@
 #include "utils/apue.h"
 #include "utils/list.h"
 #include "utils/string_buffer.h"
-#include "utils/string_ext.h"
+#include "utils/string_util.h"
 #include "utils/utils.h"
 
 

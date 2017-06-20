@@ -12,7 +12,7 @@
 #include "utils/list.h"
 #include "utils/log.h"
 #include "utils/time_util.h"
-#include "utils/string_ext.h"
+#include "utils/string_util.h"
 
 typedef struct foo_object_t {
     int                 f_id;

@@ -6,7 +6,7 @@
 #include "utils/utils.h"
 #include "utils/log.h"
 #include "utils/math_help.h"
-#include "utils/string_ext.h"
+#include "utils/string_util.h"
 #include "utils/string_buffer.h"
 
 struct arg_parser_t {
@@ -81,7 +81,7 @@ static inline void normalize_option_name(char *str) {
             *str = '_';
         }
         ++str;
-    }   
+    }
 }
 
 static inline int check_arg_name(const char *name, const char *prefix) {
@@ -445,7 +445,7 @@ OUT:
 
 // 开始一个位置参数
 static int on_arg_parser_position_option_start(struct arg_parser_t *parser,
-        struct arg_parser_options_t *options, const char *name, 
+        struct arg_parser_options_t *options, const char *name,
         struct arg_parser_option_node_t **out) {
 
     struct arg_parser_option_node_t *curr;

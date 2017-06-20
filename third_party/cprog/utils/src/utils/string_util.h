@@ -37,7 +37,11 @@ static inline string_node_t *alloc_string_node(const char *str) {
 
     ptr = (string_node_t*) malloc(sizeof(*ptr));
     INIT_LIST_HEAD(&ptr->node);
-    ptr->str = s_strdup(str);
+    if (str) {
+        ptr->str = s_strdup(str);
+    } else {
+        ptr->str = NULL;
+    }
 
     return ptr;
 }

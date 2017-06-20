@@ -1,13 +1,13 @@
 #include "chapter1/chapter1.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "utils/list.h"
 #include "utils/math_help.h"
-#include "utils/string_ext.h"
+#include "utils/string_util.h"
 #include "utils/utils.h"
 
 #define LOWER   0
@@ -266,7 +266,7 @@ static void PrintHisogram(struct list_head *list) {
     }
 }
 
-#endif 
+#endif
 
 void chapter_exercise_1_13() {
     int nblanks, nothers;
@@ -310,7 +310,7 @@ void chapter_exercise_1_14() {
     for (int i = 0; i < NARRAY(nlower); ++i) {
         printf("%d ", nlower[i]);
     }
-    printf("\n");    
+    printf("\n");
 
     printf("nupper : ");
     for (int i = 0; i < NARRAY(nupper); ++i) {
@@ -441,7 +441,7 @@ void chapter_exercise_1_18(int argc, char **argv) {
     }
 
     if (!(fp = fopen(argv[1], "r"))) {
-        fprintf(stderr, "can't open file '%s', error is '%s'\n", 
+        fprintf(stderr, "can't open file '%s', error is '%s'\n",
             argv[1], strerror(errno));
         return;
     }

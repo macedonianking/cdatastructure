@@ -1,4 +1,4 @@
-#include "string_ext.h"
+#include "utils/string_util.h"
 
 #include <stdlib.h>
 #include <string.h>
