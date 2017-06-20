@@ -3,6 +3,7 @@
 
 int chapter7_main(int argc, char **argv);
 
+void chapter7_3(int argc, char **argv);
 void chapter7_4(int argc, char **argv);
 /**
  * Demonstrate how to use environment.

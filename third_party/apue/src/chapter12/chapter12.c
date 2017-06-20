@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -11,8 +12,9 @@
 #include "utils/list.h"
 #include "utils/string_buffer.h"
 
+extern char **environ;
+
 int chapter12_main(int argc, char **argv) {
-    ThreadLoopInitialize();
     chapter12_6_2(argc, argv);
     return 0;
 }
@@ -144,6 +146,8 @@ void chapter12_6_dump_thread_specific_data() {
 pthread_barrier_t   g_barrier;
 pthread_once_t      g_once_initialzie = PTHREAD_ONCE_INIT;
 
+static const char *my_getenv(const char *name);
+
 /**
  * Initialize only one time.
  */
@@ -157,7 +161,13 @@ static void chapter12_6_2_pthread_once_initialization() {
 }
 
 static void chapter12_6_2_thread_function(void *args) {
+    const char *value;
+
     pthread_once(&g_once_initialzie, &chapter12_6_2_pthread_once_initialization);
+    value = my_getenv("HOME");
+    if (value != NULL) {
+        fprintf(stdout, "HOME=%s\n", value);
+    }
     pthread_barrier_wait(&g_barrier);
 }
 
@@ -166,4 +176,42 @@ void chapter12_6_2(int argc, char **argv) {
     create_deamon_thread(&chapter12_6_2_thread_function, NULL);
     create_deamon_thread(&chapter12_6_2_thread_function, NULL);
     pthread_barrier_wait(&g_barrier);
+}
+
+static pthread_once_t   g_getenv_one = PTHREAD_ONCE_INIT;
+static pthread_key_t    g_genenv_key;
+#define MAXSTRINGSZ     4096
+
+static void my_getenv_destructor(void *args) {
+    free(args);
+}
+
+static void my_getenv_init_once() {
+    pthread_key_create(&g_genenv_key, &my_getenv_destructor);
+}
+
+const char *my_getenv(const char *name) {
+    char *value;
+    int len;
+    char **pptr;
+
+    pthread_once(&g_getenv_one, &my_getenv_init_once);
+    value = pthread_getspecific(g_genenv_key);
+    if (!value) {
+        value = (char*) malloc(sizeof(char) * MAXSTRINGSZ);
+        pthread_setspecific(g_genenv_key, value);
+    }
+    value[0] = '\0';
+    len = strlen(name);
+
+    pptr = environ;
+    while (*pptr && (strncmp(*pptr, name, len) || (*pptr)[len] != '=')) {
+        pptr++;
+    }
+    if (*pptr) {
+        strncpy(value, *pptr + len + 1, MAXSTRINGSZ - 1);
+        value[MAXSTRINGSZ-1] = '\0';
+        return value;
+    }
+    return NULL;
 }

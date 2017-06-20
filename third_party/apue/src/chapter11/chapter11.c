@@ -34,7 +34,6 @@ static void             foo_object_wait(foo_object_t *obj);
 static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
-    ThreadLoopInitialize();
     chapter11_6_8(argc, argv);
     return 0;
 }
