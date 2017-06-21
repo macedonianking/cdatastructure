@@ -51,4 +51,9 @@ static inline void free_string_node(string_node_t *node) {
     free(node);
 }
 
+/**
+ * Split the string.
+ */
+void string_split(const char *str, char sep, list_head *list);
+
 #endif // THIRDPARTY_CHAPTER_SRC_UTILS_STRING_EXT_H

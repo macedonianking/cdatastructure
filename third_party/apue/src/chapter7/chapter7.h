@@ -9,5 +9,17 @@ void chapter7_4(int argc, char **argv);
  * Demonstrate how to use environment.
  */
 void chapter7_5(int argc, char **argv);
+/**
+ * Demonstrate how to use environment.
+ */
+void chapter7_6(int argc, char **argv);
+/**
+ * Environment list.
+ */
+void chapter7_9(int argc, char **argv);
+/**
+ * Demonstrate how to use setjmp and longjmp
+ */
+void chapter7_10(int argc, char **argv);
 
 #endif

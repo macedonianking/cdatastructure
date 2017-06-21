@@ -25,8 +25,7 @@ void string_buffer_free(struct string_buffer_t *ptr) {
 /**
 * 执行字符串的格式化
 */
-int string_buffer_printf(struct string_buffer_t *ptr,
-                         const char *format, ...) {
+int string_buffer_printf(struct string_buffer_t *ptr, const char *format, ...) {
     int n, capacity;
     va_list args;
 
