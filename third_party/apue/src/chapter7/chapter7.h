@@ -22,4 +22,6 @@ void chapter7_9(int argc, char **argv);
  */
 void chapter7_10(int argc, char **argv);
 
+void chapter7_11(int argc, char **argv);
+
 #endif

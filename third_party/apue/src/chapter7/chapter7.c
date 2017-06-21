@@ -18,7 +18,7 @@
 #define FILE_LOCK_NAME  "git.lock"
 
 int chapter7_main(int argc, char **argv) {
-    chapter7_10(argc, argv);
+    chapter7_11(argc, argv);
     return 0;
 }
 
@@ -126,4 +126,14 @@ void chapter7_10(int argc, char **argv) {
 
 void chapter7_11(int argc, char **argv) {
     struct rlimit limit_obj;
+
+    getrlimit(RLIMIT_NPROC, &limit_obj);
+    fprintf(stdout, "RLIMIT_NPROC cur=%lu, max=%lu\n",
+        (unsigned long)limit_obj.rlim_cur,
+        (unsigned long)limit_obj.rlim_max);
+
+    getrlimit(RLIMIT_AS, &limit_obj);
+    fprintf(stdout, "RLIMIT_AS cur=%lu, max=%lu\n",
+        (unsigned long)limit_obj.rlim_cur,
+        (unsigned long)limit_obj.rlim_max);
 }
