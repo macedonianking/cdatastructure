@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
+#include <setjmp.h>
 
 #include "utils/apue.h"
 #include "utils/log.h"
@@ -139,15 +140,18 @@ static void chapter8_8_find_file() {
     execlp("find", "find", ".", "-name", "*.[ch]", (char*) NULL);
 }
 
-static void read_find_result(int fd, list_head *list) {
+static void read_find_result(int fd, list_head *list, jmp_buf env) {
     string_node_t *str_node;
     FILE *file;
     char *line;
     size_t line_length;
     ssize_t n;
+    off_t off;
 
+    off = lseek(fd, 0, SEEK_SET);
+    DCHECK(off == 0);
     if (!(file = fdopen(fd, "w+"))) {
-        APUE_ERR_SYS();
+        longjmp(env, -1);
     }
 
     line = NULL;
@@ -165,9 +169,32 @@ static void read_find_result(int fd, list_head *list) {
 }
 
 static void sort_find_result(struct list_head *list) {
+    struct string_node_t *ptr, *iter, *dest;
+
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, list, node) {
+        iter = ptr;
+        dest = NULL;
+        while (iter->node.prev != list) {
+            iter = list_entry(iter->node.prev, struct string_node_t, node);
+            if (strcmp(ptr->str, iter->str) < 0) {
+                dest = iter;
+            } else {
+                break;
+            }
+        }
+        if (dest != NULL) {
+            list_del(&ptr->node);
+            list_add_tail(&ptr->node, &dest->node);
+        }
+    }
 }
 
 static void print_find_result(struct list_head *list) {
+    struct string_node_t *ptr;
+
+    LIST_FOR_EACH_ENTRY(ptr, list, node) {
+        fprintf(stdout, "%s\n", ptr->str);
+    }
 }
 
 static void free_find_result(struct list_head *list) {
@@ -182,14 +209,20 @@ static void free_find_result(struct list_head *list) {
 void chapter8_8(int argc, char **argv) {
     char buf[PATH_MAX] = "/tmp/temp-XXXXXX";
     DEFINE_LIST_HEAD(list);
+    jmp_buf env;
     int fd;
     int child;
     int status;
+    int r;
 
     fd = mkstemp(buf);
     if (fd < 0) {
         err_sys("can't ceate temperary file in /tmp directory: ");
         return;
+    }
+
+    if ((r = setjmp(env)) != 0) {
+        goto failure;
     }
 
     if ((child = fork()) < 0) {
@@ -207,15 +240,20 @@ void chapter8_8(int argc, char **argv) {
     if (waitpid(child, &status, 0) < 0) {
         APUE_ERR_SYS();
     }
-    if (WIFEXITED(status) || WEXITSTATUS(status)) {
-        exit(-1);
+    if (!WIFEXITED(status) || WEXITSTATUS(status)) {
+        goto failure;
     }
 
-    read_find_result(fd, &list);
+    read_find_result(fd, &list, env);
     if (!list_empty(&list)) {
         sort_find_result(&list);
         print_find_result(&list);
         free_find_result(&list);
     }
     unlink(buf);
+    exit(0);
+
+failure:
+    unlink(buf);
+    exit(-1);
 }
