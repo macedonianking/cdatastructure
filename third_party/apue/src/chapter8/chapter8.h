@@ -13,5 +13,14 @@ void chapter8_4(int argc, char **argv);
  * Demonstrate how to use wait function.
  */
 void chapter8_6(int argc, char **argv);
+/**
+ * waitid
+ */
+void chapter8_7(int argc, char **argv);
+
+/**
+ * exec family functions.
+ */
+void chapter8_8(int argc, char **argv);
 
 #endif 

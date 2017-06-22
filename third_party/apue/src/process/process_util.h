@@ -4,5 +4,9 @@
 #include "utils/list.h"
 
 void get_path_environ(struct list_head *list);
+/**
+ * Describe wait status.
+ */
+void describe_wait_status();
 
 #endif
