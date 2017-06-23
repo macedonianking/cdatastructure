@@ -3,6 +3,7 @@
 
 int chapter6_main(int argc, char **argv);
 
+void chapter6_2(int argc, char **argv);
 /**
  * time, mktime,localtime, gmtime, strftime
  */
