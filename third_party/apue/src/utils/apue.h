@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "utils/log.h"
+
 #define APUE_FILE_MODE  0755
 
 #define APUE_ERR_SYS() \

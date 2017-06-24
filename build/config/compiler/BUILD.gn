@@ -28,14 +28,18 @@ config("shared_library") {
   if (host_os != "win") {
     cflags += [ "-fPIC" ]
   }
-  
+
   ldflags = [ "-shared" ]
   configs = [ ":compiler" ]
 }
 
 config("debug") {
-  cflags = [ 
+  cflags = [
     "-g",
+  ]
+
+  defines = [
+    "DEBUG",
   ]
 }
 
