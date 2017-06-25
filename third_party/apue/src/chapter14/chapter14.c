@@ -1,5 +1,8 @@
 #include "chapter14/chapter14.h"
 
+#include <sys/select.h>
+#include <sys/types.h>
+
 #include "utils/apue.h"
 #include "utils/math_help.h"
 
@@ -8,7 +11,7 @@
 static int check_meet_file_size_requirment(int fd, size_t min_size);
 
 int chapter14_main(int argc, char **argv) {
-    chapter14_2(argc, argv);
+    chapter14_3(argc, argv);
     return 0;
 }
 
@@ -137,6 +140,8 @@ int check_meet_file_size_requirment(int fd, size_t min_size) {
         } else if (n == 0) {
             if ((!nread_one_time || lseek(in_fd, 0, SEEK_SET)) < 0) {
                 r = -1;
+            } else {
+                nread_one_time = 0;
             }
         } else {
             if(write(fd, buffer, n) != n) {
@@ -147,6 +152,95 @@ int check_meet_file_size_requirment(int fd, size_t min_size) {
         }
     }
     close(in_fd);
+
+    return r;
+}
+
+static int chapter14_3_fill_data(char *buf, int size);
+
+void chapter14_3(int argc, char **argv) {
+    long millis, now;
+    char *buf, *ptr;
+    int size;
+    fd_set write_set;
+    int n;
+
+    size = 50 * 1024 * 1024;
+    buf = (char*) malloc(size);
+    if (!buf) {
+        LOGE("malloc size=%d FATAL", size);
+        exit(-1);
+    }
+    if (chapter14_3_fill_data(buf, size)) {
+        LOGE("chapter14_3_fill_data FATAL");
+        exit(-1);
+    }
+
+    FD_ZERO(&write_set);
+    FD_SET(STDOUT_FILENO, &write_set);
+
+    apue_set_fl(STDOUT_FILENO, O_NONBLOCK);
+    ptr = buf;
+    while (size > 0) {
+        millis = current_time_millis();
+        n = select(STDOUT_FILENO + 1, NULL, &write_set, NULL, NULL);
+        now = current_time_millis();
+        if (n < 0) {
+            LOGW("select fail error '%s', will continue", strerror(errno));
+            continue;
+        } else if (n == 0) {
+            LOGE("select return 0, will continue");
+            continue;
+        }
+
+        if (now != millis) {
+            LOGD("select wait %ld", now - millis);
+        }
+        if (FD_ISSET(STDOUT_FILENO, &write_set)) {
+            n = write(STDOUT_FILENO, ptr, size);
+            if (n == -1) {
+                LOGE("write FATAL");
+                fputc('\n', stdout);
+                exit(-1);
+            } else {
+                ptr += n;
+                size -= n;
+            }
+        }
+    }
+    fputc('\n', stdout);
+    free(buf);
+
+    apue_clr_fl(STDOUT_FILENO, O_NONBLOCK);
+}
+
+int chapter14_3_fill_data(char *buf, int size) {
+    int fd;
+    int n;
+    int r, nread_one_period;
+
+    if ((fd = open("/etc/passwd", O_RDONLY)) < 0) {
+        LOGE("can't open file '/etc/passwd' for read.");
+        return -1;
+    }
+
+    r = 0;
+    nread_one_period = 0;
+    while (size > 0 && !r) {
+        if ((n = read(fd, buf, size)) == -1) {
+            r = -1;
+        } else if (!n) {
+            if (!nread_one_period || lseek(fd, 0, SEEK_SET) < 0) {
+                r = -1;
+            } else {
+                nread_one_period = 0;
+            }
+        } else {
+            buf += n;
+            size -= n;
+            nread_one_period += size;
+        }
+    }
 
     return r;
 }

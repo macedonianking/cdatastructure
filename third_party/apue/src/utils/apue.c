@@ -79,7 +79,7 @@ int apue_get_fd_flags(char *buf, int buf_size, int fd) {
     return n;
 }
 
-int apue_clr_flags(int fd, int flags) {
+int apue_clr_fl(int fd, int flags) {
     int fd_flags;
 
     if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0) {
@@ -93,7 +93,7 @@ int apue_clr_flags(int fd, int flags) {
     return 0;
 }
 
-int apue_set_flags(int fd, int flags) {
+int apue_set_fl(int fd, int flags) {
     int fd_flags;
 
     if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0) {
