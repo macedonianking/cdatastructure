@@ -3,24 +3,25 @@
 
 #include <stdio.h>
 
-#define __FAIL() \
+#define __FATAL() \
     do { \
+        fflush(stdout);     \
+        fflush(stderr);     \
         *((int*)0) = 0xbaadbeef; \
     } while(0)
     
 #define DCHECK(condition)   \
     do { \
         if (!(condition)) { \
-            fprintf(stderr, "%s:%d DCHECK(%s) failure\n", __FILE__, __LINE__, #condition);    \
-            __FAIL(); \
+            LOGE("DCHECK(%s) FATAL", #condition);   \
+            __FATAL(); \
         } \
     } while(0)
 
 #define DCHECK_UNREACHED()  \
     do { \
-        fprintf(stderr, "%s:%d DCHECK_UNREACHED failure\n", __FILE__, __LINE__);    \
-        fflush(stderr); \
-        __FAIL();   \
+        LOGE("DCHECK_UNREACHED() FATAL");   \
+        __FATAL();   \
     } while (0)
 
 enum {
@@ -36,17 +37,30 @@ extern void log_impl(int level, const char *file, int line,
 
 #ifdef DEBUG
 #define __LOG_IMPL(level, format, ...)  \
-    log_impl(level, __FILE__, __LINE__, format, __VA_ARGS__)
+    log_impl(level, __FILE__, __LINE__, format, ##__VA_ARGS__)
 #define __LOG_IMPL_V(level)             \
     log_impl(level, __FILE__, __LINE__, NULL)
 #else
-#define __LOG_IMPL(level, format, ...)     
+#define __LOG_IMPL(level, format...)     
+#define __LOG_IMPL_V(level)     
 #endif
 
-#define LOGI(format, ...)   __LOG_IMPL(LOG_LEVEL_INFO, format, __VA_ARGS__)
-#define LOGW(format, ...)   __LOG_IMPL(LOG_LEVEL_WARN, format, __VA_ARGS__)
-#define LOGD(format, ...)   __LOG_IMPL(LOG_LEVEL_DEBUG, format, __VA_ARGS__)
-#define LOGE(format, ...)   __LOG_IMPL(LOG_LEVEL_ERROR, format, __VA_ARGS__)
-#define LOGE_V()            __LOG_IMPL_V(LOG_LEVEL_ERROR)
+#define LOGI(format, ...)   __LOG_IMPL(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
+#define LOGI_V()            LOGI(NULL)
+#define LOGW(format, ...)   __LOG_IMPL(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
+#define LOGW_V()            LOGW(NULL)
+#define LOGD(format, ...)   __LOG_IMPL(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
+#define LOGD_V()            LOGD(NULL)
+#define LOGE(format, ...)   __LOG_IMPL(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
+#define LOGE_V()            LOGE(NULL)
+
+#define WARN_IF(cond)   \
+    do {    \
+        if (cond) { \
+            fprintf(stderr, "WARN" #cond "\n"); \
+        }   \
+    } while (0)
+
+#define TOKEN_STR(name) #name
 
 #endif
