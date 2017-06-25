@@ -10,12 +10,13 @@
 
 #include "utils/apue.h"
 #include "utils/log.h"
+#include "utils/math_help.h"
 #include "utils/string_util.h"
 
 static void default_signal_function(int signo);
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_3(argc, argv);
+    chapter10_9(argc, argv);
     return 0;
 }
 
@@ -56,4 +57,60 @@ void default_signal_function(int signo) {
     }
 
 #undef SIG_CASE
+}
+
+/**
+ * Demonstrate how use kill api.
+ */
+void chapter10_9(int argc, char **argv) {
+    struct timespec timeobj;
+    pid_t child;
+    int status;
+    long millis, delta, threshold;
+    int fd;
+
+    if ((child = fork()) < 0) {
+        LOGE("fork FATAL");
+        exit(-1);
+    } else if (!child) {
+        fprintf(stdout, "child process: pid=%d, pgid=%d\n",
+            getpid(), getpgid(0));
+        if((fd = open("/dev/null", O_WRONLY)) < 0) {
+            err_sys("can't open /dev/null");
+        }
+        dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDERR_FILENO);
+        close(fd);
+        execlp("find", "find", "/", "*.c", NULL);
+    }
+
+    fprintf(stdout, "parent process: pid=%d, pgid=%d\n",
+        getpid(), getpgid(0));
+    millis = current_time_millis();
+    threshold = 10 * SECOND_IN_MILLIS;
+    for (;;) {
+        delta = threshold - (current_time_millis() - millis);
+        delta = MAX(0, delta);
+        delta = MIN(delta, threshold);
+        if (delta == 0) {
+            break;
+        }
+
+        timeobj.tv_sec = delta / SECOND_IN_MILLIS;
+        timeobj.tv_nsec = (delta % SECOND_IN_MILLIS) * MILLIS_IN_NANOS;
+        nanosleep(&timeobj, NULL);
+    }
+    if (kill(-getpgid(0), SIGQUIT)) {
+        err_sys("kill FATAL");
+    }
+    if(waitpid(child, &status, 0) == child) {
+        if (WIFSIGNALED(status)) {
+            fprintf(stdout, "child stop for signal=%d\n, core_dump=%d",
+                WTERMSIG(status),
+                WCOREDUMP(status));
+        }
+    }
+
+    sleep(2);
+    fprintf(stdout, "parent process finish\n");
 }

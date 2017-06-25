@@ -5,8 +5,8 @@
 
 #define SECOND_IN_MILLIS        1000ul
 
-#define MILLIS_IN_NANOS         1000000ul
 #define SECOND_IN_NANOS         1000000000ul
+#define MILLIS_IN_NANOS         1000000ul
 
 static inline long current_time_millis() {
     struct timespec tv;
