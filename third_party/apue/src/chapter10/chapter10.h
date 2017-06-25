@@ -11,5 +11,15 @@ void chapter10_3(int argc, char **argv);
  * Demonstrate how to use kill, and raise api.
  */
 void chapter10_9(int argc, char **argv);
+/**
+ * Demonstrate how to use signal, sleep and pause.
+ */
+void chapter10_10(int argc, char **argv);
+/**
+ * Demonstrate how to use sigset.
+ */
+void chapter10_11(int argc, char **argv);
+void chapter10_12(int argc, char **argv);
+void chapter10_13(int argc, char **argv);
 
 #endif

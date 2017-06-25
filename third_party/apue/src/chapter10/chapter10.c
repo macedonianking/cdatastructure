@@ -16,7 +16,7 @@
 static void default_signal_function(int signo);
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_9(argc, argv);
+    chapter10_13(argc, argv);
     return 0;
 }
 
@@ -113,4 +113,93 @@ void chapter10_9(int argc, char **argv) {
 
     sleep(2);
     fprintf(stdout, "parent process finish\n");
+}
+
+static void chapter10_10_signal_action(int signo) {
+    switch(signo) {
+        case SIGALRM: {
+            fprintf(stdout, "SIGALRM\n");
+            break;
+        }
+    }
+}
+
+static void chapter10_10_sleep(int seconds) {
+    alarm(seconds);
+    pause();
+}
+
+void chapter10_10(int argc, char **argv) {
+    int seconds;
+
+    DCHECK(signal(SIGALRM, &chapter10_10_signal_action) != SIG_ERR);
+    seconds = 2;
+    chapter10_10_sleep(seconds);
+}
+
+void chapter10_11(int argc, char **argv) {
+    sigset_t mask;
+
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGALRM);
+    fprintf(stdout, "is member:%d\n", sigismember(&mask, SIGALRM));
+    sigdelset(&mask, SIGALRM);
+    sigaddset(&mask, SIGQUIT);
+    sigaddset(&mask, SIGINT);
+}
+
+/**
+ * how: SIG_SETMASK, SIG_BLOCK, SIG_UNBLOCK
+ * api: sigprocmask, sigemptyset, sigfillset, sigaddset, sigdelset.
+ */
+void chapter10_12(int argc, char **argv) {
+    sigset_t in_set;
+    sigset_t out_set;
+
+    sigemptyset(&in_set);
+    sigaddset(&in_set, SIGINT);
+    sigaddset(&in_set, SIGALRM);
+    if (sigprocmask(SIG_BLOCK, &in_set, NULL)) {
+        LOGE("sigprocmask FATAL");
+    }
+
+    if (sigprocmask(SIG_BLOCK, NULL, &out_set)) {
+        LOGE("sigprocmask get FATAL");
+    }
+
+    if (sigismember(&out_set, SIGINT) && sigismember(&out_set, SIGALRM)) {
+        LOGW("SIGINT and SIGALRM");
+    }
+}
+
+static void chapter10_13_signal_function(int signo) {
+    if (signo == SIGQUIT) {
+        fprintf(stderr, "SIGQUIT\n");
+    }
+}
+
+void chapter10_13(int argc, char **argv) {
+    sigset_t in_set, old_set;
+
+    DCHECK(signal(SIGQUIT, &chapter10_13_signal_function) != SIG_ERR);
+
+    // block SIGQUIT
+    sigemptyset(&in_set);
+    sigaddset(&in_set, SIGQUIT);
+    if (sigprocmask(SIG_BLOCK, &in_set, &old_set)) {
+        LOGE("sigprocmask SIG_BLOCK SIGQUIT FATAL");
+        exit(-1);
+    }
+    sleep(2);
+    kill(getpid(), SIGQUIT);
+    sleep(2);
+    if(sigpending(&in_set)) {
+        LOGE("sigpending FATAL");
+    }
+    if (sigismember(&in_set, SIGQUIT)) {
+        fprintf(stdout, "SIGQUIT pending\n");
+    }
+
+    sigprocmask(SIG_SETMASK, &old_set, NULL);
+    sleep(2);
 }

@@ -2,6 +2,7 @@
 
 #include <sys/select.h>
 #include <sys/types.h>
+#include <poll.h>
 
 #include "utils/apue.h"
 #include "utils/math_help.h"
@@ -11,7 +12,7 @@
 static int check_meet_file_size_requirment(int fd, size_t min_size);
 
 int chapter14_main(int argc, char **argv) {
-    chapter14_3(argc, argv);
+    chapter14_4_2(argc, argv);
     return 0;
 }
 
@@ -243,4 +244,59 @@ int chapter14_3_fill_data(char *buf, int size) {
     }
 
     return r;
+}
+
+/**
+ * Demonstrate how to use poll function.
+ */
+void chapter14_4_2(int argc, char **argv) {
+    struct pollfd fd_buf[1], *ptr;
+    char *buf, *out_ptr;
+    int size, n, r, ret;
+    long millis, now;
+
+    size = 2 * 1024 * 1024;
+    buf = (char*)malloc(size);
+    DCHECK(!chapter14_3_fill_data(buf, size));
+    ptr = fd_buf;
+    ptr->fd = STDOUT_FILENO;
+    ptr->events = POLLOUT;
+    ptr->revents = 0;
+
+    apue_set_fl(STDOUT_FILENO, O_NONBLOCK);
+    r = 0;
+    out_ptr = buf;
+    while (size > 0 && !r) {
+        millis = current_time_millis();
+        ret = poll(fd_buf, 1, -1);
+        now = current_time_millis();
+        if (millis != now) {
+            LOGD("poll wait %ldms", now - millis);
+        }
+        if (ret < 0) {
+            LOGE("poll FATAL: %s", strerror(errno));
+            r = -1;
+        } else if (!ret) {
+            LOGE("Should not be here!!!");
+        } else {
+            if (!(ptr->revents & POLLOUT)) {
+                continue;
+            }
+
+            if ((n = write(STDOUT_FILENO, out_ptr, size)) < 0) {
+                LOGE("write FATAL");
+                r = -1;
+            } else {
+                LOGI("write %d bytes", n);
+                size -= n;
+                out_ptr += n;
+            }
+        }
+    }
+    free(buf);
+    apue_clr_fl(STDOUT_FILENO, O_NONBLOCK);
+    fputc('\n', stdout);
+    if (r) {
+        exit(-1);
+    }
 }
