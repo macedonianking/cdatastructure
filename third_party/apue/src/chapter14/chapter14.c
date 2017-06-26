@@ -13,7 +13,7 @@
 #define MIN_FILE_SIZE   (4u << 20)
 
 int chapter14_main(int argc, char **argv) {
-    chapter14_4_2(argc, argv);
+    chapter14_5(argc, argv);
     return 0;
 }
 
@@ -345,6 +345,9 @@ void chapter14_4_2(int argc, char **argv) {
     char *buf, *out_ptr;
     int size, n, r, ret;
     long millis, now;
+    int old_flags;
+
+    apue_dup_stderr("stderr.txt");
 
     size = 2 * 1024 * 1024;
     buf = (char*)malloc(size);
@@ -354,7 +357,7 @@ void chapter14_4_2(int argc, char **argv) {
     ptr->events = POLLOUT;
     ptr->revents = 0;
 
-    apue_set_fl(STDOUT_FILENO, O_NONBLOCK);
+    apue_set_fd_flags(STDOUT_FILENO, APUE_ADD_FD_FL, O_NONBLOCK, &old_flags);
     r = 0;
     out_ptr = buf;
     while (size > 0 && !r) {
@@ -370,6 +373,11 @@ void chapter14_4_2(int argc, char **argv) {
         } else if (!ret) {
             LOGE("Should not be here!!!");
         } else {
+            if ((ptr->revents & (POLLERR | POLLNVAL | POLLHUP))) {
+                r = -1;
+                LOGE("poll fd FATAL");
+                continue;
+            }
             if (!(ptr->revents & POLLOUT)) {
                 continue;
             }
@@ -385,9 +393,45 @@ void chapter14_4_2(int argc, char **argv) {
         }
     }
     free(buf);
-    apue_clr_fl(STDOUT_FILENO, O_NONBLOCK);
+    apue_set_fd_flags(STDOUT_FILENO, APUE_SET_FD_FL, old_flags, NULL);
     fputc('\n', stdout);
     if (r) {
         exit(-1);
     }
+}
+
+void chapter14_5(int argc, char **argv) {
+    int fd;
+    int old_fd_flags;
+    int r, n;
+    struct pollfd fd_buf[1], *ptr;
+    char buf[BUFSIZ];
+
+    fd = STDOUT_FILENO;
+    apue_set_fd_flags(fd, APUE_ADD_FD_FL, O_NONBLOCK, &old_fd_flags);
+
+    /**
+     * Initialize the fd_buf array.
+     */
+    ptr = fd_buf;
+    ptr->fd = fd;
+    ptr->events = POLLPRI | POLLIN | POLLRDBAND | POLLRDNORM;
+    ptr->revents = 0;
+
+    for (;;) {
+        if ((r = poll(fd_buf, 1, -1)) == -1) {
+            LOGE("error=%s", strerror(errno));
+        } else if (!r) {
+            LOGE("poll return 0");
+        } else {
+            if (ptr->revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                LOGE("ptr->revents & (POLLERR | POLLHUP | POLLNVAL)");
+            } else {
+                while ((n = read(ptr->fd, buf, BUFSIZ)) > 0) {
+                    // DO NOTHING
+                }
+            }
+        }
+    }
+    apue_set_fd_flags(fd, APUE_SET_FD_FL, old_fd_flags, NULL);
 }

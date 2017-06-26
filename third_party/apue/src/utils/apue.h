@@ -29,11 +29,16 @@
 #define APUE_ERR_SYS() \
     err_sys("%s:%d ", __FILE__, __LINE__)
 
+#define APUE_SET_FD_FL 0
+#define APUE_ADD_FD_FL 1
+#define APUE_DEL_FD_FL 2
+
 void err_sys(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 void err_quit(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 void err_abort();
 
 int apue_get_fd_flags(char *buf, int buf_size, int fd);
+int apue_dup_stderr(const char* err_file);
 
 /**
  * Clear file descriptor flags.
@@ -43,6 +48,11 @@ int apue_clr_fl(int fd, int flags);
  * Set file descriptor flags.
  */
 int apue_set_fl(int fd, int flags);
+
+/**
+ * Update file descriptor flags.
+ */
+int apue_set_fd_flags(int fd, int how, int in_flags, int *out_flags);
 
 int apue_is_dir(const char *path);
 int apue_is_file(const char *path);

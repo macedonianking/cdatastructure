@@ -123,3 +123,51 @@ int apue_is_file(const char *path) {
     }
     return 0;
 }
+
+int apue_dup_stderr(const char *err_file) {
+    DCHECK(err_file);
+    int fd;
+
+    if((fd = open(err_file, O_RDWR | O_TRUNC | O_CREAT, APUE_FILE_MODE)) < 0) {
+        return -1;
+    } else {
+        dup2(fd, STDERR_FILENO);
+        return 0;
+    }
+}
+
+int apue_set_fd_flags(int fd, int how, int in_flags, int *out_flags) {
+    int r;
+    int flags, new_flags;
+
+    r = -1;
+    if((flags = fcntl(fd, F_GETFL)) != -1) {
+        switch(how) {
+            case APUE_SET_FD_FL: {
+                new_flags = in_flags;
+                break;
+            }
+            case APUE_ADD_FD_FL: {
+                new_flags = flags | in_flags;
+                break;
+            }
+            case APUE_DEL_FD_FL: {
+                new_flags = flags & ~in_flags;
+                break;
+            }
+            default: {
+                goto out;
+            }
+        }
+
+        if (fcntl(fd, F_SETFL, new_flags) != -1) {
+            r = 0;
+            if(out_flags) {
+                *out_flags = flags;
+            }
+        }
+    }
+
+out:
+    return r;
+}

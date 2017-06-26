@@ -16,7 +16,7 @@
 static void default_signal_function(int signo);
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_13(argc, argv);
+    chapter10_14(argc, argv);
     return 0;
 }
 
@@ -202,4 +202,66 @@ void chapter10_13(int argc, char **argv) {
 
     sigprocmask(SIG_SETMASK, &old_set, NULL);
     sleep(2);
+}
+
+static void chapter10_14_signal_handler(int signo) {
+    switch(signo) {
+        case SIGUSR1: {
+            LOGD("SIGUSR1");
+            break;
+        }
+        case SIGUSR2: {
+            LOGD("SIGUSR2");
+            break;
+        }
+        case SIGINT: {
+            LOGD("SIGINT");
+            break;
+        }
+    }
+}
+
+/**
+ * sigaction
+ * struct sigaction sa_handler, sa_mask
+ */
+void chapter10_14(int argc, char **argv) {
+    struct timespec time_val;
+    struct sigaction sig_action;
+
+    /**
+     * Update the sigaction.
+     */
+    memset(&sig_action, 0, sizeof(struct sigaction));
+    sig_action.sa_handler = &chapter10_14_signal_handler;
+    sigemptyset(&sig_action.sa_mask);
+    sigaddset(&sig_action.sa_mask, SIGINT);
+    sig_action.sa_flags = SA_INTERRUPT;
+
+    /**
+     * set the sigaction to SIGUSR1 & SIGUSR2
+     */
+    if (sigaction(SIGUSR1, &sig_action, NULL) || sigaction(SIGUSR2, &sig_action, NULL)) {
+        LOGE("sigaction SIGUSR1 or SIGUSR2 FATAL");
+        exit(-1);
+    }
+
+    /**
+     * nanosleep is system api that can be interrupted by signal.
+     */
+    time_val.tv_sec = 60;
+    time_val.tv_nsec = 0;
+    LOGD("nanosleep enter");
+    while (nanosleep(&time_val, NULL) == -1) {
+        LOGD("nanosleep: error=%s", strerror(errno));
+    }
+    LOGD("nanosleep leave");
+
+    sig_action.sa_handler = SIG_DFL;
+    sig_action.sa_flags = 0;
+    sigemptyset(&sig_action.sa_mask);
+    if (sigaction(SIGUSR1, &sig_action, NULL) || sigaction(SIGUSR2, &sig_action, NULL)) {
+        LOGE("sigaction restore SIGUSR1 or SIGUSR2 FATAL");
+        exit(-1);
+    }
 }
