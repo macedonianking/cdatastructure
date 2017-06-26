@@ -5,6 +5,10 @@ int chapter6_main(int argc, char **argv);
 
 void chapter6_2(int argc, char **argv);
 /**
+ * Demonstrate how to use getspwd
+ */
+void chapter6_3(int argc, char **argv);
+/**
  * time, mktime,localtime, gmtime, strftime
  */
 void chapter6_10(int argc, char **argv);

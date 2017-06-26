@@ -3,6 +3,7 @@
 
 int chapter14_main(int argc, char **argv);
 
+void chapter14_1(int argc, char **argv);
 void chapter14_2(int argc, char **argv);
 void chapter14_3(int argc, char **argv);
 void chapter14_4_2(int argc, char **argv);

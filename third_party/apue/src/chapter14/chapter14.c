@@ -1,20 +1,111 @@
 #include "chapter14/chapter14.h"
 
+#include <poll.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/select.h>
 #include <sys/types.h>
-#include <poll.h>
+#include <unistd.h>
 
 #include "utils/apue.h"
 #include "utils/math_help.h"
 
 #define MIN_FILE_SIZE   (4u << 20)
 
-static int check_meet_file_size_requirment(int fd, size_t min_size);
-
 int chapter14_main(int argc, char **argv) {
     chapter14_4_2(argc, argv);
     return 0;
 }
+
+static void set_fl(int fd, int flag);
+static void clr_fl(int fd, int flag);
+
+static char globla_buffer[500000];
+
+static int chapter14_1_read() {
+    struct stat stat_obj;
+    int fd;
+    int n, total, seek_read_count;
+    char *ptr;
+
+    fd = STDIN_FILENO;
+    if (fstat(fd, &stat_obj) || !S_ISREG(stat_obj.st_mode)) {
+        return -1;
+    }
+
+    if (lseek(fd, 0, SEEK_SET) < 0) {
+        return -1;
+    }
+
+    total = NARRAY(globla_buffer);
+    ptr = globla_buffer;
+    seek_read_count = 0;
+
+    while (total > 0) {
+        n = read(fd, ptr, total);
+        if (n == 0) {
+            if (seek_read_count == 0) {
+                break;
+            } else {
+                if (lseek(fd, 0, SEEK_SET) != 0) {
+                    break;
+                }
+                seek_read_count = 0;
+                continue;
+            }
+        } else if (n < 0) {
+            break;
+        } else {
+            total -= n;
+            seek_read_count += n;
+            ptr += n;
+        }
+    }
+
+    return total == 0 ? 0 : -1;
+}
+
+void chapter14_1(int argc, char **argv) {
+    int n, total;
+    char *ptr;
+
+    if (chapter14_1_read()) {
+        APUE_ERR_SYS();
+    }
+
+    set_fl(STDOUT_FILENO, O_NONBLOCK);
+    ptr = globla_buffer;
+    total = NARRAY(globla_buffer);
+    while (total > 0) {
+        n = write(STDOUT_FILENO, ptr, total);
+        if (n <= 0) {
+            fprintf(stderr, "chapter14_1: count=%d, error=%s\n",
+                n, strerror(errno));
+        } else {
+            total -= n;
+            ptr += n;
+            fprintf(stderr, "chapter14_1: count=%d\n", n);
+        }
+    }
+    clr_fl(STDOUT_FILENO, O_NONBLOCK);
+}
+
+void set_fl(int fd, int flag) {
+    int old_flags;
+
+    old_flags = fcntl(fd, F_GETFL);
+    fcntl(fd, F_SETFL, old_flags | flag);
+}
+
+void clr_fl(int fd, int flag) {
+    int old_flags;
+
+    old_flags = fcntl(fd, F_GETFL);
+    old_flags &= ~flag;
+    fcntl(fd, F_SETFL, old_flags);
+}
+
+static int check_meet_file_size_requirment(int fd, size_t min_size);
 
 static inline const char *get_file_lock_type_name(int type) {
     switch (type) {

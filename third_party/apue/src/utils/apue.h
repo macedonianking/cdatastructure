@@ -1,19 +1,28 @@
 #ifndef APUE_SRC_APUE_H
 #define APUE_SRC_APUE_H
 
+#include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <errno.h>
 
 #include "utils/log.h"
 #include "utils/time_util.h"
+
+#include "utils/list.h"
+#include "utils/log.h"
+#include "utils/string_buffer.h"
+#include "utils/string_util.h"
+#include "utils/utils.h"
 
 #define APUE_FILE_MODE  0755
 

@@ -285,6 +285,79 @@ static void chapter6_2_self() {
     free_unix_user_entity(&entity_obj);
 }
 
+static void chapter6_2_pwd(int argc, char **argv);
+static struct passwd *chapter6_2_getpwnam(const char *name);
+static struct passwd *chapter6_2_getpwuid(uid_t uid);
+
 void chapter6_2(int argc, char **argv) {
     chapter6_2_self();
+    chapter6_2_pwd(argc, argv);
+}
+
+void chapter6_2_pwd(int argc, char **argv) {
+    char *name;
+    struct passwd *ptr;
+
+    fprintf(stdout, "chapter6_2_pwd\n");
+
+    if (argc < 2) {
+        APUE_ERR_SYS();
+        return;
+    }
+
+    name = argv[1];
+    ptr = getpwnam(name);
+    if (!ptr) {
+        fprintf(stderr, "can't find user '%s'\n", name);
+        exit(-1);
+    }
+
+    fprintf(stdout, "name=%s, uid=%d, gid=%d, shell=%s, dir=%s\n",
+        ptr->pw_name,
+        ptr->pw_uid,
+        ptr->pw_gid,
+        ptr->pw_shell,
+        ptr->pw_dir);
+
+    ptr = chapter6_2_getpwnam("root");
+    if (ptr) {
+        fprintf(stdout, "%s, name=%s, uid=%d, shell=%s\n",
+            "chapter6_2_getpwnam",
+            ptr->pw_name,
+            ptr->pw_uid,
+            ptr->pw_shell);
+    }
+
+    ptr = chapter6_2_getpwuid(1004);
+    if (ptr) {
+        fprintf(stdout, "%s, name=%s, uid=%d, shell=%s\n",
+            "chapter6_2_getpwuid",
+            ptr->pw_name,
+            ptr->pw_uid,
+            ptr->pw_shell);
+    }
+}
+
+struct passwd *chapter6_2_getpwnam(const char *name) {
+    struct passwd *ptr;
+
+    ptr = NULL;
+    setpwent();
+    while ((ptr = getpwent()) && strcmp(name, ptr->pw_name)) {
+    }
+    endpwent();
+
+    return ptr;
+}
+
+struct passwd *chapter6_2_getpwuid(uid_t uid) {
+    struct passwd *ptr;
+
+    ptr = NULL;
+    setpwent();
+    while ((ptr = getpwent()) && ptr->pw_uid != uid)
+        ;
+    endpwent();
+
+    return ptr;
 }
