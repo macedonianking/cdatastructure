@@ -41,15 +41,18 @@ void chapter10_3(int argc, char **argv) {
 }
 
 void default_signal_function(int signo) {
+    LOGD("default_signal_function: signo=%d", signo);
 #define SIG_CASE(signo) \
-    case (signo): { \
-        fprintf(stdout, #signo "\n"); \
-        break; \
+    case (signo): {     \
+        LOGD(#signo);   \
+        break;          \
     }
 
     switch(signo) {
         SIG_CASE(SIGUSR1)
         SIG_CASE(SIGUSR2)
+        SIG_CASE(SIGCHLD)
+        SIG_CASE(SIGINT)
         default: {
             fprintf(stdout, "default_signal_function: %d\n", signo);
             break;
@@ -242,6 +245,10 @@ static void chapter10_14_test_sigcld_child() {
     }
 }
 
+static void chapter10_14_test_sigcld_sigaction(int signo, siginfo_t *info, void *context) {
+    LOGD("chapter10_14_test_sigcld_sigaction: %d", signo);
+}
+
 /**
  * Test SIGCLD signal handler message.
  */
@@ -252,9 +259,9 @@ static void chapter10_14_test_sigcld() {
 
     // Initialize the action object.
     memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = &chapter10_14_signal_handler;
-    action.sa_flags = SA_RESTART;
-    action.sa_sigaction = NULL;
+    action.sa_handler = SIG_DFL;
+    action.sa_sigaction = &chapter10_14_test_sigcld_sigaction;
+    action.sa_flags = SA_SIGINFO;
     sigemptyset(&action.sa_mask);
 
     // Install SIGCLD signal handler.
@@ -273,10 +280,15 @@ static void chapter10_14_test_sigcld() {
 
     // wait child process finish.
     for (;;) {
-        ret = waitpid(child, &status, 0);
-        if (ret == -1 && errno == EINTR) {
-            LOGD("waitpid interrupted by signal");
-            continue;
+        ret = waitpid(child, &status, WCONTINUED | WUNTRACED);
+        if (ret == -1) {
+            if (errno == EINTR) {
+                LOGD("waitpid interrupted by signal: %s", strerror(errno));
+                continue;
+            } else {
+                LOGE("waitpid FATAL");
+                break;
+            }
         }
         if (ret == child) {
             if (WIFEXITED(status) || WIFSIGNALED(status)) {
@@ -346,3 +358,4 @@ void chapter10_14(int argc, char **argv) {
 
     chapter10_14_test_sigcld();
 }
+

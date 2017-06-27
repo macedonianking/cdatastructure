@@ -26,5 +26,9 @@ void chapter10_11(int argc, char **argv);
 void chapter10_12(int argc, char **argv);
 void chapter10_13(int argc, char **argv);
 void chapter10_14(int argc, char **argv);
+/**
+ * Demonstrate child process data.
+ */
+void chapter10_14_1(int argc, char **argv);
 
 #endif
