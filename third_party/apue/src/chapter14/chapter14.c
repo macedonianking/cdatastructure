@@ -339,6 +339,9 @@ int chapter14_3_fill_data(char *buf, int size) {
 
 /**
  * Demonstrate how to use poll function.
+ * Read:POLLIN, POLLRDNORM, POLLRDBAND, POLLPRI
+ * Write: POLLOUT, POLLWRNORM, POLLWRBAND
+ * Exception: POLLERR, POLLHUP, POLLNVAL
  */
 void chapter14_4_2(int argc, char **argv) {
     struct pollfd fd_buf[1], *ptr;

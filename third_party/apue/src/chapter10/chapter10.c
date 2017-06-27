@@ -218,6 +218,85 @@ static void chapter10_14_signal_handler(int signo) {
             LOGD("SIGINT");
             break;
         }
+        case SIGCLD: {
+            LOGD("SIGCLD");
+            break;
+        }
+    }
+}
+
+static void chapter10_14_test_sigcld_child() {
+    struct sigaction action;
+
+    action.sa_handler = SIG_DFL;
+    action.sa_flags = 0;
+    sigemptyset(&action.sa_mask);
+    if (sigaction(SIGCLD, &action, NULL)) {
+        LOGD("sigaction SIGCLD FATAL");
+        exit(-1);
+    }
+
+    for (;;) {
+        pause();
+        LOGD("pause: %s", strerror(errno));
+    }
+}
+
+/**
+ * Test SIGCLD signal handler message.
+ */
+static void chapter10_14_test_sigcld() {
+    struct sigaction action, old_action;
+    pid_t child, ret;
+    int status;
+
+    // Initialize the action object.
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = &chapter10_14_signal_handler;
+    action.sa_flags = SA_RESTART;
+    action.sa_sigaction = NULL;
+    sigemptyset(&action.sa_mask);
+
+    // Install SIGCLD signal handler.
+    if (sigaction(SIGCLD, &action, &old_action)) {
+        LOGE("sigaction SIGCLD FATAL");
+        exit(-1);
+    }
+
+    // fork child process.
+    if ((child = fork()) < 0) {
+        LOGE("fork FATAL");
+        exit(-1);
+    } else if (!child) {
+        chapter10_14_test_sigcld_child();
+    }
+
+    // wait child process finish.
+    for (;;) {
+        ret = waitpid(child, &status, 0);
+        if (ret == -1 && errno == EINTR) {
+            LOGD("waitpid interrupted by signal");
+            continue;
+        }
+        if (ret == child) {
+            if (WIFEXITED(status) || WIFSIGNALED(status)) {
+                // child process message.
+                break;
+            } else if (WIFSTOPPED(status)) {
+                LOGD("WIFSTOPPED(status)");
+            } else if (WIFCONTINUED(status)) {
+                LOGD("WIFCONTINUED(status)");
+            } else {
+                LOGE("UNKNOWN error.");
+                break;
+            }
+        }
+    }
+
+    // restore SIGCLD signal handler.
+    if (sigaction(SIGCLD, &old_action, NULL)) {
+        LOGE("sigaction restore SIGCLD handler");
+        exit(-1);
     }
 }
 
@@ -249,7 +328,7 @@ void chapter10_14(int argc, char **argv) {
     /**
      * nanosleep is system api that can be interrupted by signal.
      */
-    time_val.tv_sec = 60;
+    time_val.tv_sec = 1;
     time_val.tv_nsec = 0;
     LOGD("nanosleep enter");
     while (nanosleep(&time_val, NULL) == -1) {
@@ -264,4 +343,6 @@ void chapter10_14(int argc, char **argv) {
         LOGE("sigaction restore SIGUSR1 or SIGUSR2 FATAL");
         exit(-1);
     }
+
+    chapter10_14_test_sigcld();
 }
