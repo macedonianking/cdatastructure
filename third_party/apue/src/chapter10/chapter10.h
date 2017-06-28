@@ -3,6 +3,7 @@
 
 int chapter10_main(int argc, char **argv);
 
+void chapter10_2(int argc, char **argv);
 /**
  * Demonstrate how to use signal function.
  */
@@ -30,5 +31,6 @@ void chapter10_14(int argc, char **argv);
  * Demonstrate child process data.
  */
 void chapter10_14_1(int argc, char **argv);
+void chapter10_16(int argc, char **argv);
 
 #endif

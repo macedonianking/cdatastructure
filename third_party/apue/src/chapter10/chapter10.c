@@ -16,8 +16,11 @@
 static void default_signal_function(int signo);
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_14(argc, argv);
+    chapter10_16(argc, argv);
     return 0;
+}
+
+void chapter10_2(int argc, char **argv) {
 }
 
 void chapter10_3(int argc, char **argv) {
@@ -359,3 +362,57 @@ void chapter10_14(int argc, char **argv) {
     chapter10_14_test_sigcld();
 }
 
+static void chapter10_16_sigaction(int signo, siginfo_t *info, void *context) {
+    switch (signo) {
+        case SIGUSR1: {
+            LOGD("chapter10_16_sigaction SIGUSR1");
+            break;
+        }
+    }
+}
+
+void chapter10_16(int argc, char **argv) {
+    sigset_t set, old_set, wait_set;
+    struct sigaction action;
+    pid_t child;
+    int status;
+
+    sigemptyset(&set);
+    sigaddset(&set, SIGUSR1);
+    memset(&action, 0, sizeof(action));
+    action.sa_flags = SA_SIGINFO;
+    action.sa_handler = NULL;
+    action.sa_sigaction = &chapter10_16_sigaction;
+    sigemptyset(&action.sa_mask);
+
+    if (sigprocmask(SIG_BLOCK, &set, &old_set) || sigaction(SIGUSR1, &action, NULL)) {
+        LOGE("sigprocmask or sigaction FATAL");
+        exit(-1);
+    }
+
+    if ((child = fork()) < 0) {
+        LOGE("fork FATAL");
+        exit(-1);
+    } else if (!child) {
+        LOGD("child process pid=%d, send SIGUSR1 to parent process pid=%d",
+            getpid(), getppid());
+        kill(getppid(), SIGUSR1);
+        exit(-1);
+    }
+
+    sigemptyset(&wait_set);
+    sigaddset(&wait_set, SIGQUIT);
+    sigsuspend(&wait_set);
+
+    if (sigprocmask(SIG_SETMASK, &old_set, NULL)) {
+        LOGE("sigprocmask FATAL");
+        exit(-1);
+    }
+
+    while (waitpid(child, &status, 0) != child) {
+        ;
+    }
+    if (WIFEXITED(status)) {
+        LOGD("wait exit_code=%d", WEXITSTATUS(status));
+    }
+}
