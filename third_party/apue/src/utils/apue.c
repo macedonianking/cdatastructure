@@ -171,3 +171,23 @@ int apue_set_fd_flags(int fd, int how, int in_flags, int *out_flags) {
 out:
     return r;
 }
+
+void apue_default_signal_handler(int signo) {
+#ifndef SIGNAL_CASE
+#define SIGNAL_CASE(no) \
+    case (no) : { LOGD("apue_default_signal_handler: " #no); break; }
+#endif
+
+    switch(signo) {
+        SIGNAL_CASE(SIGINT)
+        SIGNAL_CASE(SIGCHLD)
+        SIGNAL_CASE(SIGQUIT)
+        SIGNAL_CASE(SIGALRM)
+        SIGNAL_CASE(SIGUSR1)
+        SIGNAL_CASE(SIGUSR2)
+    }
+
+#ifdef SIGNAL_CASE
+#undef SIGNAL_CASE
+#endif
+}

@@ -16,11 +16,24 @@
 static void default_signal_function(int signo);
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_16(argc, argv);
+    chapter10_2(argc, argv);
     return 0;
 }
 
+/**
+ * Demonstrate how to use signal handler.
+ */
 void chapter10_2(int argc, char **argv) {
+    if (signal(SIGUSR1, &apue_default_signal_handler) == SIG_ERR
+        || signal(SIGUSR2, &apue_default_signal_handler) == SIG_ERR) {
+        LOGE("can't catch SIGUSR1 or SIGUSR2");
+        exit(-1);
+    }
+    for (;;) {
+        pause();
+        LOGD("pause interrupted");
+    }
+    exit(0);
 }
 
 void chapter10_3(int argc, char **argv) {

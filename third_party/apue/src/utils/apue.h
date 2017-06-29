@@ -57,4 +57,6 @@ int apue_set_fd_flags(int fd, int how, int in_flags, int *out_flags);
 int apue_is_dir(const char *path);
 int apue_is_file(const char *path);
 
+void apue_default_signal_handler(int signo);
+
 #endif // APUE_SRC_APUE_H
