@@ -7,16 +7,15 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "utils/apue.h"
 #include "utils/log.h"
 #include "utils/math_help.h"
 #include "utils/string_util.h"
 
-static void default_signal_function(int signo);
-
 int chapter10_main(int argc, char **argv) {
-    chapter10_2(argc, argv);
+    chapter10_10(argc, argv);
     return 0;
 }
 
@@ -41,8 +40,8 @@ void chapter10_3(int argc, char **argv) {
     struct tm tm_obj;
     struct timespec time_val;
 
-    DCHECK(signal(SIGUSR1, &default_signal_function) != SIG_ERR);
-    DCHECK(signal(SIGUSR2, &default_signal_function) != SIG_ERR);
+    DCHECK(signal(SIGUSR1, &apue_default_signal_handler) != SIG_ERR);
+    DCHECK(signal(SIGUSR2, &apue_default_signal_handler) != SIG_ERR);
 
     for (;;) {
         clock_gettime(CLOCK_REALTIME, &time_val);
@@ -56,26 +55,8 @@ void chapter10_3(int argc, char **argv) {
     }
 }
 
-void default_signal_function(int signo) {
-    LOGD("default_signal_function: signo=%d", signo);
-#define SIG_CASE(signo) \
-    case (signo): {     \
-        LOGD(#signo);   \
-        break;          \
-    }
+void chapter10_5(int argc, char **argv) {
 
-    switch(signo) {
-        SIG_CASE(SIGUSR1)
-        SIG_CASE(SIGUSR2)
-        SIG_CASE(SIGCHLD)
-        SIG_CASE(SIGINT)
-        default: {
-            fprintf(stdout, "default_signal_function: %d\n", signo);
-            break;
-        }
-    }
-
-#undef SIG_CASE
 }
 
 /**
@@ -134,26 +115,166 @@ void chapter10_9(int argc, char **argv) {
     fprintf(stdout, "parent process finish\n");
 }
 
-static void chapter10_10_signal_action(int signo) {
+struct chapter10_10_action {
+    list_head   node;
+    int         id;
+    long        time;
+    void        *data;
+    void        (*hook)(void *data);
+    void        (*cancel)(void *data);
+};
+
+static DEFINE_LIST_HEAD(g_chapter10_10_preapre_alarm_list);
+static DEFINE_LIST_HEAD(g_chapter10_10_expired_alarm_list);
+static pthread_spinlock_t g_chapter10_10_spinlock;
+
+/**
+ * Move expired action to expired action list.
+ */
+static void chapter10_10_check_expired_action() {
+    struct chapter10_10_action *ptr;
+    int times;
+    int r;
+    long millis, seconds;
+
+    times = 0;
+    while (times < 10 && (r = pthread_spin_trylock(&g_chapter10_10_spinlock))) {
+        ++times;
+    }
+
+    if (r) {
+        // wait 1 second.
+        alarm(1);
+        return;
+    }
+
+    millis = current_monotonic_time_millis();
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &g_chapter10_10_preapre_alarm_list, node) {
+        if (ptr->time <= millis) {
+            list_del(&ptr->node);
+            list_add_tail(&ptr->node, &g_chapter10_10_expired_alarm_list);
+            continue;
+        }
+        break;
+    }
+    if (!list_empty(&g_chapter10_10_preapre_alarm_list)) {
+        ptr = list_entry(g_chapter10_10_preapre_alarm_list.next, struct chapter10_10_action, node);
+        seconds = ptr->time - millis;
+        if (seconds < 0) {
+            seconds = 1;
+        } else {
+            seconds /= SECOND_IN_MILLIS;
+        }
+        seconds = MAX(1, seconds);
+        alarm(seconds);
+    }
+
+    // release pthread_spinlock_t
+    DCHECK(!pthread_spin_unlock(&g_chapter10_10_spinlock));
+}
+
+static void chapter10_10_signal_action(int signo, siginfo_t *info, void *context) {
     switch(signo) {
         case SIGALRM: {
             fprintf(stdout, "SIGALRM\n");
+            chapter10_10_check_expired_action();
             break;
         }
     }
 }
 
-static void chapter10_10_sleep(int seconds) {
-    alarm(seconds);
-    pause();
+static void chapter10_10_schedule_alarm(int seconds, void (*hook)(void*), void *data) {
+    sigset_t sig_set, old_sig_set;
+    struct chapter10_10_action *action, *ptr;
+    struct list_head *next;
+
+    if (seconds <= 0) {
+        seconds = 1;
+    }
+
+    sigemptyset(&sig_set);
+    sigaddset(&sig_set, SIGALRM);
+    DCHECK(!sigprocmask(SIG_BLOCK, &sig_set, &old_sig_set));
+    if (!pthread_spin_lock(&g_chapter10_10_spinlock)) {
+        action = (struct chapter10_10_action*) malloc(sizeof(*action));
+        memset(action, 0, sizeof(*action));
+        action->hook = hook;
+        action->data = data;
+        action->cancel = NULL;
+        action->time = current_monotonic_time_millis() + seconds * SECOND_IN_MILLIS;
+        next = NULL;
+        LIST_FOR_EACH_ENTRY_SAFE(ptr, &g_chapter10_10_preapre_alarm_list, node) {
+            if (action->time <= ptr->time) {
+                next = &ptr->node;
+                break;
+            }
+        }
+        if (next == NULL) {
+            next = &g_chapter10_10_preapre_alarm_list;
+        }
+        list_add_tail(&action->node, next);
+        if (&action->node == g_chapter10_10_preapre_alarm_list.next) {
+            // action is the first data to be expired.
+            alarm(seconds);
+        }
+        pthread_spin_unlock(&g_chapter10_10_spinlock);
+    } else {
+        LOGE("pthread_spin_lock FATAL");
+        exit(-1);
+    }
+    DCHECK(!sigprocmask(SIG_SETMASK, &old_sig_set, NULL));
+}
+
+static void chapter10_10_wait() {
+    sigset_t mask;
+    struct chapter10_10_action *ptr;
+
+    sigemptyset(&mask);
+    for (;;) {
+        LIST_FOR_EACH_ENTRY_SAFE(ptr, &g_chapter10_10_expired_alarm_list, node) {
+            if (ptr->hook) {
+                ptr->hook(ptr->data);
+            }
+            list_del(&ptr->node);
+            free(ptr);
+        }
+        if (list_empty(&g_chapter10_10_preapre_alarm_list)) {
+            break;
+        }
+        sigsuspend(&mask);
+    }
+}
+
+static void chapter10_10_callback(void *data) {
+    LOGD("chapter10_10_callback");
 }
 
 void chapter10_10(int argc, char **argv) {
-    int seconds;
+    sigset_t mask, old_mask;
+    struct sigaction action;
 
-    DCHECK(signal(SIGALRM, &chapter10_10_signal_action) != SIG_ERR);
-    seconds = 2;
-    chapter10_10_sleep(seconds);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGALRM);
+    if (sigprocmask(SIG_BLOCK, &mask, &old_mask)) {
+        LOGE("sigprocmask SIGALRM FATAL");
+        exit(-1);
+    }
+
+    DCHECK(!pthread_spin_init(&g_chapter10_10_spinlock, PTHREAD_PROCESS_PRIVATE));
+    memset(&action, 0, sizeof(action));
+    action.sa_flags = SA_SIGINFO;
+    action.sa_handler = 0;
+    action.sa_sigaction = &chapter10_10_signal_action;
+    sigemptyset(&action.sa_mask);
+
+    if (sigaction(SIGALRM, &action, NULL)) {
+        LOGE("sigaction SIGALRM FATAL");
+        exit(-1);
+    }
+
+    chapter10_10_schedule_alarm(1, &chapter10_10_callback, NULL);
+    chapter10_10_schedule_alarm(3, &chapter10_10_callback, NULL);
+    chapter10_10_wait();
 }
 
 void chapter10_11(int argc, char **argv) {

@@ -15,4 +15,11 @@ static inline long current_time_millis() {
     return tv.tv_sec * SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
 }
 
+static inline long current_monotonic_time_millis() {
+    struct timespec tv;
+
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+    return tv.tv_sec * SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
+}
+
 #endif
