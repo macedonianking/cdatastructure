@@ -75,6 +75,34 @@ static void chapter15_2_read_and_write_pipe_in_same_process() {
     LOGD("chapter15_2_read_and_write_pipe_in_same_process finish");
 }
 
-void chapter15_2(int argc, char **argv) {
+void chapter15_2_1(int argc, char **argv) {
     chapter15_2_read_and_write_pipe_in_same_process();
+}
+
+static void chapter15_2_read_and_write_pipe_in_two_process() {
+    int pipe_fds[2];
+    pid_t child;
+
+    if (pipe(pipe_fds)) {
+        LOGE("pipe FATAL");
+        exit(-1);
+    }
+
+    if ((child = fork()) < 0) {
+        LOGE("fork FATAL");
+        exit(-1);
+    } else if (!child) {
+        close(pipe_fds[0]);
+        dup2(pipe_fds[1], STDOUT_FILENO);
+        close(pipe_fds[1]);
+        execlp("find", "find", ".", "-name", "*.c", NULL);
+    } else {
+        close(pipe_fds[1]);
+        apue_fd_copy(pipe_fds[0], STDOUT_FILENO);
+        exit(0);
+    }
+}
+
+void chapter15_2(int argc, char **argv) {
+    chapter15_2_read_and_write_pipe_in_two_process();
 }
