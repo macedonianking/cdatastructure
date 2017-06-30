@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <poll.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,6 +59,8 @@ int apue_is_dir(const char *path);
 int apue_is_file(const char *path);
 
 void apue_default_signal_handler(int signo);
+void apue_default_sigaction(int signo, siginfo_t *info, void *context);
+
 /**
  * @param in_fd:    read from in file descriptor.
  * @param out_fd:   write to out file descriptor.

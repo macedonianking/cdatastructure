@@ -194,6 +194,26 @@ void apue_default_signal_handler(int signo) {
 #endif
 }
 
+void apue_default_sigaction(int signo, siginfo_t *info, void *context) {
+   #ifndef SIGNAL_CASE
+#define SIGNAL_CASE(no) \
+    case (no) : { LOGD("apue_default_sigaction: " #no); break; }
+#endif
+
+    switch(signo) {
+        SIGNAL_CASE(SIGINT)
+        SIGNAL_CASE(SIGCHLD)
+        SIGNAL_CASE(SIGQUIT)
+        SIGNAL_CASE(SIGALRM)
+        SIGNAL_CASE(SIGUSR1)
+        SIGNAL_CASE(SIGUSR2)
+    }
+
+#ifdef SIGNAL_CASE
+#undef SIGNAL_CASE
+#endif
+}
+
 static inline int is_fd_nonblock(int fd) {
     int flags;
 
