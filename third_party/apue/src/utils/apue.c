@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <poll.h>
 
-#include <utils/utils.h>
+#include "utils/utils.h"
+#include "utils/math_help.h"
 
 void err_sys(const char *format, ...) {
     va_list arg_list;
@@ -190,4 +192,111 @@ void apue_default_signal_handler(int signo) {
 #ifdef SIGNAL_CASE
 #undef SIGNAL_CASE
 #endif
+}
+
+static inline int is_fd_nonblock(int fd) {
+    int flags;
+
+    flags = fcntl(fd, F_GETFL);
+    if (flags < 0) {
+        return -1;
+    } else {
+        return !!(flags & O_NONBLOCK);
+    }
+}
+
+static inline int wait_non_block_ready(int fd, int events) {
+    struct pollfd wait_poll;
+    int r = 0;
+
+    memset(&wait_poll, 0, sizeof(wait_poll));
+    wait_poll.fd = fd;
+    wait_poll.events = events;
+    wait_poll.revents = 0;
+
+    r = -1;
+    while (poll(&wait_poll, 1, -1) == 1) {
+        if (wait_poll.revents & events) {
+            r = 0;
+            break;
+        }
+    }
+
+    return r;
+}
+
+int apue_fd_copy(int in_fd, int out_fd) {
+    char buf[BUFSIZ], *ptr;
+    int n, nbytes;
+    int is_in_fd_nonblock, is_out_fd_nonblock;
+    int r = 0;
+
+    if ((is_in_fd_nonblock = is_fd_nonblock(in_fd)) == -1
+        || (is_out_fd_nonblock = is_fd_nonblock(out_fd)) == -1) {
+        return -1;
+    }
+
+    while (!r) {
+        if (is_in_fd_nonblock && wait_non_block_ready(in_fd, POLLIN | POLLPRI)) {
+            r = -1;
+            break;
+        }
+        if ((n = read(in_fd, buf, BUFSIZ)) == -1) {
+            r = -1;
+            break;
+        } else if (n == 0) {
+            break;
+        }
+        ptr = buf;
+        while (n > 0) {
+            if (is_out_fd_nonblock && wait_non_block_ready(out_fd, POLLOUT)) {
+                r = -1;
+                break;
+            }
+            if ((nbytes = write(out_fd, ptr, n)) == -1) {
+                r = -1;
+                break;
+            } else {
+                n -= nbytes;
+                ptr += n;
+            }
+        }
+    }
+
+    return r;
+}
+
+int apue_read_file_in_size(const char* name, int out_fd, int min_size) {
+    char buf[BUFSIZ];
+    int n, read_file_count;
+    int in_fd;
+    int r;
+
+    r = 0;
+    if ((in_fd = open(name, O_RDONLY)) < 0) {
+        return -1;
+    }
+
+    read_file_count = 0;
+    while (!r && min_size > 0) {
+        if ((n = read(in_fd, buf, MIN(BUFSIZ, min_size))) < 0) {
+            r = -1;
+        } else if (n == 0) {
+            if (!read_file_count || lseek(in_fd, 0, SEEK_SET) != 0) {
+                r = -1;
+            } else {
+                read_file_count = 0;
+            }
+        } else {
+            read_file_count += n;
+            if (write(out_fd, buf, n) != n) {
+                r = -1;
+            } else {
+                min_size -= n;
+            }
+        }
+    }
+
+    close(in_fd);
+    return r;
 }

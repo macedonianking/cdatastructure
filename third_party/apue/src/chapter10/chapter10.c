@@ -174,13 +174,14 @@ static void chapter10_10_check_expired_action() {
 }
 
 static void chapter10_10_signal_action(int signo, siginfo_t *info, void *context) {
+    int local_errno = errno;
     switch(signo) {
         case SIGALRM: {
-            fprintf(stdout, "SIGALRM\n");
             chapter10_10_check_expired_action();
             break;
         }
     }
+    errno = local_errno;
 }
 
 static void chapter10_10_schedule_alarm(int seconds, void (*hook)(void*), void *data) {
@@ -226,10 +227,15 @@ static void chapter10_10_schedule_alarm(int seconds, void (*hook)(void*), void *
 }
 
 static void chapter10_10_wait() {
-    sigset_t mask;
+    sigset_t mask, old_mask, suspend_mask;
     struct chapter10_10_action *ptr;
 
     sigemptyset(&mask);
+    sigaddset(&mask, SIGALRM);
+    sigemptyset(&suspend_mask);
+
+    DCHECK(!sigprocmask(SIG_BLOCK, &mask, &old_mask));
+    DCHECK(!pthread_spin_lock(&g_chapter10_10_spinlock));
     for (;;) {
         LIST_FOR_EACH_ENTRY_SAFE(ptr, &g_chapter10_10_expired_alarm_list, node) {
             if (ptr->hook) {
@@ -241,8 +247,12 @@ static void chapter10_10_wait() {
         if (list_empty(&g_chapter10_10_preapre_alarm_list)) {
             break;
         }
-        sigsuspend(&mask);
+        DCHECK(!pthread_spin_unlock(&g_chapter10_10_spinlock));
+        sigsuspend(&suspend_mask);
+        DCHECK(!pthread_spin_lock(&g_chapter10_10_spinlock));
     }
+    DCHECK(!pthread_spin_unlock(&g_chapter10_10_spinlock));
+    DCHECK(!sigprocmask(SIG_SETMASK, &old_mask, NULL));
 }
 
 static void chapter10_10_callback(void *data) {
@@ -250,30 +260,27 @@ static void chapter10_10_callback(void *data) {
 }
 
 void chapter10_10(int argc, char **argv) {
-    sigset_t mask, old_mask;
     struct sigaction action;
 
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGALRM);
-    if (sigprocmask(SIG_BLOCK, &mask, &old_mask)) {
-        LOGE("sigprocmask SIGALRM FATAL");
-        exit(-1);
-    }
-
     DCHECK(!pthread_spin_init(&g_chapter10_10_spinlock, PTHREAD_PROCESS_PRIVATE));
+
+    /**
+     * Install signal handler.
+     */
     memset(&action, 0, sizeof(action));
     action.sa_flags = SA_SIGINFO;
     action.sa_handler = 0;
     action.sa_sigaction = &chapter10_10_signal_action;
     sigemptyset(&action.sa_mask);
-
     if (sigaction(SIGALRM, &action, NULL)) {
         LOGE("sigaction SIGALRM FATAL");
         exit(-1);
     }
 
+    LOGD("chapter10_10");
     chapter10_10_schedule_alarm(1, &chapter10_10_callback, NULL);
     chapter10_10_schedule_alarm(3, &chapter10_10_callback, NULL);
+
     chapter10_10_wait();
 }
 

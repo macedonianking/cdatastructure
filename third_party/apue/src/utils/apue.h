@@ -58,5 +58,12 @@ int apue_is_dir(const char *path);
 int apue_is_file(const char *path);
 
 void apue_default_signal_handler(int signo);
+/**
+ * @param in_fd:    read from in file descriptor.
+ * @param out_fd:   write to out file descriptor.
+ */
+int apue_fd_copy(int in_fd, int out_fd);
+
+int apue_read_file_in_size(const char *name, int out_fd, int min_size);
 
 #endif // APUE_SRC_APUE_H

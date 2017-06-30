@@ -14,6 +14,7 @@ struct chapter15_2_params {
     int write_fd;
 };
 
+
 /**
  * 读线程
  */
@@ -23,6 +24,7 @@ static void chapter15_2_read_and_write_pipe_in_same_process_read(void *args) {
 
     params = (thread_params_t*) args;
     ptr = (struct chapter15_2_params*) thread_params_getparams(params);
+    apue_fd_copy(ptr->read_fd, STDOUT_FILENO);
     close(ptr->read_fd);
 
     LOGD("chapter15_2_read_and_write_pipe_in_same_process_read finish");
@@ -38,6 +40,7 @@ static void chapter15_2_read_and_write_pipe_in_same_process_write(void *args) {
 
     params = (thread_params_t*) args;
     ptr = (struct chapter15_2_params*) thread_params_getparams(params);
+    apue_read_file_in_size("/home/lhb/.profile", ptr->write_fd, 2 * 1024 * 1024);
     close(ptr->write_fd);
 
     LOGD("chapter15_2_read_and_write_pipe_in_same_process_write finish");
