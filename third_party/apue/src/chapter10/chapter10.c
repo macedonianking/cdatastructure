@@ -15,16 +15,18 @@
 #include "utils/string_util.h"
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_10(argc, argv);
+    chapter10_6(argc, argv);
     return 0;
 }
 
 /**
  * Demonstrate how to use signal handler.
+ * This is the signal concept.
  */
 void chapter10_2(int argc, char **argv) {
     if (signal(SIGUSR1, &apue_default_signal_handler) == SIG_ERR
-        || signal(SIGUSR2, &apue_default_signal_handler) == SIG_ERR) {
+        || signal(SIGUSR2, &apue_default_signal_handler) == SIG_ERR
+        || signal(SIGINT, SIG_IGN) == SIG_ERR) {
         LOGE("can't catch SIGUSR1 or SIGUSR2");
         exit(-1);
     }
@@ -55,8 +57,107 @@ void chapter10_3(int argc, char **argv) {
     }
 }
 
+/**
+ * exec family function keep the ignore signal settings.
+ */
+void chapter10_3_1(int argc, char **argv) {
+    pid_t child;
+
+    if (signal(SIGQUIT, SIG_IGN) == SIG_ERR) {
+        LOGE("ignore SIGQUIT FATAL");
+        exit(-1);
+    }
+    if ((child = fork()) == -1) {
+        LOGE("fork FATAL");
+        exit(-1);
+    } else if (!child) {
+        LOGE("child process: %d", getpid());
+        execlp("sleep", "sleep", "100", NULL);
+    }
+
+    if (waitpid(child, NULL, 0) != child) {
+        LOGE("waitpid FATAL");
+        exit(-1);
+    }
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
+/**
+ * background process ignore the SIGQUIT and SIGTERM signal
+ */
+void chapter10_3_2(int argc, char **argv) {
+    void (*ret)(int);
+
+    if ((ret = signal(SIGQUIT, &apue_default_signal_handler)) == SIG_ERR) {
+        LOGE("catch SIGQUIT FATAL");
+        exit(-1);
+    } else if (ret == SIG_IGN) {
+        LOGE("process SIGQUIT is ignore");
+    } else if (ret == SIG_DFL){
+        LOGE("process SIGQUIT is default");
+    }
+
+    for (;;) {
+        pause();
+        LOGE("pause");
+    }
+}
+
+#pragma GCC diagnostic pop
+
+void chapter10_4(int argc, char **argv) {
+
+}
+
 void chapter10_5(int argc, char **argv) {
 
+}
+
+static void chapter10_6_alarm() {
+    struct passwd *ptr;
+
+    if ((ptr = getpwnam("root"))) {
+        LOGD("chapter10_6_alarm: name=%s, uid=%d", ptr->pw_name, ptr->pw_uid);
+        alarm(1);
+    }
+}
+
+static void chapter10_6_sigaction(int signo, siginfo_t *info, void *context) {
+    if (signo == SIGALRM) {
+        chapter10_6_alarm();
+    }
+}
+
+/**
+ * Demonstrate unreentrant functions.
+ */
+void chapter10_6(int argc, char **argv) {
+    struct sigaction action;
+    struct passwd *ptr;
+
+    memset(&action, 0, sizeof(action));
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_SIGINFO;
+    action.sa_handler = NULL;
+    action.sa_sigaction = &chapter10_6_sigaction;
+    if (sigaction(SIGALRM, &action, NULL)) {
+        LOGE("Try catch SIGALRM FATAL");
+        exit(-1);
+    }
+    alarm(1);
+    for (;;) {
+        if (!(ptr = getpwnam("mikie"))) {
+            LOGE("getpwnam(\"mikie\") FATAL");
+            exit(-1);
+        } else if (strcmp("mikie", ptr->pw_name)) {
+            LOGE("getpwnam return data corrupted.");
+            exit(-1);
+        } else {
+            LOGE("success");
+        }
+    }
 }
 
 /**

@@ -193,15 +193,23 @@ void chapter15_5_1(int argc, char **argv) {
 }
 
 static void chapter15_5_2_child_process(const char *name) {
+    int fd;
+
+    if((fd = open(name, O_WRONLY)) == -1) {
+        LOGE("open %s FATAL", name);
+        exit(-1);
+    }
+    if (apue_read_file_in_size("/home/mikie/.bashrc", fd, 2 * 1024 * 1024)) {
+        LOGE("apue_read_file_in_size FATAL: %s", strerror(errno));
+    }
+    close(fd);
 }
 
 void chapter15_5_2(int argc, char **argv) {
     struct stat stat_obj;
     const char *name = "a.fifo";
-    struct pollfd poll_fd;
-    int fifo_fd;
+    int fd;
     pid_t child;
-    int r;
 
     if (fstatat(AT_FDCWD, name, &stat_obj, AT_SYMLINK_NOFOLLOW)) {
         if (errno != ENOENT) {
@@ -217,12 +225,7 @@ void chapter15_5_2(int argc, char **argv) {
             exit(-1);
         }
     }
-
     if (mkfifoat(AT_FDCWD, name, APUE_FILE_MODE)) {
-        exit(-1);
-    }
-    if ((fifo_fd = open(name, O_RDONLY | O_NONBLOCK)) == -1) {
-        LOGE("open %s FATAL", name);
         exit(-1);
     }
 
@@ -231,36 +234,18 @@ void chapter15_5_2(int argc, char **argv) {
         exit(-1);
     } else if (!child) {
         LOGD("child process enter: %d", getpid());
-        sleep(10);
         chapter15_5_2_child_process(name);
         LOGD("child process leave: %d", getpid());
         exit(0);
     }
 
-    r = 0;
-    poll_fd.fd = fifo_fd;
-    poll_fd.events = POLLIN | POLLPRI;
-    poll_fd.revents = 0;
-    for (;;) {
-        memset(&poll_fd, 0, sizeof(struct pollfd));
-
-        LOGE("poll wait");
-        if ((r = poll(&poll_fd, 1, -1)) == -1) {
-            if (errno == EINTR) {
-                LOGE("poll EINTR");
-                continue;
-            } else {
-                break;
-            }
-        } else if (!r) {
-            LOGE("poll return 0");
-            break;
-        } else {
-            apue_fd_copy(fifo_fd, STDOUT_FILENO);
-            break;
-        }
+    if ((fd = open(name, O_RDONLY)) == -1) {
+        LOGE("open FATAL");
+        exit(-1);
     }
-    close(fifo_fd);
+
+    apue_fd_copy(fd, STDOUT_FILENO);
+    close(fd);
 }
 
 void chapter15_5(int argc, char **argv) {

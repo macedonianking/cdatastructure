@@ -3,15 +3,28 @@
 
 int chapter10_main(int argc, char **argv);
 
+/**
+ * Demonstrate the signal concept
+ */
 void chapter10_2(int argc, char **argv);
 /**
  * Demonstrate how to use signal function.
  */
 void chapter10_3(int argc, char **argv);
+void chapter10_3_1(int argc, char **argv);
+void chapter10_3_2(int argc, char **argv);
+/**
+ * Unreliable signal
+ */
+void chapter10_4(int argc, char **argv);
 /**
  * Demonstrate some system call that can be interrupted by signal.
  */
 void chapter10_5(int argc, char **argv);
+/**
+ * Demonstrate reentrant functions.
+ */
+void chapter10_6(int argc, char **argv);
 /**
  * Demonstrate how to use kill, and raise api.
  */
