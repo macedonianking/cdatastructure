@@ -1,6 +1,23 @@
 #ifndef APUE_SRC_CHATPER10_CHAPTER10_H
 #define APUE_SRC_CHATPER10_CHAPTER10_H
 
+/** 
+ * signal.h
+ * kill
+ * raise
+ * sigemptyset
+ * sigfillset
+ * sigaddset
+ * sigdelset
+ * sigismember
+ * sigprocmask SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
+ * sys_siglist
+ * psignal(int signo, const char *msg);
+ */
+
+/**
+ * main entrance.
+ */
 int chapter10_main(int argc, char **argv);
 
 /**

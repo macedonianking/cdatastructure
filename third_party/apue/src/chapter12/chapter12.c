@@ -15,7 +15,7 @@
 extern char **environ;
 
 int chapter12_main(int argc, char **argv) {
-    chapter12_6_2(argc, argv);
+    chapter12_8(argc, argv);
     return 0;
 }
 

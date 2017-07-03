@@ -15,7 +15,7 @@
 #include "utils/string_util.h"
 
 int chapter10_main(int argc, char **argv) {
-    chapter10_6(argc, argv);
+    chapter10_9(argc, argv);
     return 0;
 }
 
@@ -201,12 +201,12 @@ void chapter10_9(int argc, char **argv) {
         timeobj.tv_nsec = (delta % SECOND_IN_MILLIS) * MILLIS_IN_NANOS;
         nanosleep(&timeobj, NULL);
     }
-    if (kill(-getpgid(0), SIGQUIT)) {
+    if (kill(0, SIGQUIT)) {
         err_sys("kill FATAL");
     }
     if(waitpid(child, &status, 0) == child) {
         if (WIFSIGNALED(status)) {
-            fprintf(stdout, "child stop for signal=%d\n, core_dump=%d",
+            fprintf(stdout, "child stop for signal=%d\n, core_dump=%d\n",
                 WTERMSIG(status),
                 WCOREDUMP(status));
         }
