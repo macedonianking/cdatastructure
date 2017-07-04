@@ -3,6 +3,10 @@
 
 int chapter11_main(int argc, char **argv);
 
+/**
+ * pthread_equal(),
+ * pthread_self()
+ */
 void chapter11_3(int argc, char **argv);
 void chapter11_4(int argc, char **argv);
 void chapter11_6(int argc, char **argv);

@@ -34,14 +34,37 @@ static void             foo_object_wait(foo_object_t *obj);
 static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
-    chapter11_6_8(argc, argv);
+    chapter11_4(argc, argv);
     return 0;
 }
 
 void chapter11_3(int argc, char **argv) {
+    pthread_t ui_tid;
+
+    ui_tid = pthread_self();
+    fprintf(stdout, "0x%lx, sizeof=%lu, equal=%d\n", ui_tid, sizeof(ui_tid),
+        pthread_equal(ui_tid, ui_tid));
+}
+
+static void *chapter11_4_start_routing(void *args) {
+    for (int i = 0; i < 10000; ++i) {
+        fprintf(stdout, "chapter11_4_start_routing : %d\n", i);
+    }
+    return NULL;
 }
 
 void chapter11_4(int argc, char **argv) {
+    pthread_t tid;
+    int r;
+
+    if ((r = pthread_create(&tid, NULL, &chapter11_4_start_routing, NULL))) {
+        LOGE("pthread_create FATAL: %s", strerror(r));
+        exit(-1);
+    }
+    if (pthread_join(tid, NULL)) {
+        LOGE("pthread_join FATAL: %s", strerror(r));
+        exit(-1);
+    }
 }
 
 static void chapter11_6_thread_func(void *args) {
