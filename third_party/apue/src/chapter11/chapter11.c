@@ -34,7 +34,7 @@ static void             foo_object_wait(foo_object_t *obj);
 static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
-    chapter11_4(argc, argv);
+    chapter11_6_1(argc, argv);
     return 0;
 }
 
@@ -236,6 +236,19 @@ void chapter11_7(int argc, char **argv) {
     fprintf(stdout, "%s\n", buffer);
     perror(strerror(r));
 
+    pthread_mutex_unlock(&mutex_obj);
+    pthread_mutex_destroy(&mutex_obj);
+}
+
+void chapter11_6_1(int argc, char **argv) {
+    pthread_mutex_t mutex_obj = PTHEAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+    pthread_mutexattr_t attr;
+
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutex_init(&mutex_obj, &attr);
+    pthread_mutexattr_destroy(&attr);
+    pthread_mutex_lock(&mutex_obj);
     pthread_mutex_unlock(&mutex_obj);
     pthread_mutex_destroy(&mutex_obj);
 }
