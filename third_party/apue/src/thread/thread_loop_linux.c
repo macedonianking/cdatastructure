@@ -128,9 +128,19 @@ void thread_params_wait(thread_params_t *params) {
 }
 
 void thread_params_acquire(thread_params_t *params) {
-    pthread_mutex_lock(&params->th_lock);
-    ++params->th_count;
-    pthread_mutex_unlock(&params->th_lock);
+    int finish;
+
+    DCHECK(params->th_count > 0);
+    finish = 0;
+    for (;!finish;) {
+        pthread_mutex_lock(&params->th_lock);
+        if (++params->th_count > 0) {
+            finish = 1;
+        } else {
+            --params->th_count;
+        }
+        pthread_mutex_unlock(&params->th_lock);
+    }
 }
 
 void thread_params_release(thread_params_t *params) {
