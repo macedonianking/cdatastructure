@@ -14,6 +14,14 @@ void chapter11_7(int argc, char **argv);
 
 void chapter11_6_1(int argc, char **argv);
 void chapter11_6_2(int argc, char **argv);
+/**
+ * pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec *abs_time);
+ */
+void chapter11_6_3(int argc, char **argv);
+/**
+ * pthread_rdlock_init(pthread_rwlock_t *lock, pthread_rwlockattr_t *attr);
+ */
+void chapter11_6_4(int argc, char **argv);
 void chapter11_6_6(int argc, char **argv);
 /**
  * Demonstrate how to use pthread_spinlock_t

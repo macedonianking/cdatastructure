@@ -34,7 +34,7 @@ static void             foo_object_wait(foo_object_t *obj);
 static foo_object_t     *foo_object_find(int id);
 
 int chapter11_main(int argc, char **argv) {
-    chapter11_6_1(argc, argv);
+    chapter11_6_4(argc, argv);
     return 0;
 }
 
@@ -240,17 +240,56 @@ void chapter11_7(int argc, char **argv) {
     pthread_mutex_destroy(&mutex_obj);
 }
 
-void chapter11_6_1(int argc, char **argv) {
-    pthread_mutex_t mutex_obj = PTHEAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-    pthread_mutexattr_t attr;
+struct chapter11_6_1_params {
+    pthread_mutex_t     p_lock;
+    int                 p_count;
+    int                 p_id;
+};
 
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-    pthread_mutex_init(&mutex_obj, &attr);
-    pthread_mutexattr_destroy(&attr);
-    pthread_mutex_lock(&mutex_obj);
-    pthread_mutex_unlock(&mutex_obj);
-    pthread_mutex_destroy(&mutex_obj);
+static struct chapter11_6_1_params *alloc_chapter16_6_1_params(int id) {
+    struct chapter11_6_1_params *ptr;
+    pthread_mutexattr_t mutex_attr;
+
+    ptr = (struct chapter11_6_1_params*) malloc(sizeof(*ptr));
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_NORMAL);
+    pthread_mutex_init(&ptr->p_lock, &mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+    ptr->p_count = 1;
+    ptr->p_id = id;
+
+    return ptr;
+}
+
+static void free_chapter11_6_1_params(struct chapter11_6_1_params *ptr) {
+    DCHECK(!ptr->p_count);
+    pthread_mutex_destroy(&ptr->p_lock);
+    free(ptr);
+}
+
+static void chapter11_6_1_params_acquire(struct chapter11_6_1_params *ptr) {
+    pthread_mutex_lock(&ptr->p_lock);
+    ptr->p_count++;
+    pthread_mutex_unlock(&ptr->p_lock);
+}
+
+static void chapter11_6_1_params_release(struct chapter11_6_1_params *ptr) {
+    pthread_mutex_lock(&ptr->p_lock);
+    if (!--ptr->p_count) {
+        pthread_mutex_unlock(&ptr->p_lock);
+        free_chapter11_6_1_params(ptr);
+    } else {
+        pthread_mutex_unlock(&ptr->p_lock);
+    }
+}
+
+void chapter11_6_1(int argc, char **argv) {
+    struct chapter11_6_1_params *ptr;
+
+    ptr = alloc_chapter16_6_1_params(0);
+    chapter11_6_1_params_acquire(ptr);
+    chapter11_6_1_params_release(ptr);
+    chapter11_6_1_params_release(ptr);
 }
 
 typedef struct queue_obj_t {
@@ -280,6 +319,32 @@ void chapter11_6_2(int argc, char **argv) {
     pthread_rwlock_unlock(&rwlock);
 
     pthread_rwlock_destroy(&rwlock);
+}
+
+void chapter11_6_3(int argc, char **argv) {
+    pthread_mutex_t mutex_obj;
+    pthread_mutexattr_t mutex_attr;
+    struct timespec time_obj;
+    int ret;
+
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_DEFAULT);
+    pthread_mutex_init(&mutex_obj, &mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+    pthread_mutex_lock(&mutex_obj);
+    LOGE("pthread_mutex_timedlock");
+    clock_gettime(CLOCK_REALTIME, &time_obj);
+    time_obj.tv_sec += 2;
+    if((ret = pthread_mutex_timedlock(&mutex_obj, &time_obj)) == ETIMEDOUT) {
+        LOGE("pthread_mutex_timedlock ETIMEDOUT");
+    } else if (!ret) {
+        pthread_mutex_unlock(&mutex_obj);
+    } else {
+        LOGE("pthread_mutex_timedlock FATAL: %s", strerror(ret));
+    }
+
+    pthread_mutex_unlock(&mutex_obj);
+    pthread_mutex_destroy(&mutex_obj);
 }
 
 static void chapter11_6_6_thread_function_product(void *args) {
