@@ -1,5 +1,7 @@
 #include "chapter16/sock_addr.h"
 
+#include <pthread.h>
+
 #include "utils/apue.h"
 #include "utils/net.h"
 
@@ -187,24 +189,32 @@ void chapter16_sock_addr_6(int argc, char **argv) {
     }
 }
 
+static void *chapter16_sock_addr_7_thread_func(void *args) {
+    char buffer[BUFSIZ];
+    struct servent serv_obj, *ret;
+
+    if (!getservbyname_r("http", "tcp", &serv_obj, buffer, BUFSIZ, &ret)
+        && ret == &serv_obj) {
+        fprintf(stdout, "name=%s, port=%d, proto=%s\n",
+            ret->s_name, ret->s_port, ret->s_proto);
+    }
+    if (!getservbyname_r("https", "tcp", &serv_obj, buffer, BUFSIZ, &ret)
+        && ret == &serv_obj) {
+        fprintf(stdout, "name=%s, port=%d, proto=%s\n",
+            ret->s_name, ret->s_port, ret->s_proto);
+    }
+    return 0;
+}
+
 /**
  * 查询一台服务器有那些服务
  */
 void chapter16_sock_addr_7(int argc, char **argv) {
-    struct addrinfo info, *ret, *ptr;
+    pthread_t tid;
 
-    memset(&info, 0, sizeof(info));
-    info.ai_flags = AI_ALL;
-    info.ai_family = AF_INET;
-    info.ai_socktype = SOCK_DGRAM;
-    if (getaddrinfo("baidu.com", "http", &info, &ret)) {
-        LOGE("getaddrinfo FATAL");
-        exit(-1);
+    chapter16_sock_addr_7_thread_func(NULL);
+    if ((pthread_create(&tid, NULL, &chapter16_sock_addr_7_thread_func, NULL))) {
+        return;
     }
-
-    for (ptr = ret; ptr != NULL; ptr = ptr->ai_next) {
-        fprintf(stdout, "%s protocol=%s\n", ptr->ai_canonname,
-            getprotobynumber(ptr->ai_protocol)->p_name);
-    }
-    freeaddrinfo(ret);
+    pthread_join(tid, NULL);
 }
