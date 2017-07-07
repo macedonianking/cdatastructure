@@ -1,12 +1,14 @@
 #include "chapter16/chapter16.h"
 
+#include "chapter16/sock_addr.h"
+
 #include "utils/apue.h"
 #include "utils/net.h"
 
 #define BAIDU_IP    "14.215.177.38"
 
 int chapter16_main(int argc, char **argv) {
-    chapter16_3_2_4(argc, argv);
+    chapter16_sock_addr_main(argc, argv);
     return 0;
 }
 
