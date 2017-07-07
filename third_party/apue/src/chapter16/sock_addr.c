@@ -13,7 +13,7 @@ static void print_name_list(int fd, char **list);
 static void print_network_type(int fd, int type);
 
 void chapter16_sock_addr_main(int argc, char **argv) {
-    chapter16_sock_addr_3(argc, argv);
+    chapter16_sock_addr_7(argc, argv);
 }
 
 void chapter16_sock_addr_1(int argc, char **argv) {
@@ -127,4 +127,84 @@ void print_netent(int fd, struct netent *ent) {
         buf[0] = '\0';
     }
     dprintf(fd, "%s\n", buf);
+}
+
+static void print_protoent(int fd, struct protoent *ent) {
+    dprintf(fd, "Protocol:\n");
+    dprintf(fd, "    name: %s\n", ent->p_name);
+    dprintf(fd, "    aliases:");
+    print_name_list(fd, ent->p_aliases);
+    dprintf(fd, "\n");
+    dprintf(fd, "    proto: %d\n", ent->p_proto);
+}
+
+/**
+ * 支持的所有协议和协议号
+ */
+void chapter16_sock_addr_4(int argc, char **argv) {
+    struct protoent *ent;
+
+    setprotoent(1);
+    while ((ent = getprotoent())) {
+        print_protoent(STDOUT_FILENO, ent);
+    }
+    endprotoent();
+}
+
+static void print_servent(int fd, struct servent *ent) {
+    dprintf(fd, "Service:\n");
+    dprintf(fd, "    name: %s\n", ent->s_name);
+    dprintf(fd, "    aliases:");
+    print_name_list(fd, ent->s_aliases);
+    dprintf(fd, "\n");
+    dprintf(fd, "    port: %d\n", ent->s_port);
+    dprintf(fd, "    protocol: %s\n",ent->s_proto);
+}
+
+/**
+ * 服务和端口号
+ */
+void chapter16_sock_addr_5(int argc, char **argv) {
+    struct servent *ent;
+
+    setservent(1);
+    while ((ent = getservent())) {
+        print_servent(STDOUT_FILENO, ent);
+    }
+    endservent();
+}
+
+void chapter16_sock_addr_6(int argc, char **argv) {
+    struct protoent *ent;
+
+    ent = getprotobyname("tcp");
+    if (ent != NULL) {
+        print_protoent(STDOUT_FILENO, ent);
+    }
+    ent = getprotobyname("udp");
+    if (ent) {
+        print_protoent(STDOUT_FILENO, ent);
+    }
+}
+
+/**
+ * 查询一台服务器有那些服务
+ */
+void chapter16_sock_addr_7(int argc, char **argv) {
+    struct addrinfo info, *ret, *ptr;
+
+    memset(&info, 0, sizeof(info));
+    info.ai_flags = AI_ALL;
+    info.ai_family = AF_INET;
+    info.ai_socktype = SOCK_DGRAM;
+    if (getaddrinfo("baidu.com", "http", &info, &ret)) {
+        LOGE("getaddrinfo FATAL");
+        exit(-1);
+    }
+
+    for (ptr = ret; ptr != NULL; ptr = ptr->ai_next) {
+        fprintf(stdout, "%s protocol=%s\n", ptr->ai_canonname,
+            getprotobynumber(ptr->ai_protocol)->p_name);
+    }
+    freeaddrinfo(ret);
 }
