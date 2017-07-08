@@ -14,8 +14,12 @@ static void print_hostent_addr_list(int fd, struct hostent *ent);
 static void print_name_list(int fd, char **list);
 static void print_network_type(int fd, int type);
 
+static int resolve_host(const char *node,
+                        const char *service,
+                        struct sockaddr_in *addr);
+
 void chapter16_sock_addr_main(int argc, char **argv) {
-    chapter16_sock_addr_7(argc, argv);
+    chapter16_sock_addr_10(argc, argv);
 }
 
 void chapter16_sock_addr_1(int argc, char **argv) {
@@ -217,4 +221,102 @@ void chapter16_sock_addr_7(int argc, char **argv) {
         return;
     }
     pthread_join(tid, NULL);
+}
+
+static int look_up_protocol(const char *name, int *protocol) {
+    struct protoent ent, *ret;
+    char buffer[BUFSIZ];
+
+    if (!getprotobyname_r(name, &ent, buffer, BUFSIZ, &ret) && ret == &ent) {
+        if (protocol) {
+            *protocol = ent.p_proto;
+        }
+        return 0;
+    }
+    return -1;
+}
+
+/**
+ * AI_NUMERICALHOST
+ */
+void chapter16_sock_addr_8(int argc, char **argv) {
+    char buffer[INET6_ADDRSTRLEN];
+    struct addrinfo hint, *ret, *ptr;
+    struct sockaddr_in *in_addr;
+    int protocol;
+    int r;
+
+    if (look_up_protocol("tcp", &protocol)) {
+        return;
+    }
+
+    memset(&hint, 0, sizeof(hint));
+    hint.ai_flags = AI_CANONNAME;
+    hint.ai_family = AF_INET;
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_protocol = protocol;
+
+    if ((r = getaddrinfo("sina.com", "http", &hint, &ret))) {
+        LOGE("getaddrinfo FATAL: %s", gai_strerror(r));
+        return;
+    }
+    for (ptr = ret; ptr != NULL; ptr = ptr->ai_next) {
+        if (ptr->ai_family == AF_INET && ptr->ai_addrlen == sizeof(*in_addr)) {
+            in_addr = (struct sockaddr_in*) ptr->ai_addr;
+            if (inet_ntop(in_addr->sin_family, &in_addr->sin_addr, buffer, INET6_ADDRSTRLEN) == buffer) {
+                fprintf(stdout, "%s %s\n", ptr->ai_canonname, buffer);
+            }
+        }
+    }
+    freeaddrinfo(ret);
+}
+
+int resolve_host(const char *node, const char *service, struct sockaddr_in *addr) {
+    struct addrinfo hint, *ret;
+    int protocol;
+
+    if (look_up_protocol("tcp", &protocol)) {
+        return -1;
+    }
+
+    memset(&hint, 0, sizeof(hint));
+    hint.ai_flags = AI_CANONNAME;
+    hint.ai_family = AF_INET;
+    hint.ai_protocol = protocol;
+    hint.ai_socktype = SOCK_STREAM;
+    if (getaddrinfo(node, service, &hint, &ret) || !ret) {
+        return -1;
+    }
+    *addr = *(struct sockaddr_in*)ret->ai_addr;
+    freeaddrinfo(ret);
+    return 0;
+}
+
+/**
+ * 链接到www.baidu.com
+ * connection. create connection.
+ */
+void chapter16_sock_addr_9(int argc, char **argv) {
+    struct sockaddr_in addr;
+    int fd;
+
+    if (resolve_host("www.baidu.com", "http", &addr)) {
+        LOGE("resolve_host FATAL");
+        return;
+    }
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        LOGE("socket FATAL");
+        return;
+    }
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr))) {
+        LOGE("connect FATAL");
+    } else {
+        LOGE("connect SUCCESS");
+    }
+
+    close(fd);
+}
+
+void chapter16_sock_addr_10(int argc, char **argv) {
 }

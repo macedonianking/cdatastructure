@@ -320,3 +320,40 @@ int apue_read_file_in_size(const char* name, int out_fd, int min_size) {
     close(in_fd);
     return r;
 }
+
+int apue_handle_file_in_size(const char *name, int min_size,
+                             int (*handler)(void *, char *, int),
+                             void *data) {
+    char buf[BUFSIZ];
+    int n, read_file_count;
+    int in_fd;
+    int r;
+
+    r = 0;
+    if ((in_fd = open(name, O_RDONLY)) < 0) {
+        return -1;
+    }
+
+    read_file_count = 0;
+    while (!r && min_size > 0) {
+        if ((n = read(in_fd, buf, MIN(BUFSIZ, min_size))) < 0) {
+            r = -1;
+        } else if (n == 0) {
+            if (!read_file_count || lseek(in_fd, 0, SEEK_SET) != 0) {
+                r = -1;
+            } else {
+                read_file_count = 0;
+            }
+        } else {
+            read_file_count += n;
+            if (handler(data, buf, n)) {
+                r = -1;
+            } else {
+                min_size -= n;
+            }
+        }
+    }
+
+    close(in_fd);
+    return r;
+}

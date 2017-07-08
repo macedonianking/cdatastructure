@@ -72,4 +72,11 @@ int apue_fd_copy(int in_fd, int out_fd);
 
 int apue_read_file_in_size(const char *name, int out_fd, int min_size);
 
+/**
+ *
+ */
+int apue_handle_file_in_size(const char *name, int min_size, 
+                             int (*handler)(void *, char *, int), 
+                             void *data);
+
 #endif // APUE_SRC_APUE_H

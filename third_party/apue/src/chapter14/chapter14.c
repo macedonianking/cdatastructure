@@ -8,13 +8,14 @@
 #include <unistd.h>
 
 #include "chapter14/record_lock.h"
+#include "chapter14/epoll_tutorial.h"
 #include "utils/apue.h"
 #include "utils/math_help.h"
 
 #define MIN_FILE_SIZE   (4u << 20)
 
 int chapter14_main(int argc, char **argv) {
-    chapter14_record_lock(argc, argv);
+    epoll_tutorial_main(argc, argv);
     return 0;
 }
 

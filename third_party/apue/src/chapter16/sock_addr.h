@@ -10,5 +10,8 @@ void chapter16_sock_addr_4(int argc, char **argv);
 void chapter16_sock_addr_5(int argc, char **argv);
 void chapter16_sock_addr_6(int argc, char **argv);
 void chapter16_sock_addr_7(int argc, char **argv);
+void chapter16_sock_addr_8(int argc, char **argv);
+void chapter16_sock_addr_9(int argc, char **argv);
+void chapter16_sock_addr_10(int argc, char **argv);
 
 #endif 
