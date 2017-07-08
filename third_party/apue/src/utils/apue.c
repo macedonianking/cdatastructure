@@ -327,7 +327,7 @@ int apue_handle_file_in_size(const char *name, int min_size,
     char buf[BUFSIZ];
     int n, read_file_count;
     int in_fd;
-    int r;
+    int r, ret;
 
     r = 0;
     if ((in_fd = open(name, O_RDONLY)) < 0) {
@@ -346,8 +346,11 @@ int apue_handle_file_in_size(const char *name, int min_size,
             }
         } else {
             read_file_count += n;
-            if (handler(data, buf, n)) {
+            ret = handler(data, buf, n);
+            if (ret == -1) {
                 r = -1;
+            } else  if (!ret) {
+                break;
             } else {
                 min_size -= n;
             }
