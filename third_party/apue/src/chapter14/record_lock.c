@@ -2,137 +2,111 @@
 
 #include "utils/apue.h"
 
-static int record_lock_rdlock(int fd);
-static int record_lock_wrlock(int fd);
-static int record_lock_unlock(int fd);
-
 void chapter14_record_lock(int argc, char **argv) {
-    chapter14_record_lock_3(argc, argv);
+    chapter14_record_lock_1(argc, argv);
+}
+
+static void fill_flock_entry(struct flock *ent, int lock_type) {
+    memset(ent, 0, sizeof(*ent));
+    ent->l_type = F_WRLCK;
+    ent->l_whence = SEEK_SET;
+    ent->l_start = 0;
+    ent->l_len = 0;
+}
+
+static pid_t get_owner_pid(int fd, struct flock *ent) {
+    if (!fcntl(fd, F_GETLK, ent) && ent->l_type != F_UNLCK) {
+        return ent->l_pid;
+    }
+    return 0;
+}
+
+static void worker_process() {
+    execlp("find", "find", ".", "-name", "*.c", NULL);
 }
 
 void chapter14_record_lock_1(int argc, char **argv) {
-    char *name = "hello.txt";
-    struct flock flock_obj;
+    char *name = "out/hello.txt";
     int fd;
-
-    memset(&flock_obj, 0, sizeof(flock_obj));
-    flock_obj.l_type = F_WRLCK;
-    flock_obj.l_whence = SEEK_SET;
-    flock_obj.l_start = 0;
-    flock_obj.l_len = 0;
-
-    if ((fd = open(name, O_RDWR | O_CREAT, APUE_FILE_MODE)) == -1) {
-        APUE_ERR_SYS();
-    }
-    if (fcntl(fd, F_GETLK, &flock_obj)) {
-        APUE_ERR_SYS();
-    }
-    fprintf(stdout, "%d\n", flock_obj.l_type == F_UNLCK);
-}
-
-void chapter14_record_lock_2(int argc, char **argv) {
-    char *name = "hello.txt";
-    int fd;
-
-    if ((fd = open(name, O_RDWR | O_CREAT)) == -1) {
-        APUE_ERR_SYS();
-    }
-    record_lock_wrlock(fd);
-    record_lock_wrlock(fd);
-    record_lock_rdlock(fd);
-    record_lock_unlock(fd);
-    record_lock_unlock(fd);
-    close(fd);
-}
-
-static void chapter14_record_lock_3_prepare_file(int fd) {
-    char buf[BUFSIZ] = "hello, world";
-    int n;
-
-    n = strlen(buf);
-    write(fd, buf, n);
-}
-
-static void chapter14_record_lock_3_child_process(int fd) {
+    int my_errno;
+    pid_t owner_pid, ret_pid;
     struct flock item;
-    int r;
-
-    item.l_type = F_WRLCK;
-    item.l_whence = SEEK_SET;
-    item.l_start = 0;
-    item.l_len = 0;
-
-    r = fcntl(fd, F_SETLK, &item);
-    LOGE("chapter14_record_lock_3_child_process: r=%d, error=%s", r, strerror(errno));
-}
-
-void chapter14_record_lock_3(int argc, char **argv) {
-    char *name = "hello.txt";
-    int fd;
     int status;
-    pid_t child, ret;
 
-    if ((fd = open(name, O_RDWR | O_CREAT)) == -1) {
-        APUE_ERR_SYS();
+    if((fd = open(name, O_RDWR | O_CREAT, APUE_FILE_MODE)) == -1) {
+        LOGE("can't open %s for read and write", name);
+        exit(-1);
     }
-    LOGE("chapter14_record_lock_3 parent: pid=%d", getpid());
-    chapter14_record_lock_3_prepare_file(fd);
-    record_lock_wrlock(fd);
-    if ((child = fork()) == -1) {
-        APUE_ERR_SYS();
-    } else if (!child) {
-        LOGE("chapter14_record_lock_3 child: pid=%d", getpid());
-        chapter14_record_lock_3_child_process(fd);
+
+    fill_flock_entry(&item, F_WRLCK);
+    if (fcntl(fd, F_SETLK, &item)) {
+        my_errno = errno;
+        fill_flock_entry(&item, F_WRLCK);
+        if (my_errno == EAGAIN && (owner_pid = get_owner_pid(fd, &item)) != -1) {
+            LOGE("Trying to get write lock FATAL: owner by process(%d)", owner_pid);
+        } else {
+            LOGE("Trying to get write lock FATAL: %s", strerror(my_errno));
+        }
+        goto out;
+    }
+
+    if ((owner_pid = fork()) == -1) {
+        goto out;
+    } else if (!owner_pid) {
+        worker_process();
         exit(0);
     }
 
     for (;;) {
-       if ((ret = waitpid(child, &status, 0)) == child) {
-            if (WIFEXITED(status) || WIFSIGNALED(status)) {
+        if ((ret_pid = waitpid(owner_pid, &status, 0)) == -1) {
+            LOGE("wait child process FATAL");
+            goto out;
+        } else if (ret_pid == owner_pid) {
+            close(fd);
+            if (!WIFSTOPPED(status) && !WIFCONTINUED(status)) {
                 break;
             }
-        } else if (ret == -1 && errno != EINTR) {
-            LOGE("waitpid FATAL: %s", strerror(errno));
-            break;
         }
     }
+
+out:
     close(fd);
 }
 
-int record_lock_lock_type(int fd, int lock_type) {
+int record_lock_wr_lock(int fd) {
     struct flock item;
 
-    memset(&item, 0, sizeof(item));
-    item.l_type = lock_type;
-    item.l_whence = SEEK_SET;
-    item.l_start = 0;
-    item.l_len = 0;
-
-    if (fcntl(fd, F_SETLK, &item)) {
-        return -1;
-    }
-    return 0;
+    fill_flock_entry(&item, F_WRLCK);
+    return !fcntl(fd, F_SETLK, &item) ? 0 : -1;
 }
 
-int record_lock_rdlock(int fd) {
-    return record_lock_lock_type(fd, F_RDLCK);
-}
-
-int record_lock_wrlock(int fd) {
-    return record_lock_lock_type(fd, F_WRLCK);
-}
-
-int record_lock_unlock(int fd) {
+int record_lock_rd_lock(int fd) {
     struct flock item;
 
-    memset(&item, 0, sizeof(item));
-    item.l_type = F_UNLCK;
-    item.l_whence = 0;
-    item.l_start = 0;
-    item.l_len = 0;
+    fill_flock_entry(&item, F_RDLCK);
+    return !fcntl(fd, F_SETLK, &item) ? 0 : -1;
+}
 
-    if (fcntl(fd, F_SETLK, &item)) {
-        return -1;
+int record_lock_is_rd_locked(int fd) {
+    struct flock item;
+    int r;
+
+    r = -1;
+    fill_flock_entry(&item, F_RDLCK);
+    if (!fcntl(fd, F_GETLK, &item)) {
+        r = item.l_type != F_UNLCK;
     }
-    return 0;
+    return r;
+}
+
+int record_lock_is_wr_locked(int fd) {
+    struct flock item;
+    int r;
+
+    r = -1;
+    fill_flock_entry(&item, F_WRLCK);
+    if (!fcntl(fd, F_GETLK, &item)) {
+        r = item.l_type != F_UNLCK;
+    }
+    return r;
 }

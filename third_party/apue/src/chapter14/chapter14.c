@@ -15,7 +15,7 @@
 #define MIN_FILE_SIZE   (4u << 20)
 
 int chapter14_main(int argc, char **argv) {
-    epoll_tutorial_main(argc, argv);
+    chapter14_record_lock(argc, argv);
     return 0;
 }
 
