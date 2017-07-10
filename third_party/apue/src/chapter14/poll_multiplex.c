@@ -16,14 +16,16 @@ static void handle_wr_data(struct pollfd *fdarray, int *in_end, int *out_end,
 
 void poll_multiplex_main_1(int argc, char **argv) {
     struct pollfd fdarray[2];
-    int old_flags;
+    int old_in_flags, old_out_flags;
     char buffer[BUFSIZ];
     int count;
     int in_end, out_end;
     int ret_count;
 
-    if (apue_set_fd_flags(STDOUT_FILENO, APUE_SET_FD_FL, O_NONBLOCK, &old_flags)) {
+    if (apue_set_fd_flags(STDIN_FILENO, APUE_ADD_FD_FL, O_NONBLOCK, &old_in_flags)
+        || apue_set_fd_flags(STDOUT_FILENO, APUE_ADD_FD_FL, O_NONBLOCK, &old_out_flags)) {
         LOGE("apue_set_fd_flags FATAL");
+        exit(-1);
     }
 
     init_pollfd_array(fdarray);
@@ -44,6 +46,13 @@ void poll_multiplex_main_1(int argc, char **argv) {
 
         handle_rd_data(fdarray, &in_end, &out_end, buffer, BUFSIZ, &count);
         handle_wr_data(fdarray, &in_end, &out_end, buffer, BUFSIZ, &count);
+    }
+
+    if (old_in_flags & O_NONBLOCK) {
+        apue_set_fd_flags(STDOUT_FILENO, APUE_SET_FD_FL, old_in_flags, NULL);
+    }
+    if (old_out_flags & O_NONBLOCK) {
+        apue_set_fd_flags(STDOUT_FILENO, APUE_SET_FD_FL, old_out_flags, NULL);
     }
 }
 
