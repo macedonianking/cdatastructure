@@ -79,4 +79,7 @@ int apue_handle_file_in_size(const char *name, int min_size,
                              int (*handler)(void *, char *, int), 
                              void *data);
 
+ssize_t readn(int fd, void *buf, size_t size);
+ssize_t writen(int fd, void *buf, size_t size);
+
 #endif // APUE_SRC_APUE_H

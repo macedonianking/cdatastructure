@@ -360,3 +360,166 @@ int apue_handle_file_in_size(const char *name, int min_size,
     close(in_fd);
     return r;
 }
+
+static inline ssize_t readn_nonblock(int fd, void *buf, size_t size) {
+    struct pollfd wait_fd;
+    ssize_t count;
+    size_t remain;
+    int n;
+    char *cbuf = (char*) buf;
+
+    wait_fd.fd = fd;
+    wait_fd.events = POLLIN | POLLPRI;
+    wait_fd.revents = 0;
+
+    remain = size;
+    count = 0;
+    while (remain > 0) {
+        if ((n = poll(&wait_fd, 1, -1)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            goto meet_error;
+        } else if (!n) {
+            continue;
+        }
+        if (wait_fd.events & (POLLIN | POLLPRI)) {
+            if ((n = read(fd, cbuf + count, remain)) == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                goto meet_error;
+            } else if (!n) {
+                break;
+            } else {
+                count += n;
+                remain -= n;
+            }
+        } else {
+            goto meet_error;
+        }
+    }
+    goto out;
+
+meet_error:
+    if (count == 0) {
+        count = -1;
+    }
+
+out:
+    return count;
+}
+
+ssize_t readn(int fd, void *buf, size_t size) {
+    ssize_t count, n, remain;
+    char *cbuf;
+
+    if (is_fd_nonblock(fd)) {
+        return readn_nonblock(fd, buf, size);
+    }
+
+    cbuf = (char*) buf;
+    count = 0;
+    while (remain > 0) {
+        if ((n = read(fd, cbuf + count, remain)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            goto meet_error;
+        } else {
+            count += n;
+            remain -= n;
+        }
+    }
+
+    goto out;
+meet_error:
+    if (count == 0) {
+        count = -1;
+    }
+
+out:
+    return count;
+}
+
+static inline ssize_t writen_nonblock(int fd, void *buf, size_t size) {
+    struct pollfd wait_fd;
+    ssize_t count, remain;
+    int n;
+    char *cbuf;
+
+    wait_fd.fd = fd;
+    wait_fd.events = POLLOUT;
+    wait_fd.revents = 0;
+
+    cbuf = (char*) buf;
+    count = 0;
+    remain = size;
+    while (remain > 0) {
+        if ((n = poll(&wait_fd, 1, -1)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            goto meet_error;
+        } else if (!n) {
+            continue;
+        }
+
+        if (wait_fd.revents & POLLOUT) {
+            if((n = write(fd, cbuf + count, remain)) == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                goto meet_error;
+            } else {
+                count += n;
+                remain -= n;
+            }
+        } else {
+            goto meet_error;
+        }
+    }
+    goto out;
+
+meet_error:
+    if (count == 0) {
+        count = -1;
+    }
+
+out:
+    return count;
+}
+
+ssize_t writen(int fd, void *buf, size_t size) {
+    ssize_t count, remain;
+    int n;
+    char *cbuf;
+
+    if (is_fd_nonblock(fd)) {
+        return writen_nonblock(fd, buf, size);
+    }
+
+    cbuf = (char*) buf;
+    count = 0;
+    remain = size;
+    while (remain > 0) {
+        if ((n = write(fd, cbuf + count, remain)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            goto meet_error;
+        } else {
+            count += n;
+            remain -= n;
+        }
+    }
+    goto out;
+
+meet_error:
+    if (count == 0) {
+        count = -1;
+    }
+
+out:
+    return count;
+}
