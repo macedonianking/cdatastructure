@@ -10,6 +10,7 @@ typedef struct string_buffer_t {
 void    string_buffer_init(string_buffer_t *ptr);
 void    string_buffer_free(string_buffer_t *ptr);
 int     string_buffer_printf(string_buffer_t *ptr, const char *format, ...) __attribute__((format(printf, 2, 3)));
+void    string_buffer_resize(string_buffer_t *ptr, int size);
 
 // 添加字符串到后缀
 int     string_buffer_append(string_buffer_t *ptr, const char *str);

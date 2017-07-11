@@ -66,3 +66,10 @@ int string_buffer_assign(string_buffer_t *ptr,
     ptr->size = 0;
     return string_buffer_append(ptr, str);
 }
+
+void string_buffer_resize(string_buffer_t *ptr, int size) {
+    ptr->size = 0;
+    ptr->buf = realloc(ptr->buf, size);
+    ptr->capacity = size;
+    DCHECK(ptr->buf);
+}

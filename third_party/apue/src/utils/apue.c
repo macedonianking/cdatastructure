@@ -246,40 +246,23 @@ static inline int wait_non_block_ready(int fd, int events) {
 }
 
 int apue_fd_copy(int in_fd, int out_fd) {
-    char buf[BUFSIZ], *ptr;
-    int n, nbytes;
-    int is_in_fd_nonblock, is_out_fd_nonblock;
-    int r = 0;
+    char buf[BUFSIZ];
+    int n;
+    int r;
 
-    if ((is_in_fd_nonblock = is_fd_nonblock(in_fd)) == -1
-        || (is_out_fd_nonblock = is_fd_nonblock(out_fd)) == -1) {
-        return -1;
-    }
-
-    while (!r) {
-        if (is_in_fd_nonblock && wait_non_block_ready(in_fd, POLLIN | POLLPRI)) {
-            r = -1;
+    r = 0;
+    for (;;) {
+        if ((n = readn(in_fd, buf, BUFSIZ)) == -1 || n == 0) {
+            if (n == -1) {
+                r = -1;
+            }
             break;
         }
-        if ((n = read(in_fd, buf, BUFSIZ)) == -1) {
-            r = -1;
-            break;
-        } else if (n == 0) {
-            break;
-        }
-        ptr = buf;
-        while (n > 0) {
-            if (is_out_fd_nonblock && wait_non_block_ready(out_fd, POLLOUT)) {
+        if ((n = writen(out_fd, buf, n)) == -1 || n == 0) {
+            if (n == -1) {
                 r = -1;
-                break;
             }
-            if ((nbytes = write(out_fd, ptr, n)) == -1) {
-                r = -1;
-                break;
-            } else {
-                n -= nbytes;
-                ptr += n;
-            }
+            break;
         }
     }
 
@@ -419,7 +402,7 @@ ssize_t readn(int fd, void *buf, size_t size) {
     }
 
     cbuf = (char*) buf;
-    count = 0;
+    remain = size;
     while (remain > 0) {
         if ((n = read(fd, cbuf + count, remain)) == -1) {
             if (errno == EINTR) {

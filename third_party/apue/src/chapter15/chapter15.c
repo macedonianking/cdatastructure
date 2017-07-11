@@ -4,8 +4,10 @@
 #include "utils/math_help.h"
 #include "thread/thread_loop.h"
 
+#include "chapter15/ipc_pipe.h"
+
 int chapter15_main(int argc, char **argv) {
-    chapter15_5(argc, argv);
+    ipc_pipe_main(argc, argv);
     return 0;
 }
 
