@@ -319,4 +319,27 @@ void chapter16_sock_addr_9(int argc, char **argv) {
 }
 
 void chapter16_sock_addr_10(int argc, char **argv) {
+    struct in_addr if_addr;
+    char ip_addr[INET6_ADDRSTRLEN];
+    int fd;
+    struct sockaddr_in addr;
+
+    if (get_interface_addr(&if_addr)) {
+        exit(-1);
+    }
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        LOGE("socket FATAL");
+        exit(-1);
+    }
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = SERVER_PORT;
+    addr.sin_addr = if_addr;
+    if (bind(fd, &addr, sizeof(addr))) {
+        LOGE("bind FATAL: %s", strerror(errno));
+        goto out;
+    }
+out:
+    close(fd);
 }
