@@ -3,17 +3,27 @@
 
 #include <time.h>
 #include <sys/time.h>
+#include <stdint.h>
 
 #define SECOND_IN_MILLIS        1000ul
 
 #define SECOND_IN_NANOS         1000000000ul
 #define MILLIS_IN_NANOS         1000000ul
 
+typedef int64_t nsec_t;
+
 static inline long current_time_millis() {
     struct timespec tv;
 
     clock_gettime(CLOCK_REALTIME, &tv);
     return tv.tv_sec * SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
+}
+
+static inline nsec_t system_clock_nano_uptime() {
+    struct timespec tv;
+
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+    return tv.tv_sec * (nsec_t) SECOND_IN_NANOS + tv.tv_nsec;
 }
 
 static inline long current_monotonic_time_millis() {

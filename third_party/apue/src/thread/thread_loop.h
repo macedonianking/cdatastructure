@@ -1,9 +1,14 @@
 #ifndef APUE_SRC_THREAD_THRED_LOOP_H
 #define APUE_SRC_THREAD_THRED_LOOP_H
 
+
 #ifdef OS_LINUX
 #include <pthread.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #endif
+
+#include "thread/thread_looper.h"
 
 #ifdef OS_LINUX
 typedef pthread_t   ThreadId;
@@ -13,7 +18,6 @@ typedef pthread_t   ThreadId;
 
 struct thread_params_t;
 typedef struct thread_params_t thread_params_t;
-
 
 ThreadId create_deamon_thread(void (*start_routing)(void*), void *args);
 ThreadId current_thread_id();
@@ -31,7 +35,6 @@ void ThreadLoopInitializeLeaveImpl();
 void ThreadLoopGlobalLockAcquire();
 void ThreadLoopGlobalLockRelease();
 
-
 /**
  * Specified thread start parameters.
  */
@@ -45,5 +48,12 @@ void                thread_params_acquire(thread_params_t *params);
 void                thread_params_release(thread_params_t *params);
 void                thread_params_lock(thread_params_t *params);
 void                thread_params_unlock(thread_params_t *params);
+
+// Get thread identifier.
+#ifdef SYS_gettid
+#define sys_gettid() ((pid_t) syscall(SYS_gettid))
+#else
+#error SYS_gettid unsupported
+#endif
 
 #endif

@@ -213,7 +213,7 @@ int check_meet_file_size_requirment(int fd, size_t min_size) {
     int r;
 
     if ((off = lseek(fd, 0, SEEK_END)) == -1) {
-        LOGE_V();
+        LOGE("lseek FATAL");
         return -1;
     }
 
