@@ -320,7 +320,6 @@ void chapter16_sock_addr_9(int argc, char **argv) {
 
 void chapter16_sock_addr_10(int argc, char **argv) {
     struct in_addr if_addr;
-    char ip_addr[INET6_ADDRSTRLEN];
     int fd;
     struct sockaddr_in addr;
 
@@ -336,7 +335,7 @@ void chapter16_sock_addr_10(int argc, char **argv) {
     addr.sin_family = AF_INET;
     addr.sin_port = SERVER_PORT;
     addr.sin_addr = if_addr;
-    if (bind(fd, &addr, sizeof(addr))) {
+    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr))) {
         LOGE("bind FATAL: %s", strerror(errno));
         goto out;
     }
