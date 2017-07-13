@@ -19,7 +19,7 @@ static int resolve_host(const char *node,
                         struct sockaddr_in *addr);
 
 void chapter16_sock_addr_main(int argc, char **argv) {
-    chapter16_sock_addr_10(argc, argv);
+    chapter16_sock_addr_11(argc, argv);
 }
 
 void chapter16_sock_addr_1(int argc, char **argv) {
@@ -321,7 +321,9 @@ void chapter16_sock_addr_9(int argc, char **argv) {
 void chapter16_sock_addr_10(int argc, char **argv) {
     struct in_addr if_addr;
     int fd;
+    char ip_addr[INET6_ADDRSTRLEN];
     struct sockaddr_in addr;
+    socklen_t sock_len;
 
     if (get_interface_addr(&if_addr)) {
         exit(-1);
@@ -339,6 +341,71 @@ void chapter16_sock_addr_10(int argc, char **argv) {
         LOGE("bind FATAL: %s", strerror(errno));
         goto out;
     }
+    if (!getsockname(fd, (struct sockaddr*)&addr, &sock_len)) {
+        ALOGD("getsockname success");
+        if (inet_ntop(AF_INET, &addr.sin_addr, ip_addr, INET6_ADDRSTRLEN) == ip_addr) {
+            ALOGD("getsockname ip: %s, port=%d", ip_addr, addr.sin_port);
+        }
+    }
+
 out:
+    close(fd);
+}
+
+static int create_connection(const char *node, const char *service,
+    long timeout) {
+    struct sockaddr_in addr;
+    int fd;
+    struct pollfd pollfd;
+    int result;
+
+    if (resolve_host(node, service, &addr)) {
+        return -1;
+    }
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        return -1;
+    }
+
+    apue_set_fl(fd, O_NONBLOCK);
+start:
+    if (!connect(fd, (struct sockaddr*)&addr, sizeof(addr))) {
+        return fd;
+    }
+
+    if (errno == EINTR) {
+        goto start;
+    } else if (errno != EINPROGRESS) {
+        goto meet_error;
+    }
+
+    memset(&pollfd, 0, sizeof(struct pollfd));
+    pollfd.fd = fd;
+    pollfd.events = POLLOUT;
+    if ((result = poll(&pollfd, 1, timeout)) == -1 || result == 0) {
+        goto meet_error;
+    }
+    if (pollfd.revents & POLLOUT) {
+        goto out;
+    }
+
+meet_error:
+    close(fd);
+    fd = -1;
+
+out:
+    return fd;
+}
+
+/**
+ * connect www.baidu.com, client will bind to one address.
+ */
+void chapter16_sock_addr_11(int argc, char **argv) {
+    int fd;
+
+    if((fd = create_connection("www.baidu.com", "http", 30 * SECOND_IN_MILLIS)) == -1) {
+        return;
+    }
+
+    ALOGE("connect baiud success");
     close(fd);
 }
