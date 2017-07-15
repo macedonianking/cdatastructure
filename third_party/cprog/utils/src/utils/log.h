@@ -76,23 +76,18 @@ extern void __print_log(int level, const char *tag, const char *fmt, ...)
 } while(0)
 #endif // ALOGE_IF
 
-#ifdef DEBUG
-
 #ifndef LOG_ALWAYSE_FATAL_IF
 #define LOG_ALWAYSE_FATAL_IF(cond, ...) do { \
     if ((cond)) { \
         ALOGE(__VA_ARGS__);   \
+        __FATAL(); \
     }   \
 } while(0)
-#endif // LOG_ALWAYSE_FATAL_IF
-
-#else
-
-#ifndef LOG_ALWAYSE_FATAL_IF
-#define LOG_ALWAYSE_FATAL_IF
 #endif
 
-#endif // DEBUG
+#ifndef ALOGE_ALWAYSE_FATAL_IF
+#define ALOGE_ALWAYSE_FATAL_IF(cond, ...) LOG_ALWAYSE_FATAL_IF(cond, __VA_ARGS__)
+#endif
 
 #define WARN_IF(cond)   \
     do {    \

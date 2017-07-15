@@ -1,7 +1,7 @@
 #include "thread/thread_loop.h"
-#include "chapter16/chapter16.h"
+#include "chapter1/chapter1.h"
 
 int main(int argc, char **argv) {
     ThreadLoopInitialize();
-    return chapter16_main(argc, argv);
+    return chapter1_main(argc, argv);
 }

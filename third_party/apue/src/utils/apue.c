@@ -403,12 +403,15 @@ ssize_t readn(int fd, void *buf, size_t size) {
 
     cbuf = (char*) buf;
     remain = size;
+    count = 0;
     while (remain > 0) {
         if ((n = read(fd, cbuf + count, remain)) == -1) {
             if (errno == EINTR) {
                 continue;
             }
             goto meet_error;
+        } else if (!n) {
+            goto out;
         } else {
             count += n;
             remain -= n;

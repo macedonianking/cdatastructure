@@ -16,10 +16,11 @@
 #include "utils/string_buffer.h"
 #include "utils/string_util.h"
 #include "utils/utils.h"
+#include "chapter1/daytime_client.h"
 
 
 int chapter1_main(int argc, char **argv) {
-    chapter_tutorial_1_9(argc, argv);
+    daytime_client_main(argc, argv);
     return 0;
 }
 

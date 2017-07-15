@@ -14,10 +14,6 @@ static void print_hostent_addr_list(int fd, struct hostent *ent);
 static void print_name_list(int fd, char **list);
 static void print_network_type(int fd, int type);
 
-static int resolve_host(const char *node,
-                        const char *service,
-                        struct sockaddr_in *addr);
-
 void chapter16_sock_addr_main(int argc, char **argv) {
     chapter16_sock_addr_11(argc, argv);
 }
@@ -223,19 +219,6 @@ void chapter16_sock_addr_7(int argc, char **argv) {
     pthread_join(tid, NULL);
 }
 
-static int look_up_protocol(const char *name, int *protocol) {
-    struct protoent ent, *ret;
-    char buffer[BUFSIZ];
-
-    if (!getprotobyname_r(name, &ent, buffer, BUFSIZ, &ret) && ret == &ent) {
-        if (protocol) {
-            *protocol = ent.p_proto;
-        }
-        return 0;
-    }
-    return -1;
-}
-
 /**
  * AI_NUMERICALHOST
  */
@@ -269,27 +252,6 @@ void chapter16_sock_addr_8(int argc, char **argv) {
         }
     }
     freeaddrinfo(ret);
-}
-
-int resolve_host(const char *node, const char *service, struct sockaddr_in *addr) {
-    struct addrinfo hint, *ret;
-    int protocol;
-
-    if (look_up_protocol("tcp", &protocol)) {
-        return -1;
-    }
-
-    memset(&hint, 0, sizeof(hint));
-    hint.ai_flags = AI_CANONNAME;
-    hint.ai_family = AF_INET;
-    hint.ai_protocol = protocol;
-    hint.ai_socktype = SOCK_STREAM;
-    if (getaddrinfo(node, service, &hint, &ret) || !ret) {
-        return -1;
-    }
-    *addr = *(struct sockaddr_in*)ret->ai_addr;
-    freeaddrinfo(ret);
-    return 0;
 }
 
 /**
