@@ -8,6 +8,9 @@
 
 static char ip_addr[INET6_ADDRSTRLEN];
 
+#define SOCK_NTOP_SIZE  1024
+static char sock_ntop_buf[SOCK_NTOP_SIZE];
+
 int get_interface_addr(struct in_addr *addr) {
     struct in_addr lo_addr;
     struct ifaddrs *ret, *ptr;
@@ -78,4 +81,34 @@ char *inet_ip(struct in_addr *addr) {
         ip_addr[0] = '\0';
     }
     return ip_addr;
+}
+
+char *sock_ntop(struct sockaddr *addr, socklen_t len) {
+    int n;
+    char *buf;
+
+    buf = sock_ntop_buf;
+    switch(addr->sa_family) {
+        case AF_INET: {
+            struct sockaddr_in *in_addr;
+
+            in_addr = (struct sockaddr_in*) addr;
+            if (inet_ntop(AF_INET, &in_addr->sin_addr, buf, SOCK_NTOP_SIZE) == buf) {
+                n = strlen(buf);
+                if (in_addr->sin_port != 0 && n < SOCK_NTOP_SIZE) {
+                    snprintf(buf + n, SOCK_NTOP_SIZE - n, ":%d",
+                        ntohs(in_addr->sin_port));
+                }
+                goto out;
+            } else {
+                goto meet_error;
+            }
+        }
+    }
+
+meet_error:
+    buf[0] = '\0';
+
+out:
+    return buf;
 }

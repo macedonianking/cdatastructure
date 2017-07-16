@@ -81,5 +81,11 @@ int apue_handle_file_in_size(const char *name, int min_size,
 
 ssize_t readn(int fd, void *buf, size_t size);
 ssize_t writen(int fd, void *buf, size_t size);
+ssize_t dgetline(int fd, char **lineptr, size_t *n);
+
+int wait_rd(int fd, int timeout);
+int wait_wr(int fd, int timeout);
+
+int ensure_memory_size(char **mem, size_t *mem_size, size_t count);
 
 #endif // APUE_SRC_APUE_H

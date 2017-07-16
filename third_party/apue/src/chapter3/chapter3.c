@@ -10,9 +10,11 @@
 
 #include "utils/apue.h"
 #include "utils/string_buffer.h"
+#include "chapter3/sock_struct.h"
+
 
 int chapter3_main(int argc, char **argv) {
-    chapter_exercise_3_6(argc, argv);
+    chapter3_sock_struct_main(argc, argv);
     return 0;
 }
 
@@ -151,7 +153,7 @@ void chapter_exercise_3_6(int argc, char **argv) {
         err_quit("command options error");
     }
 
-    if ((fd = open(argv[1], O_RDWR | O_APPEND| O_CREAT, 
+    if ((fd = open(argv[1], O_RDWR | O_APPEND| O_CREAT,
             APUE_FILE_MODE)) < 0) {
         err_sys("can't open file '%s'", argv[1]);
     }

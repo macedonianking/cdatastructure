@@ -11,12 +11,13 @@
 #define MILLIS_IN_NANOS         1000000ul
 
 typedef int64_t nsec_t;
+typedef int64_t millis_t;
 
-static inline long current_time_millis() {
+static inline millis_t current_time_millis() {
     struct timespec tv;
 
     clock_gettime(CLOCK_REALTIME, &tv);
-    return tv.tv_sec * SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
+    return tv.tv_sec * (millis_t) SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
 }
 
 static inline nsec_t system_clock_nano_uptime() {
@@ -26,14 +27,14 @@ static inline nsec_t system_clock_nano_uptime() {
     return tv.tv_sec * (nsec_t) SECOND_IN_NANOS + tv.tv_nsec;
 }
 
-static inline long current_monotonic_time_millis() {
+static inline millis_t current_monotonic_time_millis() {
     struct timespec tv;
 
     clock_gettime(CLOCK_MONOTONIC, &tv);
-    return tv.tv_sec * SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
+    return tv.tv_sec * (millis_t) SECOND_IN_MILLIS + tv.tv_nsec / MILLIS_IN_NANOS;
 }
 
-static inline void millis_to_timeval(long millis, struct timeval *val) {
+static inline void millis_to_timeval(millis_t millis, struct timeval *val) {
     val->tv_sec = millis / SECOND_IN_MILLIS;
     val->tv_usec = (millis % SECOND_IN_MILLIS) * 1000ul;
 }

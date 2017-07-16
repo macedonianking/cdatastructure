@@ -509,3 +509,158 @@ meet_error:
 out:
     return count;
 }
+
+ssize_t dgetline(int fd, char **lineptr, size_t *outn) {
+    char *buf;
+    char c;
+    int count;
+    size_t buf_size;
+    ssize_t ret;
+    int n, is_nonblock;
+    int r;
+
+    if (!lineptr || !outn) {
+        return -1;
+    }
+    if (*lineptr != NULL && *outn <= 0) {
+        return -1;
+    }
+
+    ret = 0;
+    buf = *lineptr;
+    buf_size = buf ? *outn : 0;
+    count = 0;
+    is_nonblock = is_fd_nonblock(fd);
+
+    for (;;) {
+        if (is_nonblock) {
+            if ((r = wait_rd(fd, -1)) == -1) {
+                goto meet_error;
+            } else if (!r) {
+                continue;
+            }
+        }
+        if ((n = read(fd, &c, 1)) == -1) {
+            goto meet_error;
+        } else if (!n) {
+            if (ensure_memory_size(&buf, &buf_size, count + 1)) {
+                goto meet_error;
+            }
+            buf[count] = '\0';
+            ret = count;
+            break;
+        } else {
+            if (ensure_memory_size(&buf, &buf_size, count + 2)) {
+                goto meet_error;
+            }
+            buf[count++] = c;
+            if (c == '\n') {
+                buf[count] = '\0';
+                ret = count;
+                break;
+            }
+        }
+    }
+
+finish:
+    *lineptr = buf;
+    *outn = buf_size;
+    return ret;
+
+meet_error:
+    ret = -1;
+    goto finish;
+}
+
+int wait_rd(int fd, int timeout) {
+    struct pollfd item;
+    int r;
+
+    bzero(&item, sizeof(item));
+    item.events = POLLIN | POLLPRI;
+
+    for (;;) {
+        if ((r = poll(&item, 1, timeout)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            r = -1;
+            break;
+        } else if (!r) {
+            r = 0;
+            break;
+        } else {
+            if (item.revents & (POLLIN | POLLPRI)) {
+                r = 1;
+            } else {
+                r = -1;
+            }
+            break;
+        }
+    }
+
+    return r;
+}
+
+int wait_wr(int fd, int timeout) {
+    struct pollfd item;
+    int r;
+
+    bzero(&item, sizeof(item));
+    item.fd = fd;
+    item.events = POLLOUT;
+
+    for (;;) {
+        if ((r = poll(&item, 1, timeout)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            r = -1;
+            break;
+        } else if (!r) {
+            r = 0;
+            break;
+        } else {
+            if (item.revents & POLLOUT) {
+                r = 1;
+            } else {
+                r = -1;
+            }
+            break;
+        }
+    }
+
+    return r;
+}
+
+int ensure_memory_size(char **mem, size_t *mem_size, size_t count) {
+    size_t n;
+    char *tmp;
+
+    if (count <= *mem_size) {
+        return 0;
+    }
+
+    if (*mem == NULL) {
+        n = MAX(count, 256u);
+        tmp = (char*) malloc(sizeof(char) * n);
+        if (!tmp) {
+            return -1;
+        }
+        *mem = tmp;
+        *mem_size = n;
+        return 0;
+    }
+
+    n = MAX(*mem_size, count);
+    if (n < 2 * *mem_size) {
+        n = 2 * *mem_size;
+    }
+    tmp = (char*) realloc(*mem, sizeof(char) * n);
+    if (!tmp) {
+        return -1;
+    }
+    *mem = tmp;
+    *mem_size = n;
+    return 0;
+}

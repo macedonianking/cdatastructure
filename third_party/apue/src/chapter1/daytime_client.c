@@ -5,9 +5,6 @@
 #include "utils/net.h"
 #include "utils/log.h"
 
-#define SERVER_OPTION   "--server"
-#define CLIENT_OPTION   "--client"
-
 void daytime_client_main(int argc, char **argv) {
     daytime_client_main_2(argc, argv);
 }
@@ -95,16 +92,7 @@ out:
 }
 
 void daytime_client_main_2(int argc, char **argv) {
-    if (argc < 2) {
-        ALOGE("daytime_client_main_2 argument is not enough");
-        return;
-    }
-
-    if (!strcmp(SERVER_OPTION, argv[1])) {
-        daytime_client_main_2_server(argc, argv);
-    } else if (!strcmp(CLIENT_OPTION, argv[1])) {
-        daytime_client_main_2_client(argc, argv);
-    } else {
-        ALOGE("daytime_client_main_2 unknown option %s", argv[1]);
-    }
+    choose_process_main_routing(argc, argv,
+        &daytime_client_main_2_server,
+        &daytime_client_main_2_client);
 }
