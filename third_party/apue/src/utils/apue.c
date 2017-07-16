@@ -541,6 +541,9 @@ ssize_t dgetline(int fd, char **lineptr, size_t *outn) {
             }
         }
         if ((n = read(fd, &c, 1)) == -1) {
+            if (errno == EINTR || errno == EAGAIN) {
+                continue;
+            }
             goto meet_error;
         } else if (!n) {
             if (ensure_memory_size(&buf, &buf_size, count + 1)) {

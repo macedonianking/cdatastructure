@@ -3,6 +3,7 @@
 #include "utils/apue.h"
 #include "utils/utils.h"
 #include "utils/string_buffer.h"
+#include "chapter4/tcp_socket_elementary.h"
 
 static inline const char *get_file_type_description(int st_mode) {
     if (S_ISREG(st_mode)) {
@@ -29,7 +30,7 @@ static void test_lstat();
 static void test_fstatat();
 static void test_setuid_setgid();
 
-static inline 
+static inline
 const char *get_fd_type_description(int fd) {
     struct stat stat_obj;
 
@@ -40,7 +41,7 @@ const char *get_fd_type_description(int fd) {
 }
 
 int chapter4_main(int argc, char **argv) {
-    chapter4_9(argc, argv);
+    chapter4_tcp_socket_elementary(argc, argv);
     return 0;
 }
 
@@ -147,20 +148,20 @@ static void check_create_file_owner(int argc, char **argv) {
         err_sys("check_create_file_owner");
     }
     if (!fstat(fd, &stat_obj)) {
-        fprintf(stdout, "file.st_uid=%d, file.st_gid=%d\n", 
+        fprintf(stdout, "file.st_uid=%d, file.st_gid=%d\n",
             stat_obj.st_uid, stat_obj.st_gid);
     }
     close(fd);
 }
 
 void chapter4_6(int argc, char **argv) {
-    fprintf(stdout, "uid=%d, gid=%d, euid=%d, egid=%d\n", 
+    fprintf(stdout, "uid=%d, gid=%d, euid=%d, egid=%d\n",
         getuid(), getgid(), geteuid(), getegid());
     check_create_file_owner(argc, argv);
 }
 
 void chapter4_7(int argc, char **argv) {
-    if (argc < 2) 
+    if (argc < 2)
         return;
 }
 
