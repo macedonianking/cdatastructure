@@ -4,5 +4,6 @@
 void chapter4_tcp_socket_elementary(int argc, char **argv);
 
 void chapter4_tcp_socket_elementary_1(int argc, char **argv);
+void chapter4_tcp_socket_elementary_2(int argc, char **argv);
 
 #endif

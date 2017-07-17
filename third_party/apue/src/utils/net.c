@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "utils/apue.h"
+
 #define LOOP_IP_ADDR   "127.0.0.1"
 
 static char ip_addr[INET6_ADDRSTRLEN];
@@ -111,4 +113,42 @@ meet_error:
 
 out:
     return buf;
+}
+
+int say_daytime(int fd) {
+    char buf[BUFSIZ];
+    time_t seconds;
+    int n, n_wr;
+
+    time(&seconds);
+    ctime_r(&seconds, buf);
+    n = strlen(buf);
+    n_wr = writen(fd, buf, n);
+    return n_wr == n ? 0 : -1;
+}
+
+int create_connection(const struct sockaddr_in *addr) {
+    int fd;
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) != -1) {
+        if (connect(fd, (struct sockaddr*) addr, sizeof(*addr))) {
+            close(fd);
+            fd = -1;
+        }
+    }
+    return fd;
+}
+
+int create_local_connection(in_port_t port) {
+    struct sockaddr_in addr;
+    int fd;
+
+    bzero(&addr, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    fd = -1;
+    if (inet_pton(AF_INET, LOCAL_IP_ADDR, &addr.sin_addr) == 1) {
+        fd = create_connection(&addr);
+    }
+    return fd;
 }

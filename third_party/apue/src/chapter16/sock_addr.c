@@ -314,7 +314,7 @@ out:
     close(fd);
 }
 
-static int create_connection(const char *node, const char *service,
+static int create_connection_timeout(const char *node, const char *service,
     long timeout) {
     struct sockaddr_in addr;
     int fd;
@@ -364,7 +364,7 @@ out:
 void chapter16_sock_addr_11(int argc, char **argv) {
     int fd;
 
-    if((fd = create_connection("www.baidu.com", "http", 30 * SECOND_IN_MILLIS)) == -1) {
+    if((fd = create_connection_timeout("www.baidu.com", "http", 30 * SECOND_IN_MILLIS)) == -1) {
         return;
     }
 

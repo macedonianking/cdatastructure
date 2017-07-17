@@ -33,6 +33,8 @@ char *inet_ip(struct in_addr *addr);
 
 #define SERVER_OPTION   "--server"
 #define CLIENT_OPTION   "--client"
+#define LOCAL_IP_ADDR   "127.0.0.1"
+#define LISTEN_BACKLOG_COUNT   30
 
 #define SA struct sockaddr;
 
@@ -56,5 +58,12 @@ static inline int choose_process_main_routing(int argc, char **argv,
 }
 
 char *sock_ntop(struct sockaddr *addr, socklen_t len);
+/**
+ * @param rd
+ */
+int say_daytime(int fd);
+
+int create_connection(const struct sockaddr_in *addr);
+int create_local_connection(in_port_t port);
 
 #endif
