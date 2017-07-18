@@ -43,6 +43,8 @@ extern void log_impl(int level, const char *file, int line,
 extern void __vprint_log(int level, const char *tag, const char *fmt, va_list args);
 extern void __print_log(int level, const char *tag, const char *fmt, ...) 
     __attribute__((format(printf, 3, 4)));
+extern void __android_log_impl(int level, const char *tag, const char *file, int line,
+    const char *format, ...) __attribute__((format(printf, 5, 6)));
 
 #ifdef DEBUG
 #define __LOG_IMPL(level, format, ...)  \
@@ -55,7 +57,7 @@ extern void __print_log(int level, const char *tag, const char *fmt, ...)
 #endif
 
 #ifndef LOG_PRI
-#define LOG_PRI(level, tag, ...) __print_log(LOG_LEVEL_##level, tag, ##__VA_ARGS__)
+#define LOG_PRI(level, tag, ...) __android_log_impl(LOG_LEVEL_##level, tag, __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 
 #define LOGI(format, ...)   __LOG_IMPL(LOG_LEVEL_INFO, format, ##__VA_ARGS__)

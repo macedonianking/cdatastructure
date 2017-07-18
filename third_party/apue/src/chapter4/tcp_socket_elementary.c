@@ -5,7 +5,7 @@
 #include "utils/net.h"
 
 void chapter4_tcp_socket_elementary(int argc, char **argv) {
-    chapter4_tcp_socket_elementary_2(argc, argv);
+    chapter4_tcp_socket_exercise_2(argc, argv);
 }
 
 /**
@@ -90,4 +90,30 @@ void chapter4_tcp_socket_elementary_2(int argc, char **argv) {
     choose_process_main_routing(argc, argv,
         &chapter4_tcp_socket_elementary_2_server,
         &chapter4_tcp_socket_elementary_2_client);
+}
+
+void chapter4_tcp_socket_exercise_2(int argc, char **argv) {
+    struct sockaddr_in addr, out_addr;
+    socklen_t out_addr_len;
+    int fd;
+
+    if (resolve_host("www.baidu.com", "http", &addr)) {
+        ALOGE("resolve_host failure");
+        return;
+    }
+    if ((fd = create_connection(&addr)) == -1) {
+        ALOGE("create_connection FATAL");
+        return;
+    }
+    out_addr_len = sizeof(struct sockaddr_in);
+    if (!getsockname(fd, (struct sockaddr*) &out_addr, &out_addr_len)) {
+        ALOGD("getsockname:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len));
+    } else {
+        ALOGE("getsockname failure(%s)", strerror(errno));
+    }
+    out_addr_len = sizeof(struct sockaddr_in);
+    if (!getpeername(fd, (struct sockaddr*) &out_addr, &out_addr_len)) {
+        ALOGD("getpeername:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len));
+    }
+    close(fd);
 }

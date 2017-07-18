@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
@@ -17,7 +18,7 @@
 #error "SYS_gettid unsupported"
 #endif
 
-static char *log_error_str = "IWDEU";
+static char *log_error_str = "IDWEU";
 
 static inline char get_level_char(int level) {
     if (level < LOG_LEVEL_INFO || level >= LOG_LEVEL_COUNT) {
@@ -74,6 +75,29 @@ void __vprint_log(int level, const char *tag, const char *fmt, va_list args) {
     fprintf(stderr, "%s %-5d %-5d %c %s: ", time_buf, getpid(), my_gettid(),
         get_level_char(level), tag);
     vfprintf(stderr, fmt, args);
+    fputc('\n', stderr);
+    funlockfile(stderr);
+}
+
+void __android_log_impl(int level, const char *tag, const char *file, int line,
+    const char *fmt, ...) {
+    const char *name, *ptr;
+    char time_buf[128];
+    va_list args;
+
+    name = file;
+    while ((ptr = strpbrk(name, "\\/")) && ptr[1] != '\0') {
+        name = ptr + 1;
+    }
+
+    get_log_time(time_buf, NARRAY(time_buf));
+    flockfile(stderr);
+    fprintf(stderr, "%s %-5d %-5d %c %s: ", time_buf, getpid(), my_gettid(),
+        get_level_char(level), tag);
+    fprintf(stderr, "[%s:%d] ", name, line);
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
     fputc('\n', stderr);
     funlockfile(stderr);
 }
