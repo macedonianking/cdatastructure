@@ -226,7 +226,7 @@ int thread_handler_send_message(handler_t *handler, message_t *msg) {
 void wakeup_looper(looper_t *looper) {
     int n;
 
-    while((n = write(looper->tl_wrfd, "w", 1)) != -1 || errno == EINTR) {
+    while((n = write(looper->tl_wrfd, "w", 1)) == -1 && errno == EINTR) {
         ;
     }
     ALOGE_IF(n != 1, "wakeup_looper failure(%s)", strerror(errno));
@@ -490,6 +490,21 @@ void default_handler_dispatch_message_dtor(message_t *msg) {
     }
 }
 
+static void consume_all_pipe_data(int fd) {
+    int buf[128];
+    int n;
+
+    for (;;) {
+        if ((n = read(fd, buf, 128)) == -1) {
+            if (errno != EINTR) {
+                break;
+            }
+        } else if (n == 0) {
+            break;
+        }
+    }
+}
+
 static int thread_looper_next_message(looper_t *looper, message_t **msg) {
     struct epoll_event events;
     millis_t wait_time;
@@ -503,6 +518,9 @@ start:
     if (wait_time) {
         memset(&events, 0, sizeof(events));
         result = epoll_wait(looper->tl_epollfd, &events, 1, wait_time);
+        if (result > 0 && events.data.fd == looper->tl_rdfd && events.events & (EPOLLIN | EPOLLPRI)) {
+            consume_all_pipe_data(looper->tl_rdfd);
+        }
         if (result == -1 && errno != EINTR) {
             ALOGE("thread_looper_next_message epoll_wait failure->looper=%p error=%s", looper, strerror(errno));
         }
@@ -513,7 +531,7 @@ start:
         r = -1;
         goto out;
     }
-    if (!list_empty(&looper->tl_list)) {
+    if (list_empty(&looper->tl_list)) {
         wait_time = DAY_IN_MILLIS;
         goto unlock_and_wait;
     }
@@ -522,10 +540,11 @@ start:
     now = system_clock_nano_uptime();
     if (ptr->uptime <= now) {
         r = 0;
+        list_del(&ptr->node);
         *msg = ptr;
         goto out;
     }
-    wait_time = (now - ptr->uptime) / MILLIS_IN_NANOS;
+    wait_time = (ptr->uptime - now) / MILLIS_IN_NANOS;
 
 unlock_and_wait:
     pthread_mutex_unlock(&looper->tl_lock);
@@ -533,7 +552,7 @@ unlock_and_wait:
 
 out:
     pthread_mutex_unlock(&looper->tl_lock);
-    return -r;
+    return r;
 }
 
 static void dispatch_message(message_t *msg) {

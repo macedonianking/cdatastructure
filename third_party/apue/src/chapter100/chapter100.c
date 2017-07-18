@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 #define LOG_TAG "chapter100"
 #include "thread/thread_looper.h"
