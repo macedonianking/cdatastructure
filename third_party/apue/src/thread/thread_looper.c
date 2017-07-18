@@ -15,14 +15,11 @@
 #define LOG_TAG "thread_looper"
 #include "utils/log.h"
 
-#define MSG_STATE_NONE      0
-#define MSG_STATE_USING     1
-
 struct _thread_looper {
-    int         tl_rdfd;
-    int         tl_wrfd;
-    int         tl_epollfd;
-    list_head   tl_list;
+    int                 tl_rdfd;
+    int                 tl_wrfd;
+    int                 tl_epollfd;
+    list_head           tl_list;
     pthread_mutex_t     tl_lock;
 };
 
@@ -30,6 +27,11 @@ static pthread_key_t g_thread_loop_key;
 static pthread_once_t g_thread_loop_init_once = PTHREAD_ONCE_INIT;
 
 static void wakeup_looper(looper_t *looper);
+static message_t *obtain_message();
+static void send_back_message(message_t *msg);
+
+static void dispatch_message_dtor(message_t *msg);
+static void dispatch_message_dtor_and_release(list_head *list);
 
 static int set_pipe_non_block(int fd) {
     int flags;
@@ -194,4 +196,72 @@ void wakeup_looper(looper_t *looper) {
         ;
     }
     LOG_ALWAYSE_FATAL_IF(n != 1, "wakeup_looper failure(%s)", strerror(errno));
+}
+
+void thread_looper_remove_messages(looper_t *looper, handler_t *handler, int what) {
+    message_t *msg;
+    DEFINE_LIST_HEAD(list);
+
+    pthread_mutex_lock(&looper->tl_lock);
+    LIST_FOR_EACH_ENTRY_SAFE(msg, &looper->tl_list, node) {
+        if (msg->target == handler) {
+            list_del(&msg->node);
+            list_add_tail(&msg->node, &list);
+        }
+    }
+    pthread_mutex_unlock(&looper->tl_lock);
+    dispatch_message_dtor_and_release(&list);
+}
+
+message_t *obtain_message() {
+    message_t *ptr;
+
+    ptr = (message_t*) malloc(sizeof(*ptr));
+    ALOGE_ALWAYSE_FATAL_IF(!ptr, "obtain_message FATAL");
+    memset(ptr, 0, sizeof(*ptr));
+    return ptr;
+}
+
+void send_back_message(message_t *ptr) {
+    DCHECK(ptr && ptr->state == MSG_STATE_NONE);
+    memset(ptr, 0, sizeof(*ptr));
+    free(ptr);
+}
+
+void dispatch_message_dtor(message_t *msg) {
+    if (msg->data) {
+        if (msg->data_dtor) {
+            msg->data_dtor(msg);
+        } else {
+            msg->target->dispatch_message_dtor(msg);
+        }
+    }
+    memset(msg, 0, sizeof(*msg));
+    msg->state = MSG_STATE_NONE;
+}
+
+void dispatch_message_dtor_and_release(list_head *list) {
+    message_t *msg;
+
+   /**
+     * Release all removed messages.
+     */
+    LIST_FOR_EACH_ENTRY_SAFE(msg, list, node) {
+        list_del(&msg->node);
+        dispatch_message_dtor(msg);
+        send_back_message(msg);
+    }
+}
+
+message_t *thread_handler_obtain_message(handler_t *handler, int what, int arg1, int arg2, void *data) {
+    message_t *msg;
+
+    msg = obtain_message();
+    msg->state = MSG_STATE_NONE;
+    msg->what= what;
+    msg->arg1 = arg1;
+    msg->arg2 = arg2;
+    msg->data = data;
+    msg->target = handler;
+    return msg;
 }
