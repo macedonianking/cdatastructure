@@ -6,6 +6,9 @@
 #include <stdint.h>
 
 #define SECOND_IN_MILLIS        1000ul
+#define MINUTE_IN_MILLIS        (60 * SECOND_IN_MILLIS)
+#define HOUR_IN_MILLIS          (60 * MINUTE_IN_MILLIS)
+#define DAY_IN_MILLIS           (24 * HOUR_IN_MILLIS)
 
 #define SECOND_IN_NANOS         1000000000ul
 #define MILLIS_IN_NANOS         1000000ul
