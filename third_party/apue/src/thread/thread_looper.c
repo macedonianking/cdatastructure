@@ -508,7 +508,7 @@ static void consume_all_pipe_data(int fd) {
 static int thread_looper_next_message(looper_t *looper, message_t **msg) {
     struct epoll_event events;
     millis_t wait_time;
-    nsec_t now;
+    nsec_t now, delta;
     message_t *ptr;
     int r;
     int result;
@@ -544,7 +544,11 @@ start:
         *msg = ptr;
         goto out;
     }
-    wait_time = (ptr->uptime - now) / MILLIS_IN_NANOS;
+    delta = ptr->uptime - now;
+    wait_time = delta / MILLIS_IN_NANOS;
+    if ((delta % MILLIS_IN_NANOS) > 1000) {
+        wait_time += 1;
+    }
 
 unlock_and_wait:
     pthread_mutex_unlock(&looper->tl_lock);
