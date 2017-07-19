@@ -66,4 +66,19 @@ int say_daytime(int fd);
 int create_connection(const struct sockaddr_in *addr);
 int create_local_connection(in_port_t port);
 
+/**
+ * Get local socket address from LOCAL_IP_ADDR.
+ * @param addr: the sockaddr_in address that pointed to the address.
+ * @param host_port: the port number in host binary order.
+ */
+int get_local_socket_addr(struct sockaddr_in *addr, in_port_t host_port);
+
+/**
+ * Create a server tcp listen socket from the specified address.
+ *
+ * @param addr: The specified address that socket will bind.
+ * @param backlog: the listen backlog count.
+ */
+int create_server_socket(struct sockaddr_in *addr, int backlog);
+
 #endif

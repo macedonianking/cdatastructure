@@ -152,3 +152,35 @@ int create_local_connection(in_port_t port) {
     }
     return fd;
 }
+
+int create_server_socket(struct sockaddr_in *addr, int backlog) {
+    int fd;
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+        goto out;
+    }
+    if (bind(fd, (struct sockaddr*) addr, sizeof(*addr))) {
+        goto meet_error;
+    }
+    if (listen(fd, backlog)) {
+        goto meet_error;
+    }
+out:
+    return fd;
+
+meet_error:
+    close(fd);
+    fd = -1;
+    goto out;
+}
+
+int get_local_socket_addr(struct sockaddr_in *addr, in_port_t host_port) {
+    int r;
+
+    r = -1;
+    addr->sin_port = htons(host_port);
+    if (inet_pton(AF_INET, LOCAL_IP_ADDR, &addr->sin_addr) == 1) {
+        r = 0;
+    }
+    return r;
+}
