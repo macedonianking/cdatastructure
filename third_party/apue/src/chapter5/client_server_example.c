@@ -204,24 +204,99 @@ static void free_stream_echo_buf(struct stream_echo_buf *ptr) {
     memset(ptr, 0, sizeof(*ptr));
 }
 
+/**
+ * 客户端读取数据
+ */
 static int client_echo_rd_data(struct pollfd *waits, struct stream_echo_buf *sock_buf,
         struct stream_echo_buf *user_buf) {
     int r;
     struct pollfd *user_wait, *sock_wait;
+    int n, timeout, count;
 
     user_wait = waits;
     sock_wait = waits + 1;
     r = 0;
     for (;;) {
-        if (user_wait->fd == -1 && sock_wait->fd == -1) {
+        if (sock_wait->fd == -1) {
             r = -1;
             break;
-        } else if(user_wait->fd == -1) {
+        }
+        timeout = -1;
+        if (user_wait->fd == -1) {
+            timeout = 0;
+        }
+        if ((n = poll(waits, 2, timeout)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            r = -1;
+            user_wait->fd = sock_wait->fd = -1;
+            break;
+        } else if (!n) {
+            sock_wait->fd = -1;
+            r = 0;
+            break;
+        }
+        if ((sock_wait->revents & (POLLIN | POLLPRI))) {
+            if ((n = read(sock_wait->fd, sock_buf->buf + sock_buf->count, sock_buf->remain)) == -1) {
+                if (errno != EINTR) {
+                    sock_wait->fd = user_wait->fd = -1;
+                    r = -1;
+                    break;
+                }
+            } else if (!n) {
+                sock_wait->fd = user_wait->fd = -1;
+            } else {
+                sock_buf->count += n;
+                sock_buf->remain -= n;
+                sock_buf->require_flush = 1;
+            }
+        } else if ((sock_wait->revents & (POLLHUP | POLLERR | POLLNVAL))) {
+            sock_wait->fd = user_wait->fd = -1;
+            r = -1;
+            break;
+        }
+        if (user_wait->fd != -1 && user_wait->revents) {
+            if ((user_wait->revents & (POLLIN | POLLPRI))) {
+                if ((n = read(user_wait->fd, user_buf->buf + user_buf->count, user_buf->remain)) == -1) {
+                    if (errno != EINTR) {
+                        user_wait->fd = -1;
+                        r = -1;
+                    }
+                } else if (!n) {
+                    user_wait->fd = -1;
+                } else {
+                    count = user_buf->count;
+                    user_buf->count += n;
+                    user_buf->remain -= n;
+                    user_buf->buf[user_buf->count] = '\0';
+                    if (strchr(&user_buf->buf[count], '\n') || !user_buf->remain) {
+                        user_buf->require_flush = 1;
+                    }
+                }
+            } else if (user_wait->revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                user_wait->fd = -1;
+            }
+        }
+        if (sock_buf->require_flush || user_buf->require_flush || sock_wait->fd == -1) {
+            break;
+        }
+    }
 
-        } else if(sock_wait->fd == -1) {
+    return r;
+}
 
+static int stream_echo_buf_wr_data(int fd, struct stream_echo_buf *ptr) {
+    int r;
+
+    r = 0;
+    if (ptr->require_flush) {
+        if (writen(fd, ptr->buf, ptr->count) != ptr->count) {
+            r = -1;
         } else {
-
+            ptr->count = 0;
+            ptr->remain = ptr->size - 1;
+            ptr->require_flush = 0;
         }
     }
 
@@ -235,21 +310,12 @@ static int client_echo_wr_data(int fd, struct stream_echo_buf *sock_buf, struct 
     int r;
 
     r = 0;
-    if (sock_buf->require_flush) {
-        if (writen(STDOUT_FILENO, sock_buf->buf, sock_buf->count) != sock_buf->count) {
-            r = -1;
-        }
-        sock_buf->count = 0;
-        sock_buf->require_flush = 0;
+    if (stream_echo_buf_wr_data(STDOUT_FILENO, sock_buf) == -1) {
+        r = -1;
     }
-    if (user_buf->require_flush) {
-        if (writen(fd, user_buf->buf, user_buf->count) != user_buf->count) {
-            r = -1;
-        }
-        user_buf->count = 0;
-        user_buf->require_flush = 0;
+    if (stream_echo_buf_wr_data(fd, user_buf) == -1) {
+        r = -1;
     }
-
     return r;
 }
 
