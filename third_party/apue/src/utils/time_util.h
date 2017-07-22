@@ -42,6 +42,6 @@ static inline void millis_to_timeval(millis_t millis, struct timeval *val) {
     val->tv_usec = (millis % SECOND_IN_MILLIS) * 1000ul;
 }
 
-int get_format_time(char *buf, int size);
+int get_format_time(millis_t time, char *buf, int size);
 
 #endif
