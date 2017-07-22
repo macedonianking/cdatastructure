@@ -155,6 +155,7 @@ int create_local_connection(in_port_t port) {
 
 int create_server_socket(struct sockaddr_in *addr, int backlog) {
     int fd;
+    int old_errno;
 
     if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
         goto out;
@@ -169,7 +170,9 @@ out:
     return fd;
 
 meet_error:
+    old_errno = errno;
     close(fd);
+    errno = old_errno;
     fd = -1;
     goto out;
 }
@@ -178,6 +181,7 @@ int get_local_socket_addr(struct sockaddr_in *addr, in_port_t host_port) {
     int r;
 
     r = -1;
+    addr->sin_family = AF_INET;
     addr->sin_port = htons(host_port);
     if (inet_pton(AF_INET, LOCAL_IP_ADDR, &addr->sin_addr) == 1) {
         r = 0;

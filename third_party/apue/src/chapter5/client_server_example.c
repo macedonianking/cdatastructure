@@ -53,6 +53,7 @@ static void client_server_example_main_1_client(int argc, char **argv) {
 static void server_process_service_client(int fd, int client_fd, struct sockaddr_in *addr, socklen_t len) {
     server_echo_client(client_fd);
     close(client_fd);
+    ALOGE("stop serving: %s", sock_ntop((struct sockaddr*)addr, len));
 }
 
 /**
@@ -64,10 +65,10 @@ static void client_server_example_main_1_server(int argc, char **argv) {
     socklen_t addr_len;
 
     if (get_local_socket_addr(&addr, SERVER_PORT)) {
-        goto meet_error;
+        ALOGE("get_local_socket_addr FATAL(%s)", strerror(errno));
+        exit(-1);
     }
     if ((fd = create_server_socket(&addr, LISTEN_BACKLOG_COUNT)) == -1) {
-        goto meet_error;
     }
 
     for (;;) {
@@ -100,11 +101,11 @@ void client_server_example_main_1(int argc, char **argv) {
 }
 
 /**
- * 服务端读取数据到buf, 遇到newline或者bug区满，哪儿返回
+ * 服务端读取数据到buf, 遇到newline或者bug区满，立即返回
  */
 static int server_echo_read(int fd, char *buf, int size, int *out_count) {
     struct pollfd wait;
-    int count, remain, is_newline;
+    int count, remain, temp;
     int n;
     int r;
 
@@ -132,11 +133,11 @@ static int server_echo_read(int fd, char *buf, int size, int *out_count) {
             } else if (!n) {
                 break;
             } else {
-                buf[count + n] = '\n';
-                is_newline = strchr(buf + count, '\n') != NULL;
+                temp = count;
                 count += n;
                 remain -= n;
-                if (is_newline || !remain) {
+                buf[count] = '\0';
+                if (strchr(buf +  temp, '\n') || !remain) {
                     break;
                 }
             }
@@ -150,6 +151,7 @@ static int server_echo_read(int fd, char *buf, int size, int *out_count) {
     if (r && count) {
         r = 0;
     }
+    *out_count = count;
     return r;
 }
 
@@ -169,10 +171,16 @@ int server_echo_client(int fd) {
             r = -1;
         } else if (!count) {
             break;
-        } else if (writen(fd, buf, count) != count) {
-            // 写入数据出错
-            r = -1;
-            break;
+        } else {
+            if (writen(fd, buf, count) != count) {
+                r = -1;
+            }
+            if (writen(STDOUT_FILENO, buf, count) != count) {
+                r = -1;
+            }
+            if (r) {
+                break;
+            }
         }
     }
     return r;
@@ -329,13 +337,14 @@ int client_echo_server(int fd) {
 
     // 初始化对象
     init_wait_object(waits, STDIN_FILENO);
-    init_wait_object(waits + 1, STDOUT_FILENO);
+    init_wait_object(waits + 1, fd);
     init_stream_echo_buf(&user_buf);
     init_stream_echo_buf(&sock_buf);
     user_buf.flush_way = STREAM_ECHO_FLUSH_WAY_NEWLINE;
     sock_buf.flush_way = STREAM_ECHO_FLUSH_WAY_IMMEDIATELY;
     r = 0;
 
+    apue_set_fl(STDIN_FILENO, O_NONBLOCK);
     for (;;) {
         if (waits[0].fd == -1 && waits[1].fd == -1) {
             break;
