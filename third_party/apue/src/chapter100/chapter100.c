@@ -10,31 +10,28 @@
 #include "thread/thread_looper.h"
 #include "utils/log.h"
 
-static void main_thread_handler_dispatch_message(message_t *msg) {
-    ALOGE("main_thread_handler_dispatch_message");
+static sigset g_sig_mask;
+static sigset g_sig_save;
+static int g_disable_count = 0;
+
+static inline void disable_signal() {
+    if (g_disable_count++ == 0) {
+        if (sigprocmask(SIG_BLOCK, &g_sig_mask, &g_sig_save)) {
+            ALOGE("disable_signal failure(%s)", strerror(errno));
+        }
+    }
 }
 
-static void main_thread_handler_dispatch_message_dtor(message_t *msg) {
-    ALOGE("main_thread_handler_dispatch_message_dtor");
+static inline void enable_signal() {
+    if (g_disable_count-- == 0) {
+        if (sigprocmask(SIG_SETMASK, &g_sig_save, NULL)) {
+            ALOGE("enable_signal failure(%s)", strerror(errno));
+        }
+    }
 }
-
-handler_t *g_main_handler = NULL;
 
 int chapter100_main(int argc, char **argv) {
-    message_t *msg;
-
-    thread_looper_prepare(0);
-    if (open_thread_handler(NULL, &g_main_handler)) {
-        return 0;
-    }
-
-    // initial g_main_handler
-    g_main_handler->dispatch_message = main_thread_handler_dispatch_message;
-    g_main_handler->dispatch_message_dtor = main_thread_handler_dispatch_message_dtor;
-
-    // send initial message
-    msg = thread_handler_obtain_message(g_main_handler, 0, 0, 0, NULL);
-    thread_handler_send_message_delayed(g_main_handler, msg, 10 * MILLIS_IN_NANOS);
-    thread_looper_loop();
+    disable_signal();
+    enable_signal();
     return 0;
 }
