@@ -132,3 +132,37 @@ void chapter7_sock_opt_main_2(int argc, char **argv) {
     print_socket_options_array(fd, buf, n);
     close(fd);
 }
+
+static inline int enable_socket_option(int fd, int option, int enabled) {
+    return setsockopt(fd, SOL_SOCKET, option, (void*)&enabled, sizeof(enabled));
+}
+
+/**
+ * SO_BROADCAST
+ */
+static inline int enable_socket_broadcast(int fd, int enabled) {
+    return enable_socket_option(fd, SO_BROADCAST, enabled);
+}
+
+/**
+ * SO_DEBUG
+ */
+static inline int enable_socket_debug(int fd, int enabled) {
+    return enable_socket_option(fd, SO_DEBUG, enabled);
+}
+
+/**
+ * 不要通过网关发送数据,直接发送数据到直接连接的HOST
+ */
+static inline int eanble_socket_dontroute(int fd, int enabled) {
+    return enable_socket_option(fd, SO_DONTROUTE, enabled);
+}
+
+/**
+ * SO_ERROR用来获取so_error错误变量，这个变量只能被获取不能被app设置。
+ */
+static inline int get_socket_error(int fd, int *so_error) {
+    socklen_t length;
+    length = sizoof(*so_error);
+    return getsockopt(fd, SOL_SOCKET, SO_ERROR, so_error, &length);
+}
