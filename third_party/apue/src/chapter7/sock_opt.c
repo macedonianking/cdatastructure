@@ -20,7 +20,9 @@ struct socket_opt_item {
     const char *(*opt_str_method)(struct socket_opt_item *item, sock_opt *opt);
 };
 
+
 static char _socket_opt_buf[BUFSIZ];
+static struct linger _socket_linger;
 
 extern const char *opt_str_enabled(struct socket_opt_item *item, sock_opt *opt);
 extern const char *opt_str_length(struct socket_opt_item *item, sock_opt *opt);
@@ -28,7 +30,16 @@ extern const char *opt_str_long(struct socket_opt_item *item, sock_opt *opt);
 extern const char *opt_str_linger(struct socket_opt_item *item, sock_opt *opt);
 extern const char *opt_str_time(struct socket_opt_item *item, sock_opt *opt);
 
+/**
+ * 初始化对象
+ */
+static void initialize_sock_option() {
+    _socket_linger.l_onoff = 1;
+    _socket_linger.l_linger = 10;
+}
+
 void chapter7_sock_opt_main(int argc, char **argv) {
+    initialize_sock_option();
     chapter7_sock_opt_main_2(argc, argv);
 }
 
@@ -163,6 +174,22 @@ static inline int eanble_socket_dontroute(int fd, int enabled) {
  */
 static inline int get_socket_error(int fd, int *so_error) {
     socklen_t length;
-    length = sizoof(*so_error);
+    length = sizeof(*so_error);
     return getsockopt(fd, SOL_SOCKET, SO_ERROR, so_error, &length);
+}
+
+/**
+ * 设置SO_LINGER参数
+ */
+static inline int enable_socket_linger(int fd, int enabled) {
+    socklen_t length;
+    length = sizeof(struct linger);
+    struct linger item;
+
+    if (enabled) {
+        item = _socket_linger;
+    } else {
+        item.l_linger = 0;
+    }
+    return setsockopt(fd, SOL_SOCKET, SO_LINGER, &item, length);
 }
