@@ -36,7 +36,7 @@ char *inet_ip(struct in_addr *addr);
 #define LOCAL_IP_ADDR   "127.0.0.1"
 #define LISTEN_BACKLOG_COUNT   30
 
-#define SA struct sockaddr;
+#define SA struct sockaddr
 
 #define TCP_NO  6
 
