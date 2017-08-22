@@ -2,10 +2,10 @@
 
 #define LOG_TAG "chapter100"
 #include "utils/log.h"
-#include "chapter8/udp_server.h"
+#include "chapter11/dns_resolve.h"
 
 
 int chapter100_main(int argc, char **argv) {
-    udp_server_main(argc, argv);
+    dns_resolve_main(argc, argv);
     return 0;
 }
