@@ -22,4 +22,9 @@ void dns_resolve_main_2(int argc, char **argv);
  */
 void dns_resolve_main_3(int argc, char **argv);
 
+/**
+ * 解析地址
+ */
+void dns_resolve_main_4(int argc, char **argv);
+
 #endif

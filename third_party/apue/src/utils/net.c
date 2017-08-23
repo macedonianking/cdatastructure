@@ -188,3 +188,44 @@ int get_local_socket_addr(struct sockaddr_in *addr, in_port_t host_port) {
     }
     return r;
 }
+
+struct addrinfo *host_serv(const char *node, const char *service, int family, int socktype) {
+    struct addrinfo hint, *ptr;
+
+    memset(&hint, 0, sizeof(hint));
+    hint.ai_flags = AI_CANONNAME;
+    hint.ai_family = family;
+    hint.ai_socktype = socktype;
+
+    if (getaddrinfo(node, service, &hint, &ptr) != 0) {
+        ptr = NULL;
+    }
+    return ptr;
+}
+
+/**
+ * 创建tcp的socket并且实行链接
+ */
+int tcp_connect(const char *node, const char *service) {
+    struct addrinfo *src, *ptr;
+    int fd, temp_fd;
+
+    fd = -1;
+    src = host_serv(node, service, AF_UNSPEC, SOCK_STREAM);
+    for (ptr = src; ptr; ptr = ptr->ai_next) {
+        if ((temp_fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol)) == -1) {
+            continue;
+        }
+        if (!connect(temp_fd, ptr->ai_addr, ptr->ai_addrlen)) {
+            fd = temp_fd;
+            break;
+        } else {
+            close(fd);
+        }
+    }
+    if (src) {
+        freeaddrinfo(src);
+    }
+
+    return fd;
+}

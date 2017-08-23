@@ -81,4 +81,19 @@ int get_local_socket_addr(struct sockaddr_in *addr, in_port_t host_port);
  */
 int create_server_socket(struct sockaddr_in *addr, int backlog);
 
+/**
+ * Query host service information.
+ * 
+ * @param node: Host name
+ * @param service: Service name.
+ * @param family: AF_INET or AF_INET6
+ * @param socktype: 0, SOCK_STREAM or SOCK_DGRAM.
+ */
+struct addrinfo *host_serv(const char *node, const char *service, int family, int socktype);
+
+/**
+ * Create tcp socket and connect.
+ */
+int tcp_connect(const char *node, const char *service);
+
 #endif

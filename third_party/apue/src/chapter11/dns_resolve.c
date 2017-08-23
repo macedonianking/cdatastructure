@@ -6,7 +6,7 @@
 #include "utils/utils.h"
 
 void dns_resolve_main(int argc, char **argv) {
-    dns_resolve_main_3(argc, argv);
+    dns_resolve_main_4(argc, argv);
 }
 
 void dns_resolve_main_1(int argc, char **argv) {
@@ -74,7 +74,7 @@ void dns_resolve_main_2(int argc, char **argv) {
 }
 
 // 输出站点信息
-static void print_addr_info_entry(struct addrinfo *ptr) {
+static void print_addr_info_entry(struct addrinfo *ptr, const char *node) {
     char ip_addr[INET6_ADDRSTRLEN];
     struct sockaddr_in *addr;
 
@@ -82,7 +82,7 @@ static void print_addr_info_entry(struct addrinfo *ptr) {
         return;
     }
     addr = (struct sockaddr_in*) ptr->ai_addr;
-    fprintf(stdout, "name: %s\n", ptr->ai_canonname);
+    fprintf(stdout, "name: %s\n", node);
     fprintf(stdout, "famlily: AF_INET\n");
     fprintf(stdout, "socket type: %d\n", ptr->ai_socktype);
     fprintf(stdout, "protocol: %d\n", ptr->ai_protocol);
@@ -94,7 +94,8 @@ static void print_addr_info_entry(struct addrinfo *ptr) {
 }
 
 void dns_resolve_main_3(int argc, char **argv) {
-    struct addrinfo hint, *ptr;
+    struct addrinfo hint, *src, *ptr;
+    char *name;
 
     // Initilize hint strcuture.
     memset(&hint, 0, sizeof(hint));
@@ -104,10 +105,23 @@ void dns_resolve_main_3(int argc, char **argv) {
     hint.ai_protocol = IPPROTO_TCP;
 
     // 获取信息
-    if (!getaddrinfo("www.baidu.com", "http", &hint, &ptr)) {
-        for (; ptr; ptr = ptr->ai_next) {
-            print_addr_info_entry(ptr);
+    if (!getaddrinfo("www.baidu.com", "http", &hint, &src)) {
+        for (ptr = src; ptr; ptr = ptr->ai_next) {
+            if (ptr->ai_canonname != NULL) {
+                name = ptr->ai_canonname;
+            }
+            print_addr_info_entry(ptr, name);
         }
-        freeaddrinfo(ptr);
+        freeaddrinfo(src);
+    }
+}
+
+void dns_resolve_main_4(int argc, char **argv) {
+    int fd;
+
+    fd = tcp_connect("www.baidu.com", "http");
+    ALOGE("fd=%d", fd);
+    if (fd != -1) {
+        close(fd);
     }
 }
