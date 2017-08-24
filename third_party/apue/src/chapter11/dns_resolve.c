@@ -116,12 +116,7 @@ void dns_resolve_main_3(int argc, char **argv) {
     }
 }
 
-void dns_resolve_main_4(int argc, char **argv) {
-    int fd;
 
-    fd = tcp_connect("www.baidu.com", "http");
-    ALOGE("fd=%d", fd);
-    if (fd != -1) {
-        close(fd);
-    }
+void dns_resolve_main_4(int argc, char **argv) {
 }
+

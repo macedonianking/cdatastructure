@@ -229,3 +229,41 @@ int tcp_connect(const char *node, const char *service) {
 
     return fd;
 }
+
+int tcp_listen(const char *service, socklen_t *addrlen) {
+    struct addrinfo hint, *src, *ptr;
+    int fd;
+    int on;
+
+    bzero(&hint, sizeof(hint));
+    hint.ai_flags = AI_PASSIVE;
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_family = AF_UNSPEC;
+
+    if (getaddrinfo(NULL, service, &hint, &src) || !src) {
+        return -1;
+    }
+
+    fd = -1;
+    for (ptr = src; ptr; ptr = ptr->ai_next) {
+        if ((fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol)) == -1) {
+            continue;
+        }
+        on = 1;
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) {
+            close(fd);
+            fd = -1;
+            continue;
+        }
+        if (bind(fd, ptr->ai_addr, ptr->ai_addrlen) || listen(fd, LISTEN_BACKLOG_COUNT)) {
+            close(fd);
+            fd = -1;
+            continue;
+        }
+        break;
+    }
+    if (src) {
+        freeaddrinfo(src);
+    }
+    return fd;
+}

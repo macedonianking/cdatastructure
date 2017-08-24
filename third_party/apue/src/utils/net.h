@@ -96,4 +96,9 @@ struct addrinfo *host_serv(const char *node, const char *service, int family, in
  */
 int tcp_connect(const char *node, const char *service);
 
+/**
+ * 创建一个监听用的socket
+ */
+int tcp_listen(const char *service, socklen_t *addrlen);
+
 #endif
