@@ -23,6 +23,7 @@
 // inet_pton
 
 int get_interface_addr(struct in_addr *addr);
+int get_loopback_addr(struct in_addr *addr);
 int resolve_host(const char *node, const char *service, struct sockaddr_in *addr);
 int look_up_protocol(const char *name, int *protocol);
 

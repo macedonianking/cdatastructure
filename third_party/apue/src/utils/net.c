@@ -43,19 +43,37 @@ int get_interface_addr(struct in_addr *addr) {
     return r;
 }
 
+int get_loopback_addr(struct in_addr *addr) {
+    int r;
+    struct addrinfo hints, *src, *ptr;
+
+    r = -1;
+    bzero(&hints, sizeof(hints));
+    hints.ai_flags = 0;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    if (!getaddrinfo("loopback", "http", &hints, &src) && src) {
+        for (ptr = src; ptr; ptr = ptr->ai_next) {
+            if (ptr->ai_family == AF_INET && addr) {
+                *addr = ((struct sockaddr_in*) ptr->ai_addr)->sin_addr;
+                r = 0;
+                break;
+            }
+        }
+        freeaddrinfo(src);
+    }
+
+    return r;
+}
+
 
 int resolve_host(const char *node, const char *service, struct sockaddr_in *addr) {
     struct addrinfo hint, *ret;
-    int protocol;
-
-    if (look_up_protocol("tcp", &protocol)) {
-        return -1;
-    }
 
     memset(&hint, 0, sizeof(hint));
     hint.ai_flags = AI_CANONNAME;
     hint.ai_family = AF_INET;
-    hint.ai_protocol = protocol;
+    hint.ai_protocol = IPPROTO_TCP;
     hint.ai_socktype = SOCK_STREAM;
     if (getaddrinfo(node, service, &hint, &ret) || !ret) {
         return -1;
