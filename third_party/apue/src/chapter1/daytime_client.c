@@ -7,7 +7,7 @@
 #include "utils/utils.h"
 
 void daytime_client_main(int argc, char **argv) {
-    daytime_client_main_2(argc, argv);
+    daytime_client_main_3(argc, argv);
 }
 
 void daytime_client_main_1(int argc, char **argv) {
@@ -137,4 +137,36 @@ void daytime_client_main_2(int argc, char **argv) {
     choose_process_main_routing(argc, argv,
         &daytime_client_main_2_server,
         &daytime_client_main_2_client);
+}
+
+void daytime_client_main_3(int argc, char **argv) {
+    int fd;
+
+    if ((fd = socket(9999, SOCK_STREAM, 0)) == -1) {
+        ALOGE("socket failure:%s", strerror(errno));
+    }
+    if (fd != -1) {
+        close(fd);
+    }
+}
+
+void daytime_client_exercise_1_4(int fd) {
+    char buf[MAXLINE];
+    int n, counter;
+
+    counter = 0;
+    for (;;) {
+        if((n = read(fd, buf, MAXLINE)) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            break;
+        }
+        if (!n) {
+            continue;
+        }
+        ++counter;
+        write(STDOUT_FILENO, buf, n);
+    }
+    ALOGD("counter=%d", counter);
 }
