@@ -2,10 +2,10 @@
 
 #define LOG_TAG "chapter100"
 #include "utils/log.h"
-#include "chapter1/daytime_client.h"
+#include "chapter3/sock_struct.h"
 
 
 int chapter100_main(int argc, char **argv) {
-    daytime_client_main(argc, argv);
+    chapter3_sock_struct_main(argc, argv);
     return 0;
 }

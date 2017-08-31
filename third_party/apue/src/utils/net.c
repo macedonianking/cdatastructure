@@ -9,9 +9,8 @@
 #define LOOP_IP_ADDR   "127.0.0.1"
 
 static char ip_addr[INET6_ADDRSTRLEN];
-
-#define SOCK_NTOP_SIZE  1024
-static char sock_ntop_buf[SOCK_NTOP_SIZE];
+#define NTOP_BUFSIZ 1024
+static char sock_ntop_buf[NTOP_BUFSIZ];
 
 int get_interface_addr(struct in_addr *addr) {
     struct in_addr lo_addr;
@@ -104,33 +103,31 @@ char *inet_ip(struct in_addr *addr) {
 }
 
 char *sock_ntop(struct sockaddr *addr, socklen_t len) {
-    int n;
-    char *buf;
+    char buf[NTOP_BUFSIZ];
+    uint16_t port;
 
-    buf = sock_ntop_buf;
-    switch(addr->sa_family) {
-        case AF_INET: {
-            struct sockaddr_in *in_addr;
-
-            in_addr = (struct sockaddr_in*) addr;
-            if (inet_ntop(AF_INET, &in_addr->sin_addr, buf, SOCK_NTOP_SIZE) == buf) {
-                n = strlen(buf);
-                if (in_addr->sin_port != 0 && n < SOCK_NTOP_SIZE) {
-                    snprintf(buf + n, SOCK_NTOP_SIZE - n, ":%d",
-                        ntohs(in_addr->sin_port));
-                }
-                goto out;
-            } else {
-                goto meet_error;
+    if (addr->sa_family == AF_INET) {
+        struct sockaddr_in *impl = (struct sockaddr_in*)addr;
+        if (inet_ntop(impl->sin_family, &impl->sin_addr, sock_ntop_buf, NTOP_BUFSIZ)
+            == sock_ntop_buf) {
+            if ((port = ntohs(impl->sin_port)) != 0) {
+                snprintf(buf, NTOP_BUFSIZ, ":%u", port);
+                strncat(sock_ntop_buf, buf, strlen(buf));
             }
+            return sock_ntop_buf;
+        }
+    } else if (addr->sa_family == AF_INET6) {
+        struct sockaddr_in6 *impl = (struct sockaddr_in6*) addr;
+        if (inet_ntop(impl->sin6_family, &impl->sin6_addr, sock_ntop_buf, NTOP_BUFSIZ)
+            == sock_ntop_buf) {
+            if ((port = ntohs(impl->sin6_port)) != 0) {
+                snprintf(buf, NTOP_BUFSIZ, ":%u", port);
+                strncat(sock_ntop_buf, buf, strlen(buf));
+            }
+            return sock_ntop_buf;
         }
     }
-
-meet_error:
-    buf[0] = '\0';
-
-out:
-    return buf;
+    return NULL;
 }
 
 int say_daytime(int fd) {
@@ -284,4 +281,45 @@ int tcp_listen(const char *service, socklen_t *addrlen) {
         freeaddrinfo(src);
     }
     return fd;
+}
+
+int fill_socket_addr(struct sockaddr_storage *addr, const char *src) {
+    bzero(addr, sizeof(*addr));
+    if (inet_pton(AF_INET6, src, &((struct sockaddr_in6*)addr)->sin6_addr) == 1) {
+        addr->ss_family = AF_INET;
+        return 0;
+    }
+    if (inet_pton(AF_INET, src, &((struct sockaddr_in*)addr)->sin_addr) == 1) {
+        addr->ss_family = AF_INET;
+        return 0;
+    }
+    return -1;
+}
+
+int sock_bind_wild(int fd, struct sockaddr *addr, socklen_t len, uint16_t port) {
+    int r;
+
+    r = -1;
+    if (addr->sa_family == AF_INET) {
+        struct sockaddr_in *impl = (struct sockaddr_in*) addr;
+
+        bzero(impl, sizeof(*impl));
+        impl->sin_family = AF_INET6;
+        impl->sin_port = htons(port);
+        impl->sin_addr.s_addr = INADDR_ANY;
+        if (bind(fd, addr, sizeof(struct sockaddr_in)) == 0) {
+            r = 0;
+        }
+    } else if (addr->sa_family == AF_INET6) {
+        struct sockaddr_in6 *impl = (struct sockaddr_in6*) addr;
+
+        bzero(impl, sizeof(*impl));
+        impl->sin6_family = AF_INET6;
+        impl->sin6_port = htons(port);
+        impl->sin6_addr = in6addr_any;
+        if (bind(fd, addr, sizeof(struct sockaddr_in6)) == 0) {
+            r = 0;
+        }
+    }
+    return r;
 }

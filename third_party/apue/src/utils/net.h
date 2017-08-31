@@ -27,6 +27,8 @@ int get_loopback_addr(struct in_addr *addr);
 int resolve_host(const char *node, const char *service, struct sockaddr_in *addr);
 int look_up_protocol(const char *name, int *protocol);
 
+int fill_socket_addr(struct sockaddr_storage *addr, const char *src);
+
 char *inet_ip(struct in_addr *addr);
 
 #define SERVER_PORT     8081
@@ -101,5 +103,7 @@ int tcp_connect(const char *node, const char *service);
  * 创建一个监听用的socket
  */
 int tcp_listen(const char *service, socklen_t *addrlen);
+
+int sock_bind_wild(int fd, struct sockaddr *addr, socklen_t len, uint16_t port);
 
 #endif
