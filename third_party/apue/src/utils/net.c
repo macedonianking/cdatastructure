@@ -296,30 +296,41 @@ int fill_socket_addr(struct sockaddr_storage *addr, const char *src) {
     return -1;
 }
 
-int sock_bind_wild(int fd, struct sockaddr *addr, socklen_t len, uint16_t port) {
-    int r;
+int tcp_bind_wildcard(int domain, uint16_t port) {
+    int fd;
+    struct sockaddr *bind_addr;
+    socklen_t length;
 
-    r = -1;
-    if (addr->sa_family == AF_INET) {
-        struct sockaddr_in *impl = (struct sockaddr_in*) addr;
-
-        bzero(impl, sizeof(*impl));
-        impl->sin_family = AF_INET6;
-        impl->sin_port = htons(port);
-        impl->sin_addr.s_addr = INADDR_ANY;
-        if (bind(fd, addr, sizeof(struct sockaddr_in)) == 0) {
-            r = 0;
-        }
-    } else if (addr->sa_family == AF_INET6) {
-        struct sockaddr_in6 *impl = (struct sockaddr_in6*) addr;
-
-        bzero(impl, sizeof(*impl));
-        impl->sin6_family = AF_INET6;
-        impl->sin6_port = htons(port);
-        impl->sin6_addr = in6addr_any;
-        if (bind(fd, addr, sizeof(struct sockaddr_in6)) == 0) {
-            r = 0;
-        }
+    if (domain != AF_INET && domain != AF_INET6) {
+        return -1;
     }
-    return r;
+    if ((fd = socket(domain, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+        return fd;
+    }
+    if (domain == AF_INET) {
+        struct sockaddr_in addr;
+        bzero(&addr, sizeof(addr));
+        addr.sin_family = domain;
+        addr.sin_port = htons(port);
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        bind_addr = (SA*) &addr;
+        length = sizeof(addr);
+    } else if (domain == AF_INET6) {
+        struct sockaddr_in6 addr;
+
+        bzero(&addr, sizeof(addr));
+        addr.sin6_family = domain;
+        addr.sin6_addr = in6addr_any;
+        addr.sin6_port = htons(port);
+
+        bind_addr = (SA*) &addr;
+        length = sizeof(addr);
+    }
+
+    if (bind(fd, bind_addr, length)) {
+        close(fd);
+        fd = -1;
+    }
+    return fd;
 }

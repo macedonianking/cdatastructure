@@ -104,6 +104,6 @@ int tcp_connect(const char *node, const char *service);
  */
 int tcp_listen(const char *service, socklen_t *addrlen);
 
-int sock_bind_wild(int fd, struct sockaddr *addr, socklen_t len, uint16_t port);
+int tcp_bind_wildcard(int domain, uint16_t port);
 
 #endif

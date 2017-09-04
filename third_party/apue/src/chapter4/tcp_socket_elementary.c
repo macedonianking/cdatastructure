@@ -4,30 +4,38 @@
 #include "utils/apue.h"
 #include "utils/net.h"
 
-void chapter4_tcp_socket_elementary(int argc, char **argv) {
-    chapter4_tcp_socket_exercise_2(argc, argv);
+void chapter4_tcp_socket_elementary_main(int argc, char **argv) {
+    chapter4_tcp_socket_elementary_3(argc, argv);
 }
 
 /**
  * socket create server and client file descriptor.
  */
 void chapter4_tcp_socket_elementary_1(int argc, char **argv) {
-    int client_fd;
-    struct sockaddr_in addr;
+    int fd;
+    struct sockaddr *bind_addr;
 
-    if ((client_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-        ALOGE("chapter4_tcp_socket_elementary_1 create tcp socket FATAL(%s)", strerror(errno));
-        exit(-1);
-    }
-    bzero(&addr, sizeof(addr));
+    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ALOGE_ALWAYSE_FATAL_IF(fd == -1, "create tcp socket failure: %s", strerror(errno));
+
+#ifdef USE_IPV6
+    struct sockaddr_in6 addr;
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = inaddr6_any;
+    addr.sin6_port = htons(SERVER_PORT);
+    bind_addr = (SA*) &addr;
+#else
+    struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(0);
-    if (bind(client_fd, (struct sockaddr*) &addr, sizeof(addr))) {
-        ALOGE("bind failure(%s)", strerror(errno));
+    addr.sin_port = htons(SERVER_PORT);
+    bind_addr = (SA*) &addr;
+#endif
+    if (bind(fd, bind_addr, sizeof(addr)) != 0) {
+        ALOGE("bind tcp socket failure: %s", strerror(errno));
     }
 
-    close(client_fd);
+    close(fd);
 }
 
 static void log_one_service(struct sockaddr_in *addr) {
@@ -116,4 +124,21 @@ void chapter4_tcp_socket_exercise_2(int argc, char **argv) {
         ALOGD("getpeername:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len));
     }
     close(fd);
+}
+
+/**
+ *
+ */
+void chapter4_tcp_socket_elementary_3(int argc, char **argv) {
+    int fd;
+
+    fd = tcp_bind_wildcard(AF_INET, SERVER_PORT);
+    if (fd != -1) {
+        close(fd);
+    }
+
+    fd = tcp_bind_wildcard(AF_INET6, SERVER_PORT);
+    if (fd != -1) {
+        close(fd);
+    }
 }

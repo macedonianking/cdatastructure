@@ -41,7 +41,6 @@ const char *get_fd_type_description(int fd) {
 }
 
 int chapter4_main(int argc, char **argv) {
-    chapter4_tcp_socket_elementary(argc, argv);
     return 0;
 }
 
