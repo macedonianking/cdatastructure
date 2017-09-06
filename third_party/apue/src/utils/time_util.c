@@ -19,3 +19,11 @@ int get_format_time(millis_t millis, char *buf, int size) {
     r += snprintf(buf, n, ".%03ld", millis % SECOND_IN_MILLIS);
     return r;
 }
+
+int my_ctime_s(millis_t millis, char *buf, int size) {
+    time_t seconds;
+    struct tm tm_obj;
+
+    seconds = (time_t) (millis / SECOND_IN_MILLIS);
+    return strftime(buf, size, "%a %b %d %T %Y\r\n", localtime_r(&seconds, &tm_obj));
+}

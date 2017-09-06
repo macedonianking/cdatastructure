@@ -130,15 +130,8 @@ void chapter4_tcp_socket_exercise_2(int argc, char **argv) {
  *
  */
 void chapter4_tcp_socket_elementary_3(int argc, char **argv) {
-    int fd;
+    char buf[MAXLINE];
 
-    fd = tcp_bind_wildcard(AF_INET, SERVER_PORT);
-    if (fd != -1) {
-        close(fd);
-    }
-
-    fd = tcp_bind_wildcard(AF_INET6, SERVER_PORT);
-    if (fd != -1) {
-        close(fd);
-    }
+    my_ctime_s(current_time_millis(), buf, MAXLINE);
+    fprintf(stdout, "%s", buf);
 }

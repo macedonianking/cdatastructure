@@ -44,4 +44,9 @@ static inline void millis_to_timeval(millis_t millis, struct timeval *val) {
 
 int get_format_time(millis_t time, char *buf, int size);
 
+/**
+* 安全的获取时间描述
+*/
+int my_ctime_s(millis_t millis, char *buf, int size);
+
 #endif
