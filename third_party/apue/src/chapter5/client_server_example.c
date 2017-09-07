@@ -51,9 +51,11 @@ static void client_server_example_main_1_client(int argc, char **argv) {
  * 服务端处理客户端的请求
  */
 static void server_process_service_client(int fd, int client_fd, struct sockaddr_in *addr, socklen_t len) {
+    char buf[MAXLINE];
+
     server_echo_client(client_fd);
     close(client_fd);
-    ALOGE("stop serving: %s", sock_ntop((struct sockaddr*)addr, len));
+    ALOGE("stop serving: %s", sock_ntop((struct sockaddr*)addr, len, buf, MAXLINE));
 }
 
 /**

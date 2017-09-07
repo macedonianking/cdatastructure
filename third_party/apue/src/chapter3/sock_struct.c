@@ -26,23 +26,25 @@ void chapter3_sock_struct_main_1(int argc, char **argv) {
 
 void chapter3_sock_struct_main_2(int argc, char** argv) {
     struct sockaddr_in addr;
+    char buf[MAXLINE];
 
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
-    ALOGE("%s", sock_ntop((SA*)&addr, sizeof(addr)));
+    ALOGE("%s", sock_ntop((SA*)&addr, sizeof(addr), buf, MAXLINE));
 }
 
 void chapter3_sock_struct_main_3(int argc, char **argv) {
     int r;
     struct sockaddr_in addr;
     char *lineptr;
+    char buf[MAXLINE];
     size_t lineptr_size;
     int fd;
 
     r = resolve_host("www.baidu.com", "http", &addr);
     ALOGE_ALWAYSE_FATAL_IF(r, "resolve_host  FATAL");
 
-    fprintf(stdout, "result=%s\n", sock_ntop((struct sockaddr*)&addr, sizeof(struct sockaddr_in)));
+    fprintf(stdout, "result=%s\n", sock_ntop((struct sockaddr*)&addr, sizeof(struct sockaddr_in), buf, MAXLINE));
 
     lineptr = NULL;
     lineptr_size = 0;

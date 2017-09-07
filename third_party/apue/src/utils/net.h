@@ -60,7 +60,11 @@ static inline int choose_process_main_routing(int argc, char **argv,
     return 0;
 }
 
-char *sock_ntop(struct sockaddr *addr, socklen_t len);
+/**
+ * get socket destription.
+ */
+char *sock_ntop(struct sockaddr *addr, socklen_t len, char *buf, int size);
+
 /**
  * @param rd
  */

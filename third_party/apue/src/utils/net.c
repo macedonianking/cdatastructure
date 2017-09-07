@@ -9,8 +9,6 @@
 #define LOOP_IP_ADDR   "127.0.0.1"
 
 static char ip_addr[INET6_ADDRSTRLEN];
-#define NTOP_BUFSIZ 1024
-static char sock_ntop_buf[NTOP_BUFSIZ];
 
 int get_interface_addr(struct in_addr *addr) {
     struct in_addr lo_addr;
@@ -102,29 +100,27 @@ char *inet_ip(struct in_addr *addr) {
     return ip_addr;
 }
 
-char *sock_ntop(struct sockaddr *addr, socklen_t len) {
-    char buf[NTOP_BUFSIZ];
+char *sock_ntop(struct sockaddr *addr, socklen_t len, char *buf, int size) {
+    int n;
     uint16_t port;
 
     if (addr->sa_family == AF_INET) {
         struct sockaddr_in *impl = (struct sockaddr_in*)addr;
-        if (inet_ntop(impl->sin_family, &impl->sin_addr, sock_ntop_buf, NTOP_BUFSIZ)
-            == sock_ntop_buf) {
+        if (inet_ntop(impl->sin_family, &impl->sin_addr, buf, size) == buf) {
             if ((port = ntohs(impl->sin_port)) != 0) {
-                snprintf(buf, NTOP_BUFSIZ, ":%u", port);
-                strncat(sock_ntop_buf, buf, strlen(buf));
+                n = strlen(buf);
+                snprintf(buf + n, size - n, ":%u", port);
             }
-            return sock_ntop_buf;
+            return buf;
         }
     } else if (addr->sa_family == AF_INET6) {
         struct sockaddr_in6 *impl = (struct sockaddr_in6*) addr;
-        if (inet_ntop(impl->sin6_family, &impl->sin6_addr, sock_ntop_buf, NTOP_BUFSIZ)
-            == sock_ntop_buf) {
+        if (inet_ntop(impl->sin6_family, &impl->sin6_addr, buf, size) == buf) {
             if ((port = ntohs(impl->sin6_port)) != 0) {
-                snprintf(buf, NTOP_BUFSIZ, ":%u", port);
-                strncat(sock_ntop_buf, buf, strlen(buf));
+                n = strlen(buf);
+                snprintf(buf + n, size - n, ":%u", port);
             }
-            return sock_ntop_buf;
+            return buf;
         }
     }
     return NULL;

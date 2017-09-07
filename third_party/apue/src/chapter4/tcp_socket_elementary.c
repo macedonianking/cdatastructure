@@ -39,7 +39,8 @@ void chapter4_tcp_socket_elementary_1(int argc, char **argv) {
 }
 
 static void log_one_service(struct sockaddr_in *addr) {
-    ALOGE("log_one_service-->%s", sock_ntop((struct sockaddr*) addr, sizeof(*addr)));
+    char buf[MAXLINE];
+    ALOGE("log_one_service-->%s", sock_ntop((struct sockaddr*) addr, sizeof(*addr), buf, MAXLINE));
 }
 
 static void chapter4_tcp_socket_elementary_2_server(int argc, char **argv) {
@@ -101,6 +102,7 @@ void chapter4_tcp_socket_elementary_2(int argc, char **argv) {
 }
 
 void chapter4_tcp_socket_exercise_2(int argc, char **argv) {
+    char buf[MAXLINE];
     struct sockaddr_in addr, out_addr;
     socklen_t out_addr_len;
     int fd;
@@ -115,23 +117,47 @@ void chapter4_tcp_socket_exercise_2(int argc, char **argv) {
     }
     out_addr_len = sizeof(struct sockaddr_in);
     if (!getsockname(fd, (struct sockaddr*) &out_addr, &out_addr_len)) {
-        ALOGD("getsockname:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len));
+        ALOGD("getsockname:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len, buf, MAXLINE));
     } else {
         ALOGE("getsockname failure(%s)", strerror(errno));
     }
     out_addr_len = sizeof(struct sockaddr_in);
     if (!getpeername(fd, (struct sockaddr*) &out_addr, &out_addr_len)) {
-        ALOGD("getpeername:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len));
+        ALOGD("getpeername:%s", sock_ntop((struct sockaddr*) &out_addr, out_addr_len, buf, MAXLINE));
     }
     close(fd);
+}
+
+int chapter4_get_socket_address_family(int fd) {
+    struct sockaddr_storage addr;
+    socklen_t length;
+
+    length = sizeof(addr);
+    if (!getsockname(fd, (SA*) &addr, &length)) {
+        return addr.ss_family;
+    }
+    return AF_UNSPEC;
 }
 
 /**
  *
  */
 void chapter4_tcp_socket_elementary_3(int argc, char **argv) {
+    int fd;
     char buf[MAXLINE];
+    struct sockaddr_in addr;
+    socklen_t length;
 
-    my_ctime_s(current_time_millis(), buf, MAXLINE);
-    fprintf(stdout, "%s", buf);
+    if ((fd = tcp_connect("www.baidu.com", "http")) == -1) {
+        return;
+    }
+    length = sizeof(addr);
+    if (getsockname(fd, (SA*) &addr, &length) == 0) {
+        ALOGD("sock name: %s", sock_ntop((SA*) &addr, length, buf, MAXLINE));
+    }
+    length = sizeof(addr);
+    if (getpeername(fd, (SA*) &addr, &length) == 0) {
+        ALOGD("peer name: %s", sock_ntop((SA*) &addr, length, buf, MAXLINE));
+    }
+    close(fd);
 }
