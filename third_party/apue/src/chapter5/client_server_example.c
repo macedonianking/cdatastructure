@@ -1,6 +1,7 @@
 #include "chapter5/client_server_example.h"
 
 #include <limits.h>
+#include <pthread.h>
 
 #define LOG_TAG "client_server_example"
 #include "utils/net.h"
@@ -30,7 +31,7 @@ static int server_echo_client(int fd);
 static int client_echo_server(int fd);
 
 void client_server_example_main(int argc, char **argv) {
-    client_server_example_main_1(argc, argv);
+    client_server_example_main_2(argc, argv);
 }
 
 /**
@@ -369,4 +370,78 @@ int client_echo_server(int fd) {
     free_stream_echo_buf(&sock_buf);
     close(fd);
     return r;
+}
+
+static void exhaust_all_sigchld_info() {
+    pid_t pid;
+    int status;
+
+    for (;;) {
+        if ((pid = waitpid(-1, &status, 0)) == -1) {
+            if (errno == ECHILD) {
+                break;
+            } else if (errno != EINTR) {
+                ALOGE("waitpid error(%s)", strerror(errno));
+            }
+            continue;
+        }
+
+        if (WIFEXITED(status)) {
+            ALOGI("child process exited: pid=%d, code=%d", pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            ALOGI("child process terminated by signal: pid=%d, signal=%d, core_dump=%d", pid, WTERMSIG(status),
+                WCOREDUMP(status));
+        } else if (WIFSTOPPED(status)) {
+            ALOGI("child process stopped by signal: pid=%d, signal=%d", pid, WSTOPSIG(status));
+        } else if (WIFCONTINUED(status)) {
+            ALOGI("child process continued by signal: pid=%d", pid);
+        } else {
+            ALOGI("SIGCHLD received: pid=%d, reason unknown", pid);
+        }
+    }
+}
+
+/**
+ * 处理所有的子进程的消息
+ */
+void *child_processes_cleanup_routing(void *data) {
+    sigset_t mask, old_mask;
+
+    sigemptyset(&mask);
+    sigaddset(&mask,SIGCHLD);
+    pthread_sigmask(SIG_BLOCK, &mask, &old_mask);
+
+    sigaddset(&old_mask, SIGCHLD);
+start:
+    exhaust_all_sigchld_info();
+    sigsuspend(&old_mask);
+    goto start;
+
+    return NULL;
+}
+
+static void start_thread_cleanup_child_processes() {
+    pthread_t tid;
+    int r;
+
+    r = pthread_create(&tid, NULL, &child_processes_cleanup_routing, NULL);
+    ALOGE_ALWAYSE_FATAL_IF(r != 0, "pthread_create failure(%s)", strerror(errno));
+    pthread_detach(tid);
+}
+
+void client_server_example_main_2(int argc, char **argv) {
+    sigset_t mask, old_mask;
+    pid_t pid;
+
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    pthread_sigmask(SIG_BLOCK, &mask, &old_mask);
+
+    start_thread_cleanup_child_processes();
+    if (!(pid = fork())) {
+        sleep(1);
+        exit(0);
+    }
+
+    sleep(3);
 }
