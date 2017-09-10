@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <errno.h>
 
+#define LOG_TAG "process_util"
 #include "utils/list.h"
 #include "utils/log.h"
 #include "utils/string_util.h"
@@ -31,15 +33,38 @@ void get_path_environ(list_head *list) {
     string_split(str, ':', list);
 }
 
-void describe_wait_status(int status) {
+void describe_wait_status(int pid, int status) {
     if (WIFEXITED(status)) {
-        fprintf(stdout, "normal exit termination: exit_code=%d, core_dump=%d\n",
-            WEXITSTATUS(status), WCOREDUMP(status));
+        ALOGD("normal exit termination: pid=%d, exit_code=%d, core_dump=%d",
+            pid, WEXITSTATUS(status), WCOREDUMP(status));
     } else if (WIFSIGNALED(status)) {
-        fprintf(stdout, "signal termination: signal=%d\n", WTERMSIG(status));
+        ALOGD("signal termination: pid=%d, signo=%d",
+            pid, WTERMSIG(status));
     } else if (WIFSTOPPED(status)) {
-        fprintf(stdout, "stopped: signal=%d\n", WSTOPSIG(status));
+        ALOGD("stopped: pid=%d, signo=%d",
+            pid, WSTOPSIG(status));
     } else if (WIFCONTINUED(status)) {
-        fprintf(stdout, "process continued\n");
+        ALOGD("process continued: pid=%d", pid);
+    } else {
+        ALOGD("unknown SIGCHLD event: pid=%d", pid);
+    }
+}
+
+void exhaust_all_waitpid_events() {
+    pid_t pid;
+    int status;
+
+    for (;;) {
+        if ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) == -1) {
+            if (errno == ECHILD) {
+                return;
+            } else if (errno != EINTR) {
+                ALOGE("waitpid failure(%s)", strerror(errno));
+            }
+            continue;
+        } else if (!pid) {
+            break;
+        }
+        describe_wait_status(pid, status);
     }
 }

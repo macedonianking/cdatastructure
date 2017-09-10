@@ -27,6 +27,7 @@
 #include "utils/string_buffer.h"
 #include "utils/string_util.h"
 #include "utils/utils.h"
+#include "process/process_util.h"
 
 #define APUE_FILE_MODE  0755
 
