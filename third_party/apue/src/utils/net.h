@@ -110,4 +110,9 @@ int tcp_listen(const char *service, socklen_t *addrlen);
 
 int tcp_bind_wildcard(int domain, uint16_t port);
 
+/**
+ * 创建一个本地的监听描述符
+ */
+int tcp_listen_wildcard(int domain, uint16_t port);
+
 #endif

@@ -330,3 +330,14 @@ int tcp_bind_wildcard(int domain, uint16_t port) {
     }
     return fd;
 }
+
+int tcp_listen_wildcard(int domain, uint16_t port) {
+    int fd = tcp_bind_wildcard(domain, port);
+    if (fd != -1) {
+        if (listen(fd, LISTEN_BACKLOG_COUNT) == -1) {
+            close(fd);
+            fd = -1;
+        }
+    }
+    return fd;
+}
