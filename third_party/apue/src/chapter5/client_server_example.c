@@ -8,6 +8,12 @@
 #include "utils/log.h"
 #include "utils/apue.h"
 
+struct client_echo_entity {
+    int fd;
+    int request_finish;
+    int send_thread_finish;
+};
+
 void client_server_example_main(int argc, char **argv) {
     client_server_example_main_1(argc,argv);
 }
@@ -134,21 +140,53 @@ void install_sigpipe_handler() {
     ALOGE_ALWAYSE_FATAL_IF(r == -1, "sigaction FATAL(%s)", strerror(errno));
 }
 
-/**
- * 客户单的服务程序
- */
-void client_echo(int fd) {
+static void *client_echo_send_thread(void *args) {
+    struct client_echo_entity *ptr;
+    char buf[MAXLINE];
+    int n, count;
+    int fd;
+
+    ptr = (struct client_echo_entity*) args;
+    fd = ptr->fd;
+    for (;;) {
+        if((n = read(STDIN_FILENO, buf, MAXLINE)) == -1) {
+            if (errno == EINTR) {
+                if (ptr->request_finish) {
+                    goto out;
+                }
+                continue;
+            }
+            break;
+        } else if (!n) {
+            ALOGE("meet STDIN_FILENO end");
+            shutdown(fd, SHUT_WR);
+            break;
+        }
+
+        if ((count = writen(fd, buf, n)) != n) {
+            break;
+        }
+    }
+
+out:
+    ptr->send_thread_finish = 1;
+    return NULL;
+}
+
+static void client_echo_recv(int fd) {
     struct pollfd fds[1], *ptr;
+    char buf[MAXLINE];
     int r;
+    int n, count;
 
     fds[0].fd = fd;
-    fds[0].events = 0;
+    fds[0].events = POLLIN;
     fds[0].revents = 0;
 
     for (;;) {
         if ((r = poll(fds, 1, -1)) == -1) {
             if (errno == EINTR) {
-                break;
+                continue;
             }
             ALOGE("poll failure(%s)", strerror(errno));
             break;
@@ -158,10 +196,70 @@ void client_echo(int fd) {
 
         ptr = fds;
         if (ptr->revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            ALOGE("poll error: %d", ptr->revents);
+            break;
+        } else if (!(ptr->revents & POLLIN)) {
+            break;
+        }
+
+        for (;;) {
+            if ((n = read(fd, buf, MAXLINE)) == -1) {
+                if (errno == EINTR) {
+                    continue;
+                } else if(errno == EAGAIN) {
+                    break;
+                }
+                ALOGE("read FATAL(%s)", strerror(errno));
+                break;
+            } else if (!n) {
+                goto out;
+            }
+
+            if ((count = writen(STDOUT_FILENO, buf, n)) != n) {
+                goto out;
+            }
+        }
+    }
+out:
+    close(fd);
+}
+
+/**
+ * 客户单的服务程序
+ */
+void client_echo(int fd) {
+    pthread_t tid;
+    struct client_echo_entity entity;
+    int r;
+    struct timespec time_obj;
+
+    entity.fd = fd;
+    entity.request_finish = 0;
+    entity.send_thread_finish = 0;
+    r = pthread_create(&tid, NULL, &client_echo_send_thread, &entity);
+    ALOGE_ALWAYSE_FATAL_IF(r, "pthread_create FATAL(%s)", strerror(r));
+
+    client_echo_recv(fd);
+    entity.request_finish = 1;
+
+    // 设置为10ms
+    memset(&time_obj, 0, sizeof(time_obj));
+    time_obj.tv_sec = 0;
+    time_obj.tv_nsec = 10 * MILLIS_IN_NANOS;
+    for (;;) {
+        r = pthread_kill(tid, SIGUSR1);
+        if (r == ESRCH) {
+            break;
+        } if (!r) {
+            break;
+        }
+
+        nanosleep(&time_obj, NULL);
+        if (entity.send_thread_finish) {
             break;
         }
     }
+
+    pthread_join(tid, NULL);
     ALOGE("client finish echo");
 }
 
@@ -172,7 +270,6 @@ void server_echo(int fd) {
     char buf[MAXLINE];
     int n, count;
 
-    close(fd);
     for (;;) {
         if ((n = read(fd, buf, MAXLINE)) == -1) {
             if (errno == EINTR) {
@@ -184,9 +281,10 @@ void server_echo(int fd) {
             break;
         }
 
-        if((count = writen(STDOUT_FILENO, buf, n)) != n) {
+        if((count = writen(fd, buf, n)) != n) {
             ALOGE("writen failure: n=%d, count=%d, (%s)", n, count, strerror(errno));
+            break;
         }
     }
-    ALOGE("server finish echo");
+    close(fd);
 }
