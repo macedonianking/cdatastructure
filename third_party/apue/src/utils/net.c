@@ -296,6 +296,7 @@ int tcp_bind_wildcard(int domain, uint16_t port) {
     int fd;
     struct sockaddr *bind_addr;
     socklen_t length;
+    int option;
 
     if (domain != AF_INET && domain != AF_INET6) {
         return -1;
@@ -322,6 +323,13 @@ int tcp_bind_wildcard(int domain, uint16_t port) {
 
         bind_addr = (SA*) &addr;
         length = sizeof(addr);
+    }
+
+    option = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option))) {
+        close(fd);
+        fd = -1;
+        return fd;
     }
 
     if (bind(fd, bind_addr, length)) {
