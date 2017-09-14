@@ -145,6 +145,10 @@ static void *client_echo_send_thread(void *args) {
     char buf[MAXLINE];
     int n, count;
     int fd;
+    sigset_t mask, old_mask;
+
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGUSR1);
 
     ptr = (struct client_echo_entity*) args;
     fd = ptr->fd;
@@ -158,12 +162,15 @@ static void *client_echo_send_thread(void *args) {
             }
             break;
         } else if (!n) {
-            ALOGE("meet STDIN_FILENO end");
             shutdown(fd, SHUT_WR);
             break;
         }
 
-        if ((count = writen(fd, buf, n)) != n) {
+        // 在写入的过程中禁止SIGUSR1导致的EINTR
+        pthread_sigmask(SIG_BLOCK, &mask, &old_mask);
+        count = writen(fd, buf, n);
+        pthread_sigmask(SIG_SETMASK, &old_mask, NULL);
+        if (count != n) {
             break;
         }
     }
@@ -260,7 +267,6 @@ void client_echo(int fd) {
     }
 
     pthread_join(tid, NULL);
-    ALOGE("client finish echo");
 }
 
 /**
