@@ -47,7 +47,7 @@ static const char *get_sock_level_name(int level) {
 
 
 void chapter7_sock_opt_main(int argc, char **argv) {
-    chapter7_sock_opt_main_2(argc, argv);
+    chapter7_sock_opt_main_3(argc, argv);
 }
 
 void chapter7_sock_opt_main_1(int argc, char **argv) {
@@ -135,6 +135,64 @@ void chapter7_sock_opt_main_2(int argc, char **argv) {
     }
     ALOGD("connect to %s success", sock_ntop((SA*) &addr, sizeof(addr), buf, MAXLINE));
 out:
+    close(fd);
+}
+
+static int query_send_buffer_maximum_size(int fd) {
+    int min, max, cur, delta;
+    socklen_t length;
+
+    length = sizeof(min);
+    if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &min, &length)) {
+        return -1;
+    }
+
+    max = -1;
+    delta = 1024 * 1024;
+    while (max == -1) {
+        cur = min + delta;
+        if (cur <= min) {
+            cur = INT_MAX;
+        }
+        delta *= 2;
+        length = sizeof(min);
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &cur, length)) {
+            max = cur;
+        } else {
+            if (cur == INT_MAX) {
+                return cur;
+            } else {
+                min = cur;
+            }
+        }
+    }
+
+    while (min < max) {
+        cur = min + (max - min) / 2;
+        if (cur == min) {
+            break;
+        }
+        length = sizeof(cur);
+        if (!setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &cur, length)) {
+            min = cur;
+        } else {
+            max = cur;
+        }
+    }
+    return min;
+}
+
+void chapter7_sock_opt_main_3(int argc, char **argv) {
+    int fd;
+    int max_size;
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        return;
+    }
+    max_size = query_send_buffer_maximum_size(fd);
+    if (max_size != -1) {
+        fprintf(stdout, "max send buffer size=%d\n", max_size);
+    }
     close(fd);
 }
 

@@ -28,4 +28,6 @@ void chapter7_sock_opt_main_1(int argc, char **argv);
  */
 void chapter7_sock_opt_main_2(int argc, char **argv);
 
+void chapter7_sock_opt_main_3(int argc, char **argv);
+
 #endif // APUE_CHAPTER7_SOCK_OPT_H
