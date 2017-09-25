@@ -8,5 +8,6 @@ void udp_server_main(int argc, char **argv);
  */
 void udp_server_main_1(int argc, char **argv);
 void udp_server_main_2(int argc, char **argv);
+void udp_server_main_3(int argc, char **argv);
 
 #endif

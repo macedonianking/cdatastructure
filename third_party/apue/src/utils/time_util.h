@@ -5,6 +5,10 @@
 #include <sys/time.h>
 #include <stdint.h>
 
+#define MINUTE_IN_SECONDS       60
+#define HOUR_IN_SECONDS         (60 * MINUTE_IN_SECONDS)
+#define DAY_IN_SECONDS          (24 * HOUR_IN_SECONDS)
+
 #define SECOND_IN_MILLIS        1000ul
 #define MINUTE_IN_MILLIS        (60 * SECOND_IN_MILLIS)
 #define HOUR_IN_MILLIS          (60 * MINUTE_IN_MILLIS)

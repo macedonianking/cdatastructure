@@ -7,7 +7,7 @@
 #include "utils/net.h"
 
 void udp_server_main(int argc, char **argv) {
-    udp_server_main_2(argc, argv);
+    udp_server_main_3(argc, argv);
 }
 
 /**
@@ -25,27 +25,42 @@ void udp_server_main_1(int argc, char **argv) {
         &udp_server_main_1_client);
 }
 
-/**
- * server echo client datagram.
- */
-static void udp_server_main_1_server_main_routing(int fd) {
-    struct sockaddr_in client_addr;
-    socklen_t client_addr_len;
-    char buf[LINE_MAX];
-    int n, write_count;
+static int upd_writen(int fd, struct sockaddr_in *addr, char *buf, int size) {
+    int n;
+    int r;
 
+    r = -1;
     for (;;) {
-        client_addr_len = sizeof(client_addr);
-        if ((n = recvfrom(fd, buf, LINE_MAX - 1, 0, (SA*)&client_addr, &client_addr_len)) == -1) {
-            ALOGE("recvfrom error: %s", strerror(errno));
+        if ((n = sendto(fd, buf, size, 0, (SA*)addr, sizeof(*addr))) == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
+            r = -1;
             break;
         }
-        if (n != 0) {
-            if ((write_count = sendto(fd, buf, n, 0, (SA*)&client_addr, client_addr_len)) == -1) {
-                ALOGE("sendto error: %s", strerror(errno));
-            } else if (write_count != n) {
-                ALOGE("sendto write part data: n=%d, write_count=%d", n, write_count);
+        r = n == size ? 0 : -1;
+        break;
+    }
+    return r;
+}
+
+static void upd_server_echo(int fd) {
+    char buf[MAXLINE];
+    int n;
+    struct sockaddr_in addr;
+    socklen_t length;
+
+    for (;;) {
+        length = sizeof(addr);
+        if ((n = recvfrom(fd, buf, MAXLINE, 0, (SA*) &addr, &length)) == -1) {
+            if (errno == EINTR) {
+                continue;
             }
+            break;
+        }
+
+        if (upd_writen(fd, &addr, buf, n)) {
+            break;
         }
     }
 }
@@ -53,58 +68,42 @@ static void udp_server_main_1_server_main_routing(int fd) {
 void udp_server_main_1_server(int argc, char **argv) {
     int fd;
     struct sockaddr_in addr;
-    int result;
 
-    /**
-     * 创建UDP的socket后绑定本地的地址
-     */
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    ALOGE_ALWAYSE_FATAL_IF(fd == -1, "create udp socket FATAL:%s", strerror(errno));
-    result = get_local_socket_addr(&addr, SERVER_PORT);
-    ALOGE_ALWAYSE_FATAL_IF(result == -1, "get_local_socket_addr FATAL:%s", strerror(errno));
-    result = bind(fd, (struct sockaddr*) &addr, sizeof(addr));
-    ALOGE_ALWAYSE_FATAL_IF(result == -1, "bind FATAL:%s", strerror(errno));
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons(SERVER_PORT);
 
-    /**
-     * 创建UDP的socket之后使用socket
-     */
-    udp_server_main_1_server_main_routing(fd);
-
-    /**
-     * Should not be here.
-     */
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1 || bind(fd, (SA*) &addr, sizeof(addr))) {
+        if (fd != -1) {
+            close(fd);
+        }
+        return;
+    }
+    upd_server_echo(fd);
     close(fd);
 }
 
-/**
- * 客户端主程序入口
- */
-static void udp_server_main_1_client_main_routing(int argc, char **argv, int fd,
-    struct sockaddr_in *server_addr) {
+
+static void upd_client_echo(int fd) {
+    char buf[MAXLINE];
     struct sockaddr_in addr;
-    char buf[LINE_MAX];
-    int n, count;
-    socklen_t length;
+    int n;
 
+    get_local_socket_addr(&addr, SERVER_PORT);
     for (;;) {
-        if ((n = read(STDIN_FILENO, buf, LINE_MAX - 1)) <= 0) {
+        if ((n = read(STDIN_FILENO, buf, MAXLINE)) == -1 || !n) {
             break;
         }
-
-        if ((count = sendto(fd, buf, n, 0, (SA*)server_addr, sizeof(*server_addr))) == -1) {
-            ALOGE("sendto FATAL: %s", strerror(errno));
+        if ((n = sendto(fd, buf, n, 0, (SA*) &addr, sizeof(addr))) == -1 || !n) {
             break;
         }
-        else if (count != n) {
-            ALOGE("sendto: n = %d, count = %d", n, count);
-        }
-
-        length = sizeof(addr);
-        if ((n = recvfrom(fd, buf, LINE_MAX - 1, 0, (SA*) &addr, &length)) == -1) {
-            ALOGE("recvfrom FATAL:%s", strerror(errno));
+        if ((n = recvfrom(fd, buf, MAXLINE, 0, NULL, NULL)) == -1) {
             break;
         }
-        write(STDOUT_FILENO, buf, n);
+        if ((n = write(fd, buf, n)) == -1) {
+            break;
+        }
     }
 }
 
@@ -113,72 +112,49 @@ static void udp_server_main_1_client_main_routing(int argc, char **argv, int fd,
  */
 void udp_server_main_1_client(int argc, char **argv) {
     int fd;
-    struct sockaddr_in addr;
-    int result;
-
-    /**
-     * 创建socket和获取服务端的地址
-     */
-    result = get_local_socket_addr(&addr, SERVER_PORT);
-    ALOGE_ALWAYSE_FATAL_IF(result == -1, "get_local_socket_addr FATAL:%s", strerror(errno));
-    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    ALOGE_ALWAYSE_FATAL_IF(fd == -1, "client create udp socket FATAL:%s", strerror(errno));
-
-    /**
-     * 主程序入口
-     */
-    udp_server_main_1_client_main_routing(argc, argv, fd, &addr);
-}
-
-static void udp_server_main_2_client_datagram_echo(int fd, struct sockaddr_in *addr) {
-    char buf[LINE_MAX];
-    int r, n, count;
-    socklen_t length;
-
-    length = sizeof(*addr);
-    if ((r = connect(fd, (SA*) addr, length)) == -1) {
-        ALOGE("connect FATAL:%s", strerror(errno));
-        return;
-    }
-
-    for (;;) {
-        if ((n = read(STDIN_FILENO, buf, LINE_MAX - 1)) == -1 || n == 0) {
-            break;
-        }
-        if ((count = write(fd, buf, n)) == -1) {
-            ALOGE("udp socket write FATAL:%s", strerror(errno));
-            break;
-        }
-        if (count != n) {
-            break;
-        }
-        if ((count = read(fd, buf, LINE_MAX - 1)) == -1) {
-            ALOGE("upd socket read FATAL:%s", strerror(errno));
-            break;
-        }
-        write(STDOUT_FILENO, buf, count);
-    }
-}
-
-static void udp_server_main_2_client(int argc, char **argv) {
-    int fd;
-    struct sockaddr_in addr;
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
         return;
     }
-    if ((get_local_socket_addr(&addr, SERVER_PORT)) == -1) {
-        goto out;
-    }
-    udp_server_main_2_client_datagram_echo(fd, &addr);
-
-out:
+    upd_client_echo(fd);
     close(fd);
-    return;
 }
 
-void udp_server_main_2(int argc, char **argv) {
-    choose_process_main_routing(argc, argv,
-        &udp_server_main_1_server,
-        &udp_server_main_2_client);
+
+/**
+ * connected udp socket operation.
+ */
+void udp_server_main_3(int argc, char **argv) {
+    int fd;
+    struct sockaddr_in addr;
+    socklen_t length;
+    char buf[MAXLINE];
+    int n, m;
+
+    get_local_socket_addr(&addr, SERVER_PORT);
+    length = sizeof(addr);
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        return;
+    }
+    if (connect(fd, (SA*) &addr, length)) {
+        close(fd);
+        return;
+    }
+
+    for (;;) {
+        if ((n = read(STDIN_FILENO, buf, MAXLINE)) == -1 || !n) {
+            break;
+        }
+        if ((n = sendto(fd, buf, n, 0, (SA*) &addr, length)) == -1 || !n) {
+            break;
+        }
+        if ((n = read(fd, buf, MAXLINE)) == -1) {
+            ALOGE("read FATAL(%s)", strerror(errno));
+            break;
+        }
+        if ((m = write(fd, buf, n)) == -1 || m != n) {
+            break;
+        }
+    }
+    close(fd);
 }

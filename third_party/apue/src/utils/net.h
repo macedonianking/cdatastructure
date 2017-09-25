@@ -1,13 +1,12 @@
 #ifndef APUE_NET_H
 #define APUE_NET_H
 
-#include <sys/socket.h>
-// Internet address family.
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <string.h>
+#include <sys/socket.h>
 
 #include <netdb.h>
 

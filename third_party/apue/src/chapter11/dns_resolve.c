@@ -5,72 +5,101 @@
 #include "utils/net.h"
 #include "utils/utils.h"
 
+typedef struct s_host_addr_node {
+    list_head node;
+    struct sockaddr_in addr;
+} s_host_addr_node;
+
 void dns_resolve_main(int argc, char **argv) {
-    dns_resolve_main_4(argc, argv);
+    dns_resolve_main_2(argc, argv);
+}
+
+static int dns_query_host_ip_addr_list(const char *name, list_head *list) {
+    struct hostent ent, *result;
+    int h_error;
+    char buf[MAXLINE];
+    s_host_addr_node *ptr;
+    int r;
+
+    r = -1;
+    if (!gethostbyname_r(name, &ent, buf, MAXLINE, &result, &h_error)
+        && result == &ent
+        && result->h_addrtype == AF_INET) {
+        for (int i = 0; result->h_addr_list[i]; ++i) {
+            ptr = (s_host_addr_node*) malloc(sizeof(s_host_addr_node));
+            INIT_LIST_HEAD(&ptr->node);
+            memset(&ptr->addr, 0, sizeof(ptr->addr));
+            ptr->addr.sin_family = AF_INET;
+            ptr->addr.sin_addr = *(struct in_addr*) result->h_addr_list[i];
+            list_add(&ptr->node, list);
+        }
+        r = 0;
+    }
+    return r;
 }
 
 void dns_resolve_main_1(int argc, char **argv) {
-    char *host, buf[MAXLINE], ip_buf[INET6_ADDRSTRLEN];
-    struct hostent ent, *ptr;
-    struct sockaddr_in **addr_list, *addr;
-    int herror, i;
+    DEFINE_LIST_HEAD(list);
+    s_host_addr_node *ptr;
+    char ip_addr[INET6_ADDRSTRLEN];
 
-    if (argc != 2) {
+    if (argc < 2) {
         return;
     }
-
-    host = argv[1];
-    if (gethostbyname_r(host, &ent, buf, MAXLINE, &ptr, &herror) ||
-        !ptr || ptr->h_addrtype != AF_INET) {
+    if (dns_query_host_ip_addr_list(argv[1], &list)) {
         return;
     }
-    fprintf(stdout, "name: %s\n", ptr->h_name);
-    fprintf(stdout, "type: AF_INET\n");
-    addr_list = (struct sockaddr_in**) ptr->h_addr_list;
-    i = 0;
-    for (;(addr = *addr_list); ++addr_list) {
-        if (addr->sin_addr.s_addr &&
-            inet_ntop(AF_INET, &addr->sin_addr, ip_buf, INET6_ADDRSTRLEN) == ip_buf) {
-            fprintf(stdout, "addr%d: %s:%d\n", ++i, ip_buf, ntohs(addr->sin_port));
+    LIST_FOR_EACH_ENTRY(ptr, &list, node) {
+        if (inet_ntop(ptr->addr.sin_family, &ptr->addr.sin_addr, ip_addr, INET6_ADDRSTRLEN) == ip_addr) {
+            fprintf(stdout, "%s\n", ip_addr);
         }
+    }
+    LIST_FOR_EACH_ENTRY_SAFE(ptr, &list, node) {
+        list_del(&ptr->node);
+        free(ptr);
     }
 }
 
-/**
- * 输出每个服务项
- */
-static void print_service_entry(struct servent *ptr) {
-    char **aliases;
-    if (!ptr) {
-        return;
-    }
+static int get_conn_addr(const char *name, const char *service, struct sockaddr_in *addr) {
+    char buf[MAXLINE];
+    struct hostent hostent_item, *hostent_result;
+    struct servent servent_item, *servent_result;
+    int h_error;
+    int r;
 
-    fprintf(stdout, "name: %s\n", ptr->s_name);
-    if (ptr->s_aliases && *ptr->s_aliases) {
-        aliases = ptr->s_aliases;
-        fprintf(stdout, "aliases:");
-        while (*aliases) {
-            fprintf(stdout, " %s", *aliases);
-            ++aliases;
+    r = -1;
+    memset(addr, 0, sizeof(*addr));
+    addr->sin_family = AF_INET;
+    if (!gethostbyname_r(name, &hostent_item, buf, MAXLINE, &hostent_result, &h_error)
+        && hostent_result == &hostent_item
+        && hostent_result->h_addrtype == AF_INET
+        && hostent_result->h_addr_list[0]) {
+        addr->sin_addr = *(struct in_addr*) hostent_result->h_addr_list[0];
+        if (!getservbyname_r(service, "tcp", &servent_item, buf, MAXLINE, &servent_result)) {
+            r = 0;
+            addr->sin_port = servent_result->s_port;
         }
-        fprintf(stdout, "\n");
     }
-    fprintf(stdout, "port: %d\n", ntohs(ptr->s_port));
-    fprintf(stdout, "protocol: %s\n\n", ptr->s_proto);
+    return r;
 }
 
 void dns_resolve_main_2(int argc, char **argv) {
-    struct servent *ent;
+    int fd;
+    struct sockaddr_in addr;
 
-    setservent(1);
-    while ((ent = getservent()) != NULL) {
-        print_service_entry(ent);
+    if (argc < 3 || get_conn_addr(argv[1], argv[2], &addr)) {
+        return;
     }
-    endservent();
-
-    if ((ent = getservbyname("https", "tcp"))) {
-        print_service_entry(ent);
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        return;
     }
+    if (connect(fd, (SA*) &addr, sizeof(addr)) == -1) {
+        close(fd);
+        return;
+    }
+    ALOGE("connect success");
+    close(fd);
+    return;
 }
 
 // 输出站点信息
