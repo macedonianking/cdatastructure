@@ -11,7 +11,7 @@ typedef struct s_host_addr_node {
 } s_host_addr_node;
 
 void dns_resolve_main(int argc, char **argv) {
-    dns_resolve_main_2(argc, argv);
+    dns_resolve_main_4(argc, argv);
 }
 
 static int dns_query_host_ip_addr_list(const char *name, list_head *list) {
@@ -145,7 +145,78 @@ void dns_resolve_main_3(int argc, char **argv) {
     }
 }
 
+typedef struct tcp_service_entry {
+    list_head   node;
+    char        *service_name;
+    uint16_t    port;
+} tcp_service_entry;
+
+tcp_service_entry *create_tcp_service_entry(struct servent *src) {
+    tcp_service_entry *ptr;
+
+    ptr = (tcp_service_entry*) malloc(sizeof(*ptr));
+    INIT_LIST_HEAD(&ptr->node);
+    ptr->service_name = s_strdup(src->s_name);
+    ptr->port = ntohs(src->s_port);
+
+    return ptr;
+}
+
+void free_tcp_service_entry(tcp_service_entry *ptr) {
+    free(ptr->service_name);
+    ptr->service_name = NULL;
+    free(ptr);
+}
+
+void free_tcp_service_entry_list(list_head *list) {
+    struct tcp_service_entry *ptr;
+
+    LIST_FOR_EACH_ENTRY(ptr, list, node) {
+        list_del(&ptr->node);
+        free_tcp_service_entry(ptr);
+    }
+}
+
+void insert_tcp_service_entry(list_head *list, tcp_service_entry *src) {
+    tcp_service_entry *ptr;
+
+    LIST_FOR_EACH_ENTRY_REVERSE(ptr, list, node) {
+        if (ptr->port <= src->port) {
+            list_add(&src->node, &ptr->node);
+            return;
+        }
+    }
+    list_add_tail(&src->node, list);
+}
 
 void dns_resolve_main_4(int argc, char **argv) {
+    char buf[MAXLINE];
+    struct servent item, *result;
+    DEFINE_LIST_HEAD(list);
+    struct tcp_service_entry *ptr;
+    int n, m;
+
+    setservent(1);
+    while(!getservent_r(&item, buf, MAXLINE, &result) && result == &item) {
+        ptr = create_tcp_service_entry(result);
+        if (ptr) {
+            insert_tcp_service_entry(&list, ptr);
+        }
+    }
+    endservent();
+
+    n = 0;
+    LIST_FOR_EACH_ENTRY(ptr, &list, node) {
+        m = strlen(ptr->service_name);
+        n = MAX(m, n);
+    }
+
+    n += 8;
+    snprintf(buf, MAXLINE, "%%-%ds%%d\n", n);
+    LIST_FOR_EACH_ENTRY(ptr, &list, node) {
+        fprintf(stdout, buf, ptr->service_name, ptr->port);
+    }
+
+    free_tcp_service_entry_list(&list);
 }
 

@@ -72,8 +72,8 @@ void list_move_tail(struct list_head *ptr, struct list_head *head);
 	for (ptr = (head)->next; ptr != (head); ptr = ptr->next)
 
 #define LIST_FOR_EACH_ENTRY(ptr, head, m) \
-	for (struct list_head *__p = (head); \
-		 (__p = __p->next) != (head) && (ptr = list_entry(__p, typeof(*ptr), m));)
+	for (struct list_head *__p = (head)->next; \
+		 __p != (head) && ({ptr =list_entry(__p, typeof(*ptr), m); __p = __p->next;});)
 
 #define LIST_FOR_EACH_ENTRY_SAFE(ptr, head, m) \
 	for (struct list_head *__p = (head)->next; \
@@ -83,5 +83,9 @@ void list_move_tail(struct list_head *ptr, struct list_head *head);
 	for (struct list_head *__p = (fm); \
 		 ptr = list_entry(__p, typeof(*ptr), m), __p != (head); \
 		 __p = __p->next)
+
+#define LIST_FOR_EACH_ENTRY_REVERSE(ptr, head, m) \
+	for (struct list_head *__p = (head)->prev; \
+		 __p != (head) && ({ptr = list_entry(__p, typeof(*ptr), m); __p = __p->prev;});)
 
 #endif // MAIN_LIST_H
