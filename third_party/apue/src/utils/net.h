@@ -103,6 +103,11 @@ struct addrinfo *host_serv(const char *node, const char *service, int family, in
 int tcp_connect(const char *node, const char *service);
 
 /**
+ * Create tcp connection to the node port.
+ */
+int tcp_connect_port(const char *node, uint16_t port);
+
+/**
  * 创建一个监听用的socket
  */
 int tcp_listen(const char *service, socklen_t *addrlen);
@@ -113,5 +118,9 @@ int tcp_bind_wildcard(int domain, uint16_t port);
  * 创建一个本地的监听描述符
  */
 int tcp_listen_wildcard(int domain, uint16_t port);
+
+
+int dns_host_address(const char *host, struct in_addr *addr);
+int dns_service_port(const char *name, const char *proto, uint16_t *port);
 
 #endif

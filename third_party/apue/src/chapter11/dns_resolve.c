@@ -102,121 +102,50 @@ void dns_resolve_main_2(int argc, char **argv) {
     return;
 }
 
-// 输出站点信息
-static void print_addr_info_entry(struct addrinfo *ptr, const char *node) {
-    char ip_addr[INET6_ADDRSTRLEN];
-    struct sockaddr_in *addr;
+void dns_resolve_main_3(int argc, char **argv) {
+    struct addrinfo hints, *result, *ptr;
+    char ip_buf[INET6_ADDRSTRLEN];
+    int r;
 
-    if (!ptr || ptr->ai_family != AF_INET) {
+    bzero(&hints, sizeof(hints));
+    hints.ai_flags = 0;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    if ((r = getaddrinfo(NULL, "https", &hints, &result)) || !result) {
+        ALOGE("getaddrinfo failure: %s", gai_strerror(r));
         return;
     }
-    addr = (struct sockaddr_in*) ptr->ai_addr;
-    fprintf(stdout, "name: %s\n", node);
-    fprintf(stdout, "famlily: AF_INET\n");
-    fprintf(stdout, "socket type: %d\n", ptr->ai_socktype);
-    fprintf(stdout, "protocol: %d\n", ptr->ai_protocol);
-    fprintf(stdout, "addr: ");
-    if (inet_ntop(addr->sin_family, &addr->sin_addr, ip_addr, INET6_ADDRSTRLEN) == ip_addr) {
-        fprintf(stdout, "%s: %d", ip_addr, ntohs(addr->sin_port));
-    }
-    fprintf(stdout, "\n\n");
-}
-
-void dns_resolve_main_3(int argc, char **argv) {
-    struct addrinfo hint, *src, *ptr;
-    char *name;
-
-    // Initilize hint strcuture.
-    memset(&hint, 0, sizeof(hint));
-    hint.ai_flags = AI_CANONNAME | AI_PASSIVE;
-    hint.ai_family = AF_INET;
-    hint.ai_socktype = SOCK_STREAM;
-    hint.ai_protocol = IPPROTO_TCP;
-
-    // 获取信息
-    if (!getaddrinfo("www.baidu.com", "http", &hint, &src)) {
-        for (ptr = src; ptr; ptr = ptr->ai_next) {
-            if (ptr->ai_canonname != NULL) {
-                name = ptr->ai_canonname;
+    for (ptr = result; ptr; ptr = ptr->ai_next) {
+        void *addr = NULL;
+        switch (ptr->ai_family) {
+            case AF_INET: {
+                addr = &((struct sockaddr_in*)ptr->ai_addr)->sin_addr;
+                break;
             }
-            print_addr_info_entry(ptr, name);
+            case AF_INET6:{
+                addr = &((struct sockaddr_in6*)ptr->ai_addr)->sin6_addr;
+                break;
+            }
         }
-        freeaddrinfo(src);
-    }
-}
-
-typedef struct tcp_service_entry {
-    list_head   node;
-    char        *service_name;
-    uint16_t    port;
-} tcp_service_entry;
-
-tcp_service_entry *create_tcp_service_entry(struct servent *src) {
-    tcp_service_entry *ptr;
-
-    ptr = (tcp_service_entry*) malloc(sizeof(*ptr));
-    INIT_LIST_HEAD(&ptr->node);
-    ptr->service_name = s_strdup(src->s_name);
-    ptr->port = ntohs(src->s_port);
-
-    return ptr;
-}
-
-void free_tcp_service_entry(tcp_service_entry *ptr) {
-    free(ptr->service_name);
-    ptr->service_name = NULL;
-    free(ptr);
-}
-
-void free_tcp_service_entry_list(list_head *list) {
-    struct tcp_service_entry *ptr;
-
-    LIST_FOR_EACH_ENTRY(ptr, list, node) {
-        list_del(&ptr->node);
-        free_tcp_service_entry(ptr);
-    }
-}
-
-void insert_tcp_service_entry(list_head *list, tcp_service_entry *src) {
-    tcp_service_entry *ptr;
-
-    LIST_FOR_EACH_ENTRY_REVERSE(ptr, list, node) {
-        if (ptr->port <= src->port) {
-            list_add(&src->node, &ptr->node);
-            return;
+        if (addr && inet_ntop(ptr->ai_family, addr, ip_buf, INET6_ADDRSTRLEN)) {
+            ALOGD("%s", ip_buf);
         }
     }
-    list_add_tail(&src->node, list);
+    freeaddrinfo(result);
 }
 
 void dns_resolve_main_4(int argc, char **argv) {
-    char buf[MAXLINE];
-    struct servent item, *result;
-    DEFINE_LIST_HEAD(list);
-    struct tcp_service_entry *ptr;
-    int n, m;
+    uint16_t port;
+    int fd;
 
-    setservent(1);
-    while(!getservent_r(&item, buf, MAXLINE, &result) && result == &item) {
-        ptr = create_tcp_service_entry(result);
-        if (ptr) {
-            insert_tcp_service_entry(&list, ptr);
-        }
+    if (dns_service_port("http", "tcp", &port)) {
+        return;
     }
-    endservent();
-
-    n = 0;
-    LIST_FOR_EACH_ENTRY(ptr, &list, node) {
-        m = strlen(ptr->service_name);
-        n = MAX(m, n);
+    if ((fd = tcp_connect_port("www.ifeng.com", port)) == -1) {
+        return;
     }
-
-    n += 8;
-    snprintf(buf, MAXLINE, "%%-%ds%%d\n", n);
-    LIST_FOR_EACH_ENTRY(ptr, &list, node) {
-        fprintf(stdout, buf, ptr->service_name, ptr->port);
-    }
-
-    free_tcp_service_entry_list(&list);
+    close(fd);
+    ALOGD("success: port=%d", port);
 }
-

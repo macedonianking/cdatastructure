@@ -1,5 +1,7 @@
 #include "chapter9/chapter9.h"
 
+
+#include <termios.h>
 #include "utils/apue.h"
 
 int chapter9_main(int argc, char **argv) {
@@ -11,23 +13,16 @@ int chapter9_main(int argc, char **argv) {
  *
  */
 void chapter9_3(int argc, char **argv) {
-    pid_t child;
-    int status;
+    char buf[MAXLINE];
+    int n;
+    sleep(3);
 
-    if((child = fork()) < 0) {
-        APUE_ERR_SYS();
-    } else if (!child) {
-        /**
-         * child process.
-         */
-        fprintf(stdout, "child process: pid=%d, pgid=%d\n", getpid(), getpgid(0));
-        exit(0);
+    for (;;) {
+        if ((n = read(STDIN_FILENO, buf, MAXLINE)) == -1) {
+            break;
+        }
+        write(STDOUT_FILENO, buf, n);
     }
 
-    if(waitpid(child, &status, 0) <= 0) {
-        APUE_ERR_SYS();
-    }
-    if(WIFEXITED(status) && !WEXITSTATUS(status)) {
-        fprintf(stdout, "parent process: pid=%d, pgid=%d\n", getpid(), getpgrp());
-    }
+    ALOGE("finish");
 }

@@ -1,11 +1,9 @@
 #include "chapter100/chapter100.h"
 
 #define LOG_TAG "chapter100"
-#include "utils/log.h"
-#include "utils/apue.h"
-#include "chapter11/dns_resolve.h"
+#include "chapter14/advanced_socket.h"
 
 int chapter100_main(int argc, char **argv) {
-    dns_resolve_main(argc, argv);
+    advanced_socket_main(argc, argv);
     return 0;
 }

@@ -219,18 +219,15 @@ struct addrinfo *host_serv(const char *node, const char *service, int family, in
  */
 int tcp_connect(const char *node, const char *service) {
     struct addrinfo *src, *ptr;
-    int fd, temp_fd;
+    int fd;
 
     fd = -1;
     src = host_serv(node, service, AF_UNSPEC, SOCK_STREAM);
     for (ptr = src; ptr; ptr = ptr->ai_next) {
-        if ((temp_fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol)) == -1) {
-            continue;
-        }
-        if (!connect(temp_fd, ptr->ai_addr, ptr->ai_addrlen)) {
-            fd = temp_fd;
-            break;
-        } else {
+        if ((fd = socket(ptr->ai_family, ptr->ai_socktype, 0)) != -1) {
+            if (!connect(fd, ptr->ai_addr, ptr->ai_addrlen)) {
+                break;
+            }
             close(fd);
         }
     }
@@ -238,6 +235,36 @@ int tcp_connect(const char *node, const char *service) {
         freeaddrinfo(src);
     }
 
+    return fd;
+}
+
+int tcp_connect_port(const char *node, uint16_t port) {
+    struct addrinfo hints, *ptr;
+    int fd, r;
+
+    bzero(&hints, sizeof(hints));
+    hints.ai_flags = 0;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    if (getaddrinfo(node, "http", &hints, &ptr) || !ptr) {
+        return -1;
+    }
+    if ((fd = socket(ptr->ai_family, ptr->ai_socktype, 0)) != -1) {
+        r = 0;
+        if (ptr->ai_family == AF_INET) {
+            ((struct sockaddr_in*) ptr->ai_addr)->sin_port = htons(port);
+            r = 1;
+        } else if (ptr->ai_family == AF_INET6) {
+            ((struct sockaddr_in6*) ptr->ai_addr)->sin6_port = htons(port);
+            r = 1;
+        }
+        if (!r || connect(fd, ptr->ai_addr, ptr->ai_addrlen)) {
+            close(fd);
+            fd = -1;
+        }
+    }
+    freeaddrinfo(ptr);
     return fd;
 }
 
@@ -348,4 +375,38 @@ int tcp_listen_wildcard(int domain, uint16_t port) {
         }
     }
     return fd;
+}
+
+/**
+ * 解析地址
+ */
+int dns_host_address(const char *host, struct in_addr *addr) {
+    struct hostent item, *result;
+    char buf[MAXLINE];
+    int h_error;
+
+    if (inet_pton(AF_INET, host, addr) == 1) {
+        return 0;
+    }
+    if (!gethostbyname_r(host, &item, buf, MAXLINE, &result, &h_error) && !h_error
+        && result == &item
+        && result->h_addr_list
+        && result->h_addr_list[0]) {
+        *addr = *(struct in_addr*) result->h_addr_list[0];
+        return 0;
+    }
+    return -1;
+}
+
+int dns_service_port(const char *name, const char *proto, uint16_t *port) {
+    int r;
+    struct servent item, *result;
+    char buf[MAXLINE];
+
+    r = -1;
+    if (!getservbyname_r(name, proto, &item, buf, MAXLINE, &result) && result == &item) {
+        *port = ntohs(result->s_port);
+        r = 0;
+    }
+    return r;
 }
