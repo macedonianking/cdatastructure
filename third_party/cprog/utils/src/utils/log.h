@@ -56,8 +56,8 @@ extern void __android_log_impl(int level, const char *tag, const char *file, int
 #define __LOG_IMPL_V(level)     
 #endif
 
-#ifndef LOG_PRI
-#define LOG_PRI(level, tag, ...) __android_log_impl(LOG_LEVEL_##level, tag, __FILE__, __LINE__, ##__VA_ARGS__)
+#ifndef __ANDROID_LOG_IMPL
+#define __ANDROID_LOG_IMPL(level, tag, ...) __android_log_impl(LOG_LEVEL_##level, tag, __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 
 #define LOGI(format, ...)   __LOG_IMPL(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
@@ -65,10 +65,10 @@ extern void __android_log_impl(int level, const char *tag, const char *file, int
 #define LOGD(format, ...)   __LOG_IMPL(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
 #define LOGE(format, ...)   __LOG_IMPL(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
 
-#define ALOGI(...)          LOG_PRI(INFO, LOG_TAG, ##__VA_ARGS__)
-#define ALOGW(...)          LOG_PRI(WARN, LOG_TAG, ##__VA_ARGS__)
-#define ALOGD(...)          LOG_PRI(DEBUG, LOG_TAG, ##__VA_ARGS__)
-#define ALOGE(...)          LOG_PRI(ERROR, LOG_TAG, ##__VA_ARGS__)
+#define ALOGI(...)          __ANDROID_LOG_IMPL(INFO, LOG_TAG, ##__VA_ARGS__)
+#define ALOGW(...)          __ANDROID_LOG_IMPL(WARN, LOG_TAG, ##__VA_ARGS__)
+#define ALOGD(...)          __ANDROID_LOG_IMPL(DEBUG, LOG_TAG, ##__VA_ARGS__)
+#define ALOGE(...)          __ANDROID_LOG_IMPL(ERROR, LOG_TAG, ##__VA_ARGS__)
 
 #ifndef ALOGE_IF
 #define ALOGE_IF(cond, ...) do { \
