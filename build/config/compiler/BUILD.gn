@@ -1,0 +1,10 @@
+config("gcc_default_c_config") {
+  cflags = [
+    "-std=gnu99",
+    "-Wall",
+    "-Werror",
+  ]
+  if (is_debug) {
+    cflags += [ "-g" ]
+  }
+}

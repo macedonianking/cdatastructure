@@ -1,0 +1,15 @@
+
+config("hello_shared_config") {
+    include_dirs = [
+        "//hello_shared",
+    ]
+}
+
+shared_library("hello") {
+    sources = [
+        "hello_shared.c",
+    ]
+    public_configs = [
+        ":hello_shared_config",
+    ]
+}

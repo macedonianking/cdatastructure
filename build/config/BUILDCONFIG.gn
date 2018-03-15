@@ -1,0 +1,19 @@
+declare_args() {
+  is_debug = true
+}
+
+set_default_toolchain("//build/toolchain:gcc_toolchain")
+
+_default_c_config_name = "//build/config/compiler:gcc_default_c_config"
+
+set_defaults("executable") {
+  configs = [ _default_c_config_name ]
+}
+
+set_defaults("shared_library") {
+  configs = [ _default_c_config_name ]
+}
+
+set_defaults("static_library") {
+  configs = [ _default_c_config_name ]
+}
