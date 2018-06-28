@@ -1,0 +1,33 @@
+
+config("compiler") {
+  cflags_c = [
+    "-std=gnu99",
+  ]
+  cflags_cc = [
+    "-std=c++0x",
+  ]
+  configs = []
+}
+
+config("static_library") {
+  cflags = []
+}
+
+config("shared_library") {
+  cflags = []
+  if (host_os != "win") {
+    cflags += [ "-fPIC" ]
+  }
+  
+  ldflags = [ "-shared" ]
+}
+
+config("debug") {
+  cflags = [ 
+    "-g",
+  ]
+}
+
+config("release") {
+  cflags = []
+}

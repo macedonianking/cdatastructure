@@ -1,8 +1,34 @@
 
+all_source_file = exec_script("//build/find_all_files_under.py",
+                              [
+                                "--include-patterns",
+                                "*",
+                                "--dir",
+                                rebase_path(".", root_build_dir),
+                                "--relative-dir",
+                                rebase_path(".", root_build_dir),
+                              ],
+                              "list lines")
+
 executable("main") {
-  sources = [
-    "main.c",
+  sources = all_source_file
+
+  cflags_c = [
+    "-Wall",
+    "-Werror",
+    "-Wno-unused-value",
+    "-Wno-unused-variable",
+    "-O3",
+    "-fno-strict-aliasing",
   ]
-  include_dirs = [".", "./include/asm-i386"]
-  cflags = [ "-std=gnu99", "-g", "-Werror=return-type" ]
+  include_dirs = [
+    ".",
+  ]
+  libs = [
+    "pthread",
+  ]
+  defines = [
+    "NULL=0",
+  ]
+  output_extension = "exe"
 }
