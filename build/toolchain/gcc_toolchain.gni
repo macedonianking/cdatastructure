@@ -14,15 +14,12 @@ template("gcc_toolchain") {
   ld = invoker.ld
   nm = invoker.nm
   forward_variables_from(invoker, 
-                         [ "toolchain_args_current_os",
-                           "toolchain_args_current_cpu",
+                         [ 
                            "shlib_extension",
                            "static_lib_extension",
                            "executable_extension",
                          ]
                         )
-  assert(defined(toolchain_args_current_cpu))
-  assert(defined(toolchain_args_current_os))
   assert(defined(shlib_extension))
   assert(defined(static_lib_extension))
   assert(defined(executable_extension))
@@ -157,11 +154,6 @@ template("gcc_toolchain") {
     tool("copy") {
       command = "cp -f {{source}} {{output}}"
       description = "COPY {{output}}"
-    }
-
-    toolchain_args() {
-      current_cpu = toolchain_args_current_cpu
-      current_os = toolchain_args_current_os
     }
 
     forward_variables_from(invoker, 

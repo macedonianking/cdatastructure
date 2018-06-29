@@ -30,5 +30,8 @@ executable("main") {
   defines = [
     "NULL=0",
   ]
-  output_extension = "exe"
+
+  if (target_os == "win") {
+    output_extension = "exe"
+  }
 }
