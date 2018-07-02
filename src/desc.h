@@ -30,4 +30,24 @@ struct Xgt_desc_struct {
 
 extern struct Xgt_desc_struct cpu_gdt_descr[NR_CPUS];
 
+/**
+ * 设置系统中断门
+ */
+void set_intr_gate(unsigned int irq, unsigned long *addr);
+/**
+ * 设置系统中断门，能够被用户态进程触发
+ */
+void set_system_intr_gate(unsigned int irq, unsigned long *addr);
+
+/**
+ * 设置陷阱门，只能由系统触发
+ */
+void set_trap_gate(unsigned int n, unsigned long *addr);
+/**
+ * 设置系统陷阱门，能够被用户触发
+ */
+void set_system_gate(unsigned int n, unsigned long *addr);
+
+void set_task_gate(unsigned int n, unsigned int gdt_entry);
+
 #endif /* DESC_H_ */

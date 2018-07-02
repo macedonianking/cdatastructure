@@ -15,8 +15,6 @@ struct desc_struct cpu_gdt_table;
 
 struct Xgt_desc_struct cpu_gdt_descr[NR_CPUS];
 
-extern void set_intr_gate(unsigned int irq, void *addr);
-
 static inline unsigned long get_desc_base(unsigned long *desc) {
     unsigned long base;
 
