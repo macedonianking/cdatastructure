@@ -7,3 +7,10 @@ all:
 .PHONY: clean
 clean:
 	gn clean out
+
+.PHONY: clone
+clone:
+	git branch -D main
+	git checkout -b main
+
+

@@ -20,6 +20,7 @@ executable("main") {
     "-Wno-unused-variable",
     "-O3",
     "-fno-strict-aliasing",
+    "-Wno-unused-function",
   ]
   include_dirs = [
     ".",

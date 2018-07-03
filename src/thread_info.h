@@ -18,6 +18,7 @@ struct thread_info {
     unsigned int softirq_count;
     unsigned int hardirq_count;
     unsigned long flags;
+    unsigned long previous_esp;
 };
 
 #define PREEMPT_ACTIVE  0x10000000

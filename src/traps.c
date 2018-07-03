@@ -8,8 +8,68 @@
 #include "processor.h"
 #include "config.h"
 #include "segment.h"
+#include "thread_info.h"
+#include "printk.h"
+#include "current.h"
+#include "sched.h"
 
 struct desc_struct __attribute__((section(".data.idt"))) idt_table[256];
+
+/**
+ * 可用的栈指针
+ */
+static inline int valid_stack_ptr(struct thread_info *tinfo, void *p) {
+    return p > (void*) tinfo && p < (void*) tinfo + THREAD_SIZE - 3;
+}
+
+static unsigned long print_context_stack(struct thread_info *tinfo, unsigned long *stack,
+        unsigned long ebp) {
+    unsigned long addr;
+#ifdef CONFIG_FRAME_POINTER
+    while (valid_stack_ptr(tinfo, (void*) ebp)) {
+        addr = *(unsigned long*) (ebp + 4);
+        printk(" [<%08lx>] ", addr);
+        printk("\n");
+        ebp = *(unsigned long*) ebp;
+    }
+#else
+    while (valid_stack_ptr(tinfo, (void*) stack)) {
+        addr = *stack++;
+        if (__kernel_text_address(addr)) {
+            printk(" [<%08lx>] ");
+            printk("\n");
+        }
+    }
+#endif
+    return ebp;
+}
+
+/**
+ * 输出堆栈，考虑了双堆栈的问题
+ */
+void show_trace(struct task_struct *task, unsigned long *stack) {
+    unsigned long ebp;
+
+    if (!task) {
+        task = current;
+    }
+    if (task == current) {
+        asm volatile("movl %%ebp, %0":"=r"(ebp));
+    } else {
+        ebp = *(unsigned long *) task->thread.esp;
+    }
+
+    struct thread_info *context;
+    for (;;) {
+        context = (struct thread_info*) (((unsigned long) stack) & ~(THREAD_SIZE - 1));
+        ebp = print_context_stack(context, stack, ebp);
+        stack = (unsigned long*) context->previous_esp;
+        if (!stack) {
+            break;
+        }
+        printk("=================================\n");
+    }
+}
 
 #define __set_gate(gate_addr, type, dpl, addr, seg) \
 ({ \

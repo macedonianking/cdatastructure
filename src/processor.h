@@ -23,6 +23,7 @@ extern unsigned long mmu_cr4_feature;
 #define cpu_relax() asm volatile("pause")
 
 struct thread_struct {
+    unsigned long esp;
 };
 
 #endif /* PROCESSOR_H_ */

@@ -13,4 +13,6 @@
     (type*)((char*)__mptr - __builtin_offsetof(type, member)); \
 })
 
+extern int __kernel_text_address(unsigned long addr);
+
 #endif /* KERNEL_H_ */

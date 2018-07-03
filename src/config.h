@@ -14,4 +14,6 @@
 #define CONFIG_MODULES
 #define CONFIG_PREEMPT
 
+#define CONFIG_FRAME_POINTER
+
 #endif /* CONFIG_H_ */
