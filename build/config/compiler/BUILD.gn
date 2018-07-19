@@ -2,6 +2,7 @@
 config("compiler") {
   cflags_c = [
     "-std=gnu99",
+    "-g",
   ]
   cflags_cc = [
     "-std=c++0x",

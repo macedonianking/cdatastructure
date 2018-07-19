@@ -14,6 +14,7 @@ struct desc_struct cpu_gdt_table;
 #endif
 
 struct Xgt_desc_struct cpu_gdt_descr[NR_CPUS];
+struct Xgt_desc_struct idt_descr;
 
 static inline unsigned long get_desc_base(unsigned long *desc) {
     unsigned long base;
@@ -22,4 +23,13 @@ static inline unsigned long get_desc_base(unsigned long *desc) {
             ((desc[1] << 16) & 0x00ff0000) | //
             (desc[1] & 0xff000000);
     return base;
+}
+
+static void ignore_idt() {
+}
+
+void setup_idt() {
+    for (int i = 0; i < 256; ++i) {
+        set_intr_gate(i, &ignore_idt);
+    }
 }

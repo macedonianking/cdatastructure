@@ -229,18 +229,18 @@ unsigned long _write_lock_irqsave(rwlock_t *lock) { // @suppress("No return")
     }
 }
 
-void _write_unlock(rwlock_t *lock) {
+void write_unlock(rwlock_t *lock) {
     __raw_write_unlock(lock);
     preempt_enable();
 }
 
-void _write_unlock_irq(rwlock_t *lock) {
+void write_unlock_irq(rwlock_t *lock) {
     __raw_write_unlock(lock);
     local_irq_enable();
     preempt_enable();
 }
 
-void _write_unlock_irqrestore(rwlock_t *lock, unsigned long flags) {
+void write_unlock_irqrestore(rwlock_t *lock, unsigned long flags) {
     __raw_write_unlock(lock);
     local_irq_restore(flags);
     preempt_enable();

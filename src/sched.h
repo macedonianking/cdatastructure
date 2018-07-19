@@ -98,4 +98,6 @@ extern int try_to_wake_up(struct task_struct *task, unsigned int mode, int sync)
 extern void schedule();
 extern long schedule_timeout(long timeout);
 
+extern void trap_init();
+
 #endif /* SCHED_H_ */

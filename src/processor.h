@@ -24,6 +24,8 @@ extern unsigned long mmu_cr4_feature;
 
 struct thread_struct {
     unsigned long esp;
+    unsigned long error_code;
+    unsigned long trap_no;
 };
 
 #endif /* PROCESSOR_H_ */
