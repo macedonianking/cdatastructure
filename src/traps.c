@@ -17,7 +17,12 @@
 
 #define SIGFPE          8
 
-struct desc_struct __attribute__((section(".data.idt"))) idt_table[256];
+#ifdef __MACH__
+#define DESC_SECTION	"DATA,idt"
+#else
+#define DESC_SECTION	".data.idt"
+#endif
+struct desc_struct __attribute__((section(DESC_SECTION))) idt_table[256];
 
 asmlinkage void divide_error();
 

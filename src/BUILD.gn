@@ -15,12 +15,14 @@ executable("main") {
 
   cflags_c = [
     "-Wall",
+    "-m32",
     "-Werror",
     "-Wno-unused-value",
     "-Wno-unused-variable",
     "-O3",
     "-fno-strict-aliasing",
     "-Wno-unused-function",
+    "-Wno-format-security",
   ]
   include_dirs = [
     ".",
@@ -35,4 +37,8 @@ executable("main") {
   if (target_os == "win") {
     output_extension = "exe"
   }
+  ldflags = [
+    "-m32",
+    "-Wl,-no_pie"
+  ]
 }

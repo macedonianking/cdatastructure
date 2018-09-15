@@ -13,7 +13,6 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdint.h>
-#include <windows.h>
 #include <time.h>
 
 #include "count_compiler.h"

@@ -15,7 +15,13 @@
 
 extern unsigned long __per_cpu_offset[NR_CPUS];
 
-#define DEFINE_PER_CPU(type, name)  __attribute__((section(".data.percpu"))) \
+#ifdef __MACH__
+#define PERCPU_SECTION	"DATA,percpu"
+#else
+#define PERCPU_SECTION	".data.percpu"
+#endif
+
+#define DEFINE_PER_CPU(type, name)  __attribute__((section(PERCPU_SECTION))) \
     typeof(type) per_cpu__##name
 
 #define per_cpu(var, cpu)           *RELOC_HIDE(&(per_cpu__##var), __per_cpu_offset[cpu])

@@ -5,7 +5,7 @@
  *      Author: lhb
  */
 
-.section .text
+.text
 .globl _do_divide_error
 .globl _divide_error
 
@@ -44,7 +44,6 @@ common_error:
 	addl $8, %esp
 	jmp ret_from_expception
 
-.align
 ret_from_expception:
 
 
